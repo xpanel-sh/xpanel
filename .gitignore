@@ -1,0 +1,21 @@
+# Runtime files created on installed servers
+/.env
+/config/
+/logs/
+/runtime/
+/backups/
+traefik/acme.json
+daemon/xpanel-daemon
+daemon/config/
+daemon-src/
+
+# Laravel runtime/dependency artifacts
+panel/.env
+panel/vendor/
+panel/node_modules/
+panel/public/build/
+panel/public/hot
+panel/storage/logs/*.log
+panel/storage/framework/cache/data/*
+panel/storage/framework/sessions/*
+panel/storage/framework/views/*.php

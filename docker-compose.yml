@@ -1,0 +1,137 @@
+services:
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    container_name: xpanel-docker-socket-proxy
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      CONTAINERS: 1
+      EVENTS: 1
+      INFO: 1
+      NETWORKS: 1
+      PING: 1
+      VERSION: 1
+      POST: 0
+    networks:
+      - xpanel-net
+    restart: unless-stopped
+
+  # Reverse Proxy (Traefik)
+  proxy:
+    image: traefik:v3.6
+    container_name: xpanel-proxy
+    command:
+      #- "--api.insecure=true" # Movido a traefik.yml
+      #- "--providers.docker=true"
+      - "--configFile=/etc/traefik/traefik.yml"
+      - "--certificatesresolvers.myresolver.acme.email=${XPANEL_ACME_EMAIL:?XPANEL_ACME_EMAIL is required for production ACME}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml
+      - ./traefik/acme.json:/acme.json # Persistencia de certificados
+    environment:
+      - CF_API_EMAIL=${CF_API_EMAIL:-}
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN:-}
+      - DOCKER_API_VERSION=1.41
+    networks:
+      - xpanel-net
+    depends_on:
+      - docker-socket-proxy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  # Web Panel (Laravel)
+  panel:
+    build:
+      context: ./panel
+      dockerfile: Dockerfile
+    container_name: xpanel-web
+    working_dir: /var/www/html
+    volumes:
+      - ./panel:/var/www/html
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.panel.rule=Host(`${XPANEL_DOMAIN:?XPANEL_DOMAIN is required}`)"
+      - "traefik.http.routers.panel.entrypoints=websecure"
+      - "traefik.http.routers.panel.tls.certresolver=myresolver"
+      - "traefik.http.routers.panel.middlewares=secHeaders@file"
+      - "traefik.http.services.panel.loadbalancer.server.port=80"
+    networks:
+      - xpanel-net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "php -v >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Database (Panel)
+  db:
+    image: mariadb:10.11
+    container_name: xpanel-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-xpanel}
+      MYSQL_USER: ${MYSQL_USER:-xpanel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - xpanel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+
+  # Cache & Queues
+  redis:
+    image: redis:alpine
+    container_name: xpanel-redis
+    networks:
+      - xpanel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  # Optional authoritative DNS service.
+  # Start explicitly with: docker compose --profile dns up -d dns
+  dns:
+    image: coredns/coredns:1.11.3
+    container_name: xpanel-dns
+    command: -conf /etc/coredns/Corefile
+    profiles:
+      - dns
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    volumes:
+      - ./dns/coredns/Corefile:/etc/coredns/Corefile:ro
+      - ./runtime/daemon/dns/zones:/zones:ro
+    networks:
+      - xpanel-net
+    restart: unless-stopped
+
+networks:
+  xpanel-net:
+    external: true
+
+volumes:
+  mysql_data:
