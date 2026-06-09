@@ -41,6 +41,23 @@ acquire_lock() {
   trap cleanup_lock EXIT INT TERM
 }
 
+cleanup_known_stack() {
+  local containers=(
+    xpanel-web
+    xpanel-db
+    xpanel-redis
+    xpanel-proxy
+    xpanel-docker-socket-proxy
+    xpanel-dns
+  )
+  local volumes=(
+    xpanel_mysql_data
+  )
+
+  docker rm -f "${containers[@]}" >/dev/null 2>&1 || true
+  docker volume rm "${volumes[@]}" >/dev/null 2>&1 || true
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     es|en)
@@ -121,6 +138,7 @@ if [ "$FRESH_INSTALL" -eq 1 ]; then
   if [ -f "$BASE/docker-compose.yml" ]; then
     (cd "$BASE" && docker compose down -v --remove-orphans) || true
   fi
+  cleanup_known_stack
 
   if [ "$SRC_ROOT" = "$BASE" ]; then
     rm -rf \
