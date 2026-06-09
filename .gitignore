@@ -1,3 +1,5 @@
+xpanel.sh
+
 # Runtime files created on installed servers
 /.env
 /config/
