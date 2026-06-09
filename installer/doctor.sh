@@ -158,6 +158,27 @@ if docker ps --format '{{.Names}}' | grep -q '^xpanel-web$'; then
     warn "Laravel storage may not be writable inside container"
   fi
 
+  PANEL_DAEMON_URL="$(grep '^XPANEL_DAEMON_URL=' "$BASE/panel/.env" 2>/dev/null | cut -d= -f2- || true)"
+  if [ -n "$PANEL_DAEMON_URL" ]; then
+    PANEL_DAEMON_HOST="$(echo "$PANEL_DAEMON_URL" | sed -E 's|^[a-zA-Z]+://([^/:]+).*|\1|')"
+    if docker exec xpanel-web getent hosts "$PANEL_DAEMON_HOST" >/dev/null 2>&1; then
+      ok "Panel container resolves daemon host: $PANEL_DAEMON_HOST"
+    else
+      warn "Panel container cannot resolve daemon host: $PANEL_DAEMON_HOST"
+    fi
+
+    if [ -n "${DAEMON_TOKEN:-}" ]; then
+      PANEL_DAEMON_CODE="$(docker exec -e XPANEL_CHECK_DAEMON_URL="$PANEL_DAEMON_URL" -e XPANEL_CHECK_DAEMON_TOKEN="$DAEMON_TOKEN" xpanel-web php -r '$url=getenv("XPANEL_CHECK_DAEMON_URL");$token=getenv("XPANEL_CHECK_DAEMON_TOKEN");$ctx=stream_context_create(["http"=>["timeout"=>5,"ignore_errors"=>true,"header"=>"X-XPanel-Token: ".$token."\r\n"]]);$body=@file_get_contents(rtrim($url,"/")."/api/operations",false,$ctx);$code=0;if(isset($http_response_header)){foreach($http_response_header as $header){if(preg_match("/^HTTP\\/\\S+\\s+(\\d+)/",$header,$m)){$code=(int)$m[1];break;}}}echo $code;' 2>/dev/null || true)"
+      if [ "$PANEL_DAEMON_CODE" = "200" ]; then
+        ok "Panel container can reach protected daemon API"
+      else
+        warn "Panel container cannot reach protected daemon API (HTTP ${PANEL_DAEMON_CODE:-0})"
+      fi
+    fi
+  else
+    warn "XPANEL_DAEMON_URL missing in panel/.env"
+  fi
+
   URL_LINE="$(grep '^URL=' "$BASE/config/access.info" 2>/dev/null || true)"
   DOMAIN="$(echo "$URL_LINE" | sed 's|^URL=https\?://||;s|/.*||')"
   if [ -n "$DOMAIN" ]; then

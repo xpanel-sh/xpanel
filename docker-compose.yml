@@ -57,6 +57,8 @@ services:
     environment:
       - DB_HOST=db
       - REDIS_HOST=redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.panel.rule=Host(`${XPANEL_DOMAIN:?XPANEL_DOMAIN is required}`)"

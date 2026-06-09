@@ -357,7 +357,7 @@ fi
 upsert_env "XPANEL_ADMIN_LOGIN_PATH" "admin/login" "$PANEL_DIR/.env"
 upsert_env "XPANEL_CLIENT_LOGIN_PATH" "login" "$PANEL_DIR/.env"
 upsert_env "XPANEL_ADMIN_BASE_PATH" "admin" "$PANEL_DIR/.env"
-upsert_env "XPANEL_DAEMON_URL" "http://127.0.0.1:7070" "$PANEL_DIR/.env"
+upsert_env "XPANEL_DAEMON_URL" "http://host.docker.internal:7070" "$PANEL_DIR/.env"
 upsert_env "XPANEL_DAEMON_TOKEN" "$DAEMON_TOKEN" "$PANEL_DIR/.env"
 
 # Laravel runtime directories must be writable by the web process.

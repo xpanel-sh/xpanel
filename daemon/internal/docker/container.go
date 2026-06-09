@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"xpanel/internal/sites"
 	model "xpanel/internal/types"
 )
 
@@ -68,11 +69,16 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 	}
 
 	routerName := strings.TrimPrefix(containerName, siteContainerPrefix)
+	preparedSite, err := sites.Prepare(req)
+	if err != nil {
+		return "", err
+	}
 
 	// 2. Configurar Contenedor
 	config := &container.Config{
-		Image: imageName,
-		Cmd:   cmd,
+		Image:      imageName,
+		Cmd:        cmd,
+		WorkingDir: preparedSite.WorkingDir,
 		Labels: map[string]string{
 			"traefik.enable": "true",
 			fmt.Sprintf("traefik.http.routers.%s.rule", routerName):             fmt.Sprintf("Host(`%s`)", strings.ToLower(req.Domain)),
@@ -87,6 +93,9 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 
 	hostConfig := &container.HostConfig{
 		NetworkMode: "xpanel-net", // Debe coincidir con docker-compose
+		Binds: []string{
+			fmt.Sprintf("%s:%s", preparedSite.HostDir, preparedSite.TargetDir),
+		},
 		PortBindings: nat.PortMap{
 			"80/tcp": []nat.PortBinding{}, // Traefik maneja el puerto, no exponemos al host
 		},

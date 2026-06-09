@@ -68,7 +68,7 @@ ensure_daemon_token() {
 
   token="$(tr -d '[:space:]' < "$token_file")"
   if [ -n "$token" ] && [ -f "$panel_env" ]; then
-    upsert_env_line "$panel_env" "XPANEL_DAEMON_URL" "http://127.0.0.1:7070"
+    upsert_env_line "$panel_env" "XPANEL_DAEMON_URL" "http://host.docker.internal:7070"
     upsert_env_line "$panel_env" "XPANEL_DAEMON_TOKEN" "$token"
   fi
 }
