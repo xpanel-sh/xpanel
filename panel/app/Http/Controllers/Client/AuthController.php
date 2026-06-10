@@ -10,10 +10,8 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
-        if (Auth::check()) {
-            return Auth::user()->role === 'admin'
-                ? redirect()->route('admin.dashboard')
-                : redirect()->route('client.dashboard');
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('client.dashboard');
         }
 
         return view('client.auth.login');
@@ -26,11 +24,12 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::guard('web')->attempt($credentials)) {
             $request->session()->regenerate();
 
-            if ($request->user()->role === 'admin') {
-                return redirect()->route('admin.dashboard');
+            if (Auth::guard('web')->user()->role === 'admin') {
+                Auth::guard('web')->logout();
+                return back()->withErrors(['email' => 'Usa el panel de administrador para iniciar sesión.']);
             }
 
             return redirect()->route('client.dashboard');
@@ -41,9 +40,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        Auth::guard('web')->logout();
         return redirect()->route('client.login');
     }
 }

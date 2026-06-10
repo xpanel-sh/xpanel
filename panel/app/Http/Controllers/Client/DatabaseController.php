@@ -18,6 +18,7 @@ class DatabaseController extends Controller
         $databases = ManagedDatabase::query()
             ->with('site')
             ->where('tenant_id', $tenant->id)
+            ->when($request->search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
             ->latest()
             ->paginate(15);
 

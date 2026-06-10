@@ -10,10 +10,8 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
-        if (Auth::check()) {
-            return Auth::user()->role === 'admin'
-                ? redirect()->route('admin.dashboard')
-                : redirect()->route('client.dashboard');
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard');
         }
 
         return view('admin.auth.login');
@@ -26,11 +24,11 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::guard('admin')->attempt($credentials)) {
             $request->session()->regenerate();
 
-            if ($request->user()->role !== 'admin') {
-                Auth::logout();
+            if (Auth::guard('admin')->user()->role !== 'admin') {
+                Auth::guard('admin')->logout();
                 return back()->withErrors(['email' => 'No tienes permisos de administrador.']);
             }
 
@@ -42,9 +40,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        Auth::guard('admin')->logout();
         return redirect()->route('admin.login');
     }
 }

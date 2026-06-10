@@ -12,6 +12,51 @@ Future releases will include:
 
 ---
 
+## [2.1.0] - File Manager, UI Overhaul and Dual-Session Auth
+**Release date:** 2026-06-09
+
+### Added
+- Added full file manager module accessible from both client and admin panels, similar to cPanel/Hostinger file managers.
+- Added Go daemon `files` package (`daemon/internal/files/manager.go`) with path traversal prevention via `SafeJoin()`, 2 MB read limit and 50 MB upload limit.
+- Added 8 daemon API endpoints under `/api/files/*`: list, read, write, mkdir, delete, rename, upload (multipart) and download.
+- Added `DaemonClient` PHP methods: `fileList`, `fileRead`, `fileWrite`, `fileMkdir`, `fileDelete`, `fileRename`, `fileUpload` and `fileDownloadProxy`.
+- Added `Client\FileManagerController` with per-operation tenant ownership check (`$site->tenant_id !== $tenant->id` → 403).
+- Added `Admin\FileManagerController` with unrestricted admin access to any site's files.
+- Added 18 file manager routes (9 client under `/files/{site}/api/*`, 9 admin under `/admin/files/{site}/api/*`).
+- Added Monaco Editor (CDN `monaco-editor@0.52.2`) as the in-browser code editor with syntax highlighting by file extension, dirty indicator and Ctrl+S save.
+- Added image preview mode in the file manager for PNG, JPG, GIF, SVG, WebP and ICO files.
+- Added drag-and-drop upload support and upload progress bar.
+- Added right-click context menu in the file manager (open, rename, download, delete).
+- Added directory tree sidebar with lazy path expansion.
+- Added dark/light mode toggle with `localStorage` persistence and anti-flash inline script in `<head>`.
+- Added Monaco Editor theme sync with dark/light mode via `MutationObserver`.
+- Added Alpine.js 3.14.3 globally via CDN across the authenticated layout.
+- Added `confirm-modal` Blade component replacing all native `confirm()` dialogs.
+- Added auto-dismiss alerts: success messages dismiss after 5 s, error messages after 7 s.
+- Added client-side search (Alpine.js `x-model`) in admin clients and admin sites tables.
+- Added server-side search for client databases (`DatabaseController`) and client email accounts (`EmailAccountController`).
+- Added dual authentication guard system: `admin` guard (session key `login_admin_*`) independent from `web` guard (session key `login_web_*`), allowing simultaneous admin and client sessions in the same browser without incognito mode.
+
+### Changed
+- Changed admin routes to use `auth:admin` middleware (previously shared `auth` + `can:admin` gate), fully separating admin session from client session.
+- Changed client routes to use `auth:web` middleware, preventing admin credentials from being accepted through the client login form.
+- Changed `Client\AuthController::showLogin()` to only redirect already-authenticated client users; admin guard state no longer triggers a redirect on the client login page.
+- Changed `ResolveTenant` middleware to explicitly use `Auth::guard('web')->user()` so admin guard sessions are never mistaken for client sessions.
+- Changed authenticated layout `app.blade.php` to resolve `$user` and `$isAdmin` from the admin guard first, falling back to the web guard.
+- Changed `AuthServiceProvider` admin gate definition to check `Auth::guard('admin')` directly.
+- Changed `Admin\AuthController` to use `Auth::guard('admin')` for all login, check and logout operations.
+- Changed `Client\AuthController` to use `Auth::guard('web')` explicitly and reject admin-role users with a clear error message.
+- Unified visual style across admin and client views: replaced legacy `bg-gray-800`/`border-gray-700` classes with `bg-white/[0.03]`/`border-white/10` modern palette.
+- Changed client web, databases, domains, emails and DNS views to use the `confirm-modal` component instead of inline `onsubmit` confirm.
+- Changed admin clients and sites views to use Alpine.js client-side search.
+- Added "Archivos" button to client sites list and admin sites list linking to the respective file manager.
+
+### Fixed
+- Fixed inability to open client login in the same browser while admin is logged in without using incognito mode.
+- Fixed admin users being incorrectly redirected to `admin.dashboard` when visiting the client login URL.
+
+---
+
 ## [2.0.0] - Production Security Hardening
 **Release date:** 2026-06-08
 

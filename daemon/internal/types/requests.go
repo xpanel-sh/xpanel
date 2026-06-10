@@ -49,3 +49,47 @@ type ActionResponse struct {
 	Message     string `json:"message,omitempty"`
 	OperationID string `json:"operation_id,omitempty"`
 }
+
+// --- File Manager Types ---
+
+type FileEntry struct {
+	Name    string `json:"name"`
+	Path    string `json:"path"`
+	IsDir   bool   `json:"is_dir"`
+	Size    int64  `json:"size"`
+	Mode    string `json:"mode"`
+	ModTime string `json:"mod_time"`
+}
+
+type FileListResponse struct {
+	Path    string      `json:"path"`
+	Entries []FileEntry `json:"entries"`
+}
+
+type FileReadResponse struct {
+	Path    string `json:"path"`
+	Content string `json:"content"`
+	Size    int64  `json:"size"`
+}
+
+type FileWriteRequest struct {
+	Domain  string `json:"domain"`
+	Path    string `json:"path"`
+	Content string `json:"content"`
+}
+
+type FileMkdirRequest struct {
+	Domain string `json:"domain"`
+	Path   string `json:"path"`
+}
+
+type FileDeleteRequest struct {
+	Domain string `json:"domain"`
+	Path   string `json:"path"`
+}
+
+type FileRenameRequest struct {
+	Domain  string `json:"domain"`
+	OldPath string `json:"old_path"`
+	NewPath string `json:"new_path"`
+}

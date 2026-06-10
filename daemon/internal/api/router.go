@@ -32,6 +32,16 @@ func NewRouter() http.Handler {
 	mux.HandleFunc("/api/operations", requireAuth(handleOperationsList))
 	mux.HandleFunc("/api/runtime/status", requireAuth(handleRuntimeStatus))
 
+	// File Manager endpoints
+	mux.HandleFunc("/api/files/list", requireAuth(handleFileList))
+	mux.HandleFunc("/api/files/read", requireAuth(handleFileRead))
+	mux.HandleFunc("/api/files/write", requireAuth(handleFileWrite))
+	mux.HandleFunc("/api/files/mkdir", requireAuth(handleFileMkdir))
+	mux.HandleFunc("/api/files/delete", requireAuth(handleFileDelete))
+	mux.HandleFunc("/api/files/rename", requireAuth(handleFileRename))
+	mux.HandleFunc("/api/files/upload", requireAuth(handleFileUpload))
+	mux.HandleFunc("/api/files/download", requireAuth(handleFileDownload))
+
 	mux.HandleFunc("/api/site/create", requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

@@ -8,15 +8,16 @@
                 <h1 class="mt-2 text-3xl font-black tracking-tight">Correos</h1>
                 <p class="mt-2 text-gray-400">Crea y gestiona cuentas de correo para tus dominios.</p>
             </div>
-            <a href="{{ route('client.emails.create') }}" class="rounded-xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-gray-200">
+            <a href="{{ route('client.emails.create') }}"
+                class="flex items-center gap-2 rounded-xl bg-gray-900 dark:bg-white px-5 py-3 text-sm font-bold text-white dark:text-black transition hover:bg-gray-700 dark:hover:bg-gray-200">
                 Crear correo
             </a>
         </div>
 
-        <div class="rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div class="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[900px] text-left">
-                    <thead class="text-xs uppercase tracking-widest text-gray-500">
+                    <thead class="text-xs uppercase tracking-widest text-gray-500 border-b border-white/10">
                         <tr>
                             <th class="px-6 py-4">Correo</th>
                             <th class="px-6 py-4">Dominio</th>
@@ -27,7 +28,7 @@
                     </thead>
                     <tbody class="divide-y divide-white/10">
                         @forelse($accounts as $account)
-                            <tr>
+                            <tr class="hover:bg-white/[0.02] transition">
                                 <td class="px-6 py-4 font-semibold text-white">{{ $account->email }}</td>
                                 <td class="px-6 py-4 text-gray-400">{{ $account->domain?->domain }}</td>
                                 <td class="px-6 py-4 text-gray-400">{{ number_format($account->quota_mb / 1024, 1) }} GB</td>
@@ -42,21 +43,40 @@
                                     <span class="rounded-full border px-3 py-1 text-xs font-bold {{ $statusClass }}">{{ strtoupper($account->status) }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <details class="inline-block text-left">
-                                        <summary class="cursor-pointer text-sm font-semibold text-white">Gestionar</summary>
-                                        <div class="mt-3 w-80 rounded-2xl border border-white/10 bg-black p-4 shadow-xl">
+                                    <div x-data="{ open: false }" class="inline-block text-left relative">
+                                        <button @click="open = !open" type="button"
+                                            class="text-sm font-semibold text-white/80 hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5">
+                                            Gestionar ▾
+                                        </button>
+                                        <div x-show="open" @click.outside="open = false"
+                                             x-transition:enter="transition ease-out duration-100"
+                                             x-transition:enter-start="opacity-0 scale-95"
+                                             x-transition:enter-end="opacity-100 scale-100"
+                                             class="absolute right-0 mt-2 w-80 rounded-2xl border border-white/10 bg-[#13141a] p-4 shadow-2xl z-10"
+                                             style="display:none;">
                                             <form action="{{ route('client.emails.reset-password', $account) }}" method="POST" class="space-y-3">
                                                 @csrf
-                                                <input type="password" name="password" required minlength="12" autocomplete="new-password" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" placeholder="Nueva clave">
-                                                <button class="w-full rounded-xl bg-white px-4 py-2 text-sm font-bold text-black">Resetear clave</button>
+                                                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Cambiar contraseña</p>
+                                                <input type="password" name="password" required minlength="12"
+                                                    autocomplete="new-password"
+                                                    class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-white/20"
+                                                    placeholder="Nueva contraseña (mín. 12 chars)">
+                                                <button class="w-full rounded-xl bg-white/10 hover:bg-white/15 px-4 py-2 text-sm font-semibold text-white transition">
+                                                    Actualizar contraseña
+                                                </button>
                                             </form>
-                                            <form action="{{ route('client.emails.destroy', $account) }}" method="POST" onsubmit="return confirm('¿Eliminar correo?')" class="mt-3">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="w-full rounded-xl border border-red-500/20 px-4 py-2 text-sm font-bold text-red-300">Eliminar</button>
-                                            </form>
+                                            <div class="mt-3 pt-3 border-t border-white/10">
+                                                <x-confirm-modal
+                                                    action="{{ route('client.emails.destroy', $account) }}"
+                                                    title="Eliminar cuenta de correo"
+                                                    message="Se eliminará '{{ $account->email }}' permanentemente."
+                                                    btnText="Eliminar correo"
+                                                    triggerClass="w-full text-left rounded-xl border border-red-500/20 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/10 transition block"
+                                                    triggerText="Eliminar cuenta"
+                                                />
+                                            </div>
                                         </div>
-                                    </details>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

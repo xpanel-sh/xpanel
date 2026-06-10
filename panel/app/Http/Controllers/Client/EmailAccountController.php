@@ -19,6 +19,7 @@ class EmailAccountController extends Controller
         $accounts = EmailAccount::query()
             ->with('domain')
             ->where('tenant_id', $tenant->id)
+            ->when($request->search, fn ($q, $s) => $q->where('email', 'like', "%{$s}%"))
             ->latest()
             ->paginate(15);
 

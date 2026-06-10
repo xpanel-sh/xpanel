@@ -15,15 +15,9 @@ class ResolveTenant
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = \Illuminate\Support\Facades\Auth::guard('web')->user();
 
         if (!$user) {
-            return $next($request);
-        }
-
-        // Admin users are still authenticated by the `auth` middleware.
-        // We only skip tenant binding for admins because they manage all tenants globally.
-        if ($user->role === 'admin') {
             return $next($request);
         }
 
