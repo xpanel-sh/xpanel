@@ -11,6 +11,8 @@ CHECK_ONLY="${XPANEL_UPDATE_CHECK_ONLY:-0}"
 MODE="${2:-apply}" # apply|rollback
 ROLLBACK_FILE="${3:-}"
 SNAPSHOT_DIR="$BASE/backups/updates"
+# After git pull this script re-execs itself so the new version runs the build phase.
+XPANEL_PULLED="${XPANEL_PULLED:-0}"
 
 source "$DIR/lib/i18n.sh"
 load_xpanel_lang "$DIR/lang" "$XPANEL_LANG"
@@ -104,89 +106,99 @@ do_rollback() {
   msg_rollback_complete "$ROLLBACK_FILE"
 }
 
-msg_update_start
+[ "$XPANEL_PULLED" = "0" ] && msg_update_start
 
 if [ "$MODE" = "rollback" ]; then
   do_rollback
   exit 0
 fi
 
-LOCAL_VERSION="0.0.0"
-[ -f "$BASE/VERSION" ] && LOCAL_VERSION="$(tr -d '[:space:]' < "$BASE/VERSION")"
+# ── Phase 1: fetch new code (only when not already done by a prior exec) ──────
+if [ "$XPANEL_PULLED" = "0" ]; then
+  LOCAL_VERSION="0.0.0"
+  [ -f "$BASE/VERSION" ] && LOCAL_VERSION="$(tr -d '[:space:]' < "$BASE/VERSION")"
 
-REMOTE_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/$REPO/$BRANCH/VERSION" 2>/dev/null || echo "")"
-REMOTE_VERSION="$(echo "$REMOTE_VERSION" | tr -d '[:space:]')"
+  REMOTE_VERSION="$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" \
+    "https://raw.githubusercontent.com/$REPO/$BRANCH/VERSION?_=$(date +%s)" 2>/dev/null || echo "")"
+  REMOTE_VERSION="$(echo "$REMOTE_VERSION" | tr -d '[:space:]')"
 
-if [ -z "$REMOTE_VERSION" ]; then
-  msg_update_remote_fetch_error "$REPO" "$BRANCH"
-  exit 1
-fi
-
-msg_update_local_version "$LOCAL_VERSION"
-msg_update_remote_version "$REMOTE_VERSION"
-
-if version_ge "$LOCAL_VERSION" "$REMOTE_VERSION"; then
-  msg_update_uptodate
-  exit 0
-fi
-
-if [ "$CHECK_ONLY" = "1" ] || [ "$MODE" = "dry-run" ]; then
-  msg_update_available "$LOCAL_VERSION" "$REMOTE_VERSION"
-  exit 10
-fi
-
-snapshot_file="$(snapshot_before_update)"
-msg_snapshot_created "$snapshot_file"
-
-if [ -d "$BASE/.git" ]; then
-  git -C "$BASE" fetch --all --tags
-  if [ -n "$(git -C "$BASE" status --porcelain)" ]; then
-    STASH_NAME="xpanel-auto-stash-$(date +"%Y%m%d-%H%M%S")"
-    git -C "$BASE" stash push -u -m "$STASH_NAME" >/dev/null
-    echo "Local changes were stashed before update: $STASH_NAME"
-  fi
-  git -C "$BASE" checkout "$BRANCH"
-  git -C "$BASE" pull --ff-only origin "$BRANCH"
-
-  # Restore execute bits on all shell scripts (git may strip +x on pull)
-  find "$BASE/installer" -name "*.sh" -exec chmod +x {} \;
-  chmod +x "$BASE/install.sh" 2>/dev/null || true
-  # Re-ensure the CLI symlink target is executable
-  [ -L /usr/local/bin/xpanel ] || ln -sf "$BASE/installer/cli.sh" /usr/local/bin/xpanel
-  chmod +x /usr/local/bin/xpanel 2>/dev/null || true
-else
-  rm -rf "$TMP"
-  mkdir -p "$TMP"
-  curl -fsSL "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" -o "$TMP/repo.tgz"
-  tar -xzf "$TMP/repo.tgz" -C "$TMP"
-
-  SRC="$TMP/xpanel-$BRANCH"
-  [ -d "$SRC" ] || SRC="$(find "$TMP" -maxdepth 1 -type d -name 'xpanel-*' | head -n1)"
-  if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
-    msg_update_payload_error
+  if [ -z "$REMOTE_VERSION" ]; then
+    msg_update_remote_fetch_error "$REPO" "$BRANCH"
     exit 1
   fi
 
-  mkdir -p "$BASE"/{installer,panel,daemon-src,traefik,dns}
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a --delete "$SRC/installer/" "$BASE/installer/"
-    rsync -a --delete "$SRC/panel/" "$BASE/panel/"
-    rsync -a --delete "$SRC/daemon/" "$BASE/daemon-src/"
-    rsync -a --delete "$SRC/traefik/" "$BASE/traefik/"
-    rsync -a --delete "$SRC/dns/" "$BASE/dns/" 2>/dev/null || true
-  else
-    rm -rf "$BASE/installer" "$BASE/panel" "$BASE/daemon-src" "$BASE/traefik" "$BASE/dns"
-    mkdir -p "$BASE"/{installer,panel,daemon-src,traefik,dns}
-    cp -a "$SRC/installer/." "$BASE/installer/"
-    cp -a "$SRC/panel/." "$BASE/panel/"
-    cp -a "$SRC/daemon/." "$BASE/daemon-src/"
-    cp -a "$SRC/traefik/." "$BASE/traefik/"
-    cp -a "$SRC/dns/." "$BASE/dns/" 2>/dev/null || true
+  msg_update_local_version "$LOCAL_VERSION"
+  msg_update_remote_version "$REMOTE_VERSION"
+
+  if version_ge "$LOCAL_VERSION" "$REMOTE_VERSION"; then
+    msg_update_uptodate
+    exit 0
   fi
-  cp -f "$SRC/docker-compose.yml" "$BASE/docker-compose.yml"
-  cp -f "$SRC/VERSION" "$BASE/VERSION"
+
+  if [ "$CHECK_ONLY" = "1" ] || [ "$MODE" = "dry-run" ]; then
+    msg_update_available "$LOCAL_VERSION" "$REMOTE_VERSION"
+    exit 10
+  fi
+
+  snapshot_file="$(snapshot_before_update)"
+  msg_snapshot_created "$snapshot_file"
+
+  if [ -d "$BASE/.git" ]; then
+    git -C "$BASE" fetch --all --tags
+    if [ -n "$(git -C "$BASE" status --porcelain)" ]; then
+      STASH_NAME="xpanel-auto-stash-$(date +"%Y%m%d-%H%M%S")"
+      git -C "$BASE" stash push -u -m "$STASH_NAME" >/dev/null
+      echo "Local changes were stashed before update: $STASH_NAME"
+    fi
+    git -C "$BASE" checkout "$BRANCH"
+    git -C "$BASE" pull --ff-only origin "$BRANCH"
+
+    # Restore execute bits on all shell scripts (git may strip +x on pull)
+    find "$BASE/installer" -name "*.sh" -exec chmod +x {} \;
+    chmod +x "$BASE/install.sh" 2>/dev/null || true
+    # Re-ensure the CLI symlink target is executable
+    [ -L /usr/local/bin/xpanel ] || ln -sf "$BASE/installer/cli.sh" /usr/local/bin/xpanel
+    chmod +x /usr/local/bin/xpanel 2>/dev/null || true
+  else
+    rm -rf "$TMP"
+    mkdir -p "$TMP"
+    curl -fsSL "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" -o "$TMP/repo.tgz"
+    tar -xzf "$TMP/repo.tgz" -C "$TMP"
+
+    SRC="$TMP/xpanel-$BRANCH"
+    [ -d "$SRC" ] || SRC="$(find "$TMP" -maxdepth 1 -type d -name 'xpanel-*' | head -n1)"
+    if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
+      msg_update_payload_error
+      exit 1
+    fi
+
+    mkdir -p "$BASE"/{installer,panel,daemon-src,traefik,dns}
+    if command -v rsync >/dev/null 2>&1; then
+      rsync -a --delete "$SRC/installer/" "$BASE/installer/"
+      rsync -a --delete "$SRC/panel/" "$BASE/panel/"
+      rsync -a --delete "$SRC/daemon/" "$BASE/daemon-src/"
+      rsync -a --delete "$SRC/traefik/" "$BASE/traefik/"
+      rsync -a --delete "$SRC/dns/" "$BASE/dns/" 2>/dev/null || true
+    else
+      rm -rf "$BASE/installer" "$BASE/panel" "$BASE/daemon-src" "$BASE/traefik" "$BASE/dns"
+      mkdir -p "$BASE"/{installer,panel,daemon-src,traefik,dns}
+      cp -a "$SRC/installer/." "$BASE/installer/"
+      cp -a "$SRC/panel/." "$BASE/panel/"
+      cp -a "$SRC/daemon/." "$BASE/daemon-src/"
+      cp -a "$SRC/traefik/." "$BASE/traefik/"
+      cp -a "$SRC/dns/." "$BASE/dns/" 2>/dev/null || true
+    fi
+    cp -f "$SRC/docker-compose.yml" "$BASE/docker-compose.yml"
+    cp -f "$SRC/VERSION" "$BASE/VERSION"
+  fi
+
+  # Re-exec this script from the freshly-pulled version so the build phase
+  # always runs the latest code regardless of bash's read-ahead buffering.
+  export XPANEL_PULLED=1
+  exec bash "$BASE/installer/update.sh" "$XPANEL_LANG" "$MODE"
 fi
 
+# ── Phase 2: build & deploy (runs from the newly-pulled update.sh) ─────────
 # Detect daemon source: git installs use BASE/daemon, tar installs use BASE/daemon-src
 DAEMON_SRC_DIR=""
 if [ -f "$BASE/daemon/go.mod" ]; then
@@ -198,7 +210,7 @@ fi
 if command -v go >/dev/null 2>&1 && [ -n "$DAEMON_SRC_DIR" ]; then
   (
     cd "$DAEMON_SRC_DIR"
-    go mod download || true
+    go mod download all || true
     if go build -o xpanel-daemon-new .; then
       mkdir -p "$BASE/daemon"
       mv -f xpanel-daemon-new "$BASE/daemon/xpanel-daemon"
@@ -221,7 +233,5 @@ cd "$BASE"
 docker compose up -d --build
 systemctl daemon-reload || true
 systemctl restart xpanel-daemon || true
-
-echo "$REMOTE_VERSION" > "$BASE/VERSION"
 
 msg_done

@@ -12,6 +12,15 @@ Future releases will include:
 
 ---
 
+## [2.2.1] - Update Script Self-Re-Exec Fix
+**Release date:** 2026-06-10
+
+### Fixed
+- Fixed update script running stale bash-buffered code after `git pull` by adding a self-re-exec mechanism: after pulling new code the script re-executes itself (`exec bash update.sh`) with `XPANEL_PULLED=1` so the build and deploy phase always runs from the freshly-downloaded version.
+- Fixed `go mod download` warning in Go 1.21+ by changing `go mod download` to `go mod download all` inside the daemon build subshell.
+
+---
+
 ## [2.2.0] - Metronic UI, CLI Permissions Fix and Update Hardening
 **Release date:** 2026-06-10
 
