@@ -12,6 +12,27 @@ Future releases will include:
 
 ---
 
+## [2.3.0] - Separate Admin/Client Layouts and Client Route Prefix
+**Release date:** 2026-06-10
+
+### Added
+- Added `layouts/admin.blade.php`: dedicated admin layout with admin sidebar and navbar, no conditional logic, admin guard logout.
+- Added `layouts/client.blade.php`: dedicated client layout with client sidebar, domain selector dropdown in header, Mi Cuenta in user menu, client guard logout.
+- Added `layouts/home.blade.php`: minimal public layout for the home page (nav bar + footer, no auth required).
+- Added `HomeController` and `home/index.blade.php` / `home/disabled.blade.php` views. Root `/` shows home or a blank branded page depending on `XPANEL_HOME_ENABLED` env flag (default `false`).
+- Added `home_enabled` key to `config/xpanel.php`.
+
+### Changed
+- Changed all client routes from root prefix to `/client/` prefix: login is now `/client/login`, dashboard `/client/dashboard`, etc. Route names are unchanged (`client.login`, `client.dashboard`, …).
+- Changed default `XPANEL_CLIENT_LOGIN_PATH` from `login` to `client/login`.
+- Changed all 15 admin views to extend `layouts.admin` and all 12 client views to extend `layouts.client`; `layouts/app.blade.php` kept as legacy fallback.
+- Changed root `/` from client login redirect to `HomeController@index`.
+
+### Fixed
+- Fixed hardcoded BASE URL in client file manager (`/files/` → `/client/files/`) after route prefix change.
+
+---
+
 ## [2.2.1] - Update Script Self-Re-Exec Fix
 **Release date:** 2026-06-10
 
