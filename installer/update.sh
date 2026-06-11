@@ -147,6 +147,13 @@ if [ -d "$BASE/.git" ]; then
   fi
   git -C "$BASE" checkout "$BRANCH"
   git -C "$BASE" pull --ff-only origin "$BRANCH"
+
+  # Restore execute bits on all shell scripts (git may strip +x on pull)
+  find "$BASE/installer" -name "*.sh" -exec chmod +x {} \;
+  chmod +x "$BASE/install.sh" 2>/dev/null || true
+  # Re-ensure the CLI symlink target is executable
+  [ -L /usr/local/bin/xpanel ] || ln -sf "$BASE/installer/cli.sh" /usr/local/bin/xpanel
+  chmod +x /usr/local/bin/xpanel 2>/dev/null || true
 else
   rm -rf "$TMP"
   mkdir -p "$TMP"
@@ -180,19 +187,30 @@ else
   cp -f "$SRC/VERSION" "$BASE/VERSION"
 fi
 
-if command -v go >/dev/null 2>&1 && [ -d "$BASE/daemon-src" ]; then
+# Detect daemon source: git installs use BASE/daemon, tar installs use BASE/daemon-src
+DAEMON_SRC_DIR=""
+if [ -f "$BASE/daemon/go.mod" ]; then
+  DAEMON_SRC_DIR="$BASE/daemon"
+elif [ -f "$BASE/daemon-src/go.mod" ]; then
+  DAEMON_SRC_DIR="$BASE/daemon-src"
+fi
+
+if command -v go >/dev/null 2>&1 && [ -n "$DAEMON_SRC_DIR" ]; then
   (
-    cd "$BASE/daemon-src"
+    cd "$DAEMON_SRC_DIR"
     go mod download || true
-    go build -o xpanel-daemon
-    mkdir -p "$BASE/daemon"
-    SRC_BIN="$(pwd)/xpanel-daemon"
-    DST_BIN="$BASE/daemon/xpanel-daemon"
-    if [ "$SRC_BIN" != "$DST_BIN" ]; then
-      cp -f xpanel-daemon "$DST_BIN"
+    if go build -o xpanel-daemon-new .; then
+      mkdir -p "$BASE/daemon"
+      mv -f xpanel-daemon-new "$BASE/daemon/xpanel-daemon"
+      chmod +x "$BASE/daemon/xpanel-daemon"
+      echo "Daemon compilado correctamente."
+    else
+      rm -f xpanel-daemon-new
+      echo "[WARN] No se pudo compilar el daemon; se conserva el binario anterior."
     fi
-    chmod +x "$BASE/daemon/xpanel-daemon"
-  )
+  ) || true
+elif command -v go >/dev/null 2>&1; then
+  echo "[WARN] No se encontró go.mod del daemon; se omite compilación."
 fi
 
 bash "$BASE/installer/migrate.sh" "$XPANEL_LANG" || true

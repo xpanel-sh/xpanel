@@ -21,3 +21,5 @@ panel/storage/logs/*.log
 panel/storage/framework/cache/data/*
 panel/storage/framework/sessions/*
 panel/storage/framework/views/*.php
+
+plantilla

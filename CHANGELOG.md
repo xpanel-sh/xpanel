@@ -12,6 +12,33 @@ Future releases will include:
 
 ---
 
+## [2.2.0] - Metronic UI, CLI Permissions Fix and Update Hardening
+**Release date:** 2026-06-10
+
+### Added
+- Added Metronic v9.4.14 (Tailwind CSS) as the new panel UI framework, replacing the previous custom Tailwind layout.
+- Added icon-only sidebar (58 px) with hover tooltips using KeenIcons, separate icon sets for admin and client panels.
+- Added horizontal tab navbar below the header that reflects all main sections for admin and client; automatically hidden on file manager pages.
+- Added dark/light mode toggle using Metronic's `kt-theme` system (`localStorage` key `kt-theme`), replacing the previous `xpanel-theme` key.
+- Added domain selector dropdown in the header for client panel: lists all tenant sites and navigates directly to the file manager for the selected domain.
+- Added `@yield('navbar_actions')` slot so views can inject action buttons into the navbar right side.
+- Added automatic `chmod +x` restoration for all `installer/*.sh` scripts after `git pull` in `update.sh`.
+- Added automatic re-creation of the `/usr/local/bin/xpanel` symlink if it is missing after an update.
+
+### Changed
+- Changed `layouts/app.blade.php` to use Metronic card-based layout: rounded content card, sidebar, header and navbar from Metronic's `demo3` demo.
+- Changed file manager content wrapper to `full-height, no-container` mode so Monaco editor fills the available viewport without interference from the navbar card layout.
+- Changed file manager height calculation from `calc(100vh - 10rem)` to `calc(100dvh - var(--header-height) - 2.5rem)` to match the new fixed header.
+- Changed admin and client panel to load `assets/css/styles.css` and `assets/vendors/keenicons/styles.bundle.css` from `public/assets/` (Metronic bundle) instead of CDN Tailwind.
+- Changed user info display in sidebar footer to user dropdown in header topbar (name, email, logout, Mi Cuenta for clients).
+
+### Fixed
+- Fixed `xpanel` CLI becoming non-executable after `git pull` updates `installer/cli.sh` without preserving the executable bit.
+- Fixed update aborting with `set -euo pipefail` when Go daemon build fails; build failure now logs a warning and the update continues to docker compose and systemd restart steps.
+- Fixed daemon build path detection: git installs now correctly compile from `$BASE/daemon/` (where `go.mod` exists) instead of the stale `$BASE/daemon-src/` directory.
+
+---
+
 ## [2.1.0] - File Manager, UI Overhaul and Dual-Session Auth
 **Release date:** 2026-06-09
 

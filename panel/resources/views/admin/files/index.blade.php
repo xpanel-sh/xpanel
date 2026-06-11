@@ -25,7 +25,7 @@
 
     {{-- File Manager Layout --}}
     <div class="flex rounded-2xl border border-white/10 overflow-hidden"
-         style="height: calc(100vh - 10rem);">
+         style="height: calc(100dvh - var(--header-height, 58px) - 2.5rem);">
 
         {{-- Sidebar: Directory Tree --}}
         <aside id="fm-tree" class="w-52 shrink-0 border-r border-white/10 bg-black/30 overflow-y-auto flex flex-col">
