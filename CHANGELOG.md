@@ -12,6 +12,22 @@ Future releases will include:
 
 ---
 
+## [2.4.0] - File Manager Fix and Multi-Tenant Domain Access (Port 2083)
+**Release date:** 2026-06-10
+
+### Added
+- Added Traefik `clientpanel` entrypoint on port 2083 so clients can access their panel at `theirdomain.com:2083/client/login` — similar to how cPanel exposes `:2083`.
+- Added `TenantFromHost` middleware: on every web request, if the hostname matches a registered site domain (and is not the main XPanel domain), the associated active tenant is stored on the request as `tenant_host`.
+- Added fallback in `ResolveTenant`: if the authenticated user has no tenant record, the tenant detected by `TenantFromHost` is used instead.
+
+### Fixed
+- Fixed `site root not found for domain` error in the file manager daemon: `SiteRoot()` now calls `os.MkdirAll` instead of `os.Stat`, auto-creating the site directory if it does not yet exist (e.g. sites created directly in the database or imported from another system).
+
+### Changed
+- Changed `docker-compose.yml` to expose port `2083` on the Traefik container and add a `clientpanel` router label to the panel service.
+
+---
+
 ## [2.3.0] - Separate Admin/Client Layouts and Client Route Prefix
 **Release date:** 2026-06-10
 

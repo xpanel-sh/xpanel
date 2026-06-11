@@ -21,7 +21,9 @@ class ResolveTenant
             return $next($request);
         }
 
-        $tenant = $user->tenant;
+        // Prefer tenant from the user record; fall back to the one detected
+        // from the request hostname (set by TenantFromHost middleware).
+        $tenant = $user->tenant ?? $request->attributes->get('tenant_host');
         if (!$tenant) {
             abort(403, 'No tenant assigned to this account.');
         }

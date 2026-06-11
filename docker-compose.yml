@@ -29,6 +29,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "2083:2083"
     volumes:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml
       - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml
@@ -61,11 +62,17 @@ services:
       - "host.docker.internal:host-gateway"
     labels:
       - "traefik.enable=true"
+      # Main panel router — HTTPS only, xpanel domain
       - "traefik.http.routers.panel.rule=Host(`${XPANEL_DOMAIN:?XPANEL_DOMAIN is required}`)"
       - "traefik.http.routers.panel.entrypoints=websecure"
       - "traefik.http.routers.panel.tls.certresolver=myresolver"
       - "traefik.http.routers.panel.middlewares=secHeaders@file"
       - "traefik.http.services.panel.loadbalancer.server.port=80"
+      # Client panel router — port 2083, any domain (like cPanel :2083).
+      # Clients access their panel at theirdomain.com:2083/client/login
+      - "traefik.http.routers.clientpanel.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.clientpanel.entrypoints=clientpanel"
+      - "traefik.http.routers.clientpanel.service=panel"
     networks:
       - xpanel-net
     depends_on:

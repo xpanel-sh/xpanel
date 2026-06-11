@@ -25,8 +25,9 @@ func SiteRoot(domain string) (string, error) {
 		return "", fmt.Errorf("invalid domain: %q", domain)
 	}
 	root := filepath.Join(xenv.BasePath(), "runtime", "sites", domain)
-	if _, err := os.Stat(root); err != nil {
-		return "", fmt.Errorf("site root not found for domain %q", domain)
+	// Auto-create the directory if it doesn't exist (e.g. freshly-imported site).
+	if err := os.MkdirAll(root, 0755); err != nil {
+		return "", fmt.Errorf("cannot initialize site root for domain %q: %w", domain, err)
 	}
 	return root, nil
 }

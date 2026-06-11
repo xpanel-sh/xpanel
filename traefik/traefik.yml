@@ -13,6 +13,10 @@ entryPoints:
           scheme: https
   websecure:
     address: ":443"
+  # Client panel access port (like cPanel's :2083).
+  # Any client domain pointing to this server can reach the panel via :2083.
+  clientpanel:
+    address: ":2083"
 
 providers:
   docker:
