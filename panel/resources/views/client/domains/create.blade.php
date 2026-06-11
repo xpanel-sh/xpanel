@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
 @section('content')
     <section class="mx-auto max-w-3xl">

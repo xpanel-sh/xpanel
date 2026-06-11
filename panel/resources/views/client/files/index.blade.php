@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
 @section('content')
 <div class="space-y-4">
@@ -141,7 +141,7 @@
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
 <script>
 const CSRF   = document.querySelector('meta[name="csrf-token"]').content;
-const BASE   = '{{ url("/files/" . $site->id . "/api") }}';
+const BASE   = '{{ url("/client/files/" . $site->id . "/api") }}';
 const DOMAIN = '{{ $site->domain }}';
 
 // ==================== STATE ====================
