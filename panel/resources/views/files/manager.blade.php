@@ -58,6 +58,14 @@
         .xpanel-file-shell .ikode_tabs_action_btn.is-active {
             background: rgba(59, 130, 246, .18);
         }
+        .xpanel-file-shell .xpanel-editor-group-tabs {
+            flex: 0 0 35px;
+            min-width: 0;
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid hsl(var(--border));
+            background: hsl(var(--background));
+        }
         .xpanel-file-shell .xpanel-editor-groups {
             width: 100%;
             height: 100%;
@@ -74,32 +82,6 @@
             flex-direction: column;
             overflow: hidden;
             background: hsl(var(--background));
-        }
-        .xpanel-file-shell .xpanel-editor-group-tabs {
-            flex: 0 0 35px;
-            min-width: 0;
-            display: flex;
-            align-items: stretch;
-            border-bottom: 1px solid hsl(var(--border));
-            background: hsl(var(--muted) / 0.22);
-        }
-        .xpanel-file-shell .xpanel-editor-group-tab {
-            max-width: min(320px, 70%);
-            min-width: 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 10px;
-            border-right: 1px solid hsl(var(--border));
-            color: hsl(var(--foreground));
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .xpanel-file-shell .xpanel-editor-group-tab span {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
         .xpanel-file-shell .xpanel-editor-group-close {
             width: 22px;
@@ -839,29 +821,22 @@
             </aside>
 
             <section class="ikode_editor_center bg-background" id="xpanel_center_pane">
-                <div class="ikode_tabs border-b border-border">
-                    <div class="flex min-w-0" id="xpanel_file_tabs" style="width: 100%; overflow-x: auto;"></div>
-                    <div class="ikode_tabs_actions">
-                        <button class="ikode_tabs_action_btn ikode_hidden" type="button" data-fm-action="duplicate-tab" title="Duplicar pestaña">
-                            <i class="ki-filled ki-copy"></i>
-                        </button>
-                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="save" title="Guardar">
-                            <i class="ki-filled ki-check"></i>
-                        </button>
-                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="download" title="Descargar">
-                            <i class="ki-filled ki-exit-down"></i>
-                        </button>
-                    </div>
-                </div>
                 <div class="ikode_editor_split">
                     <div class="ikode_editor_codepane border-b border-border" id="xpanel_code_pane">
                         <div id="xpanel_editor_groups" class="xpanel-editor-groups ikode_hidden">
                             <section id="xpanel_editor_group_main" class="xpanel-editor-group">
-                                <div class="xpanel-editor-group-tabs">
-                                    <div class="xpanel-editor-group-tab">
-                                        <i class="ki-filled ki-document" id="xpanel_editor_group_icon"></i>
-                                        <span id="xpanel_editor_group_title">-</span>
-                                        <strong id="xpanel_editor_group_dirty" class="text-warning"></strong>
+                                <div class="ikode_tabs xpanel-editor-group-tabs">
+                                    <div class="flex min-w-0" id="xpanel_file_tabs" style="width: 100%; overflow-x: auto;"></div>
+                                    <div class="ikode_tabs_actions">
+                                        <button class="ikode_tabs_action_btn ikode_hidden" type="button" data-fm-action="duplicate-tab" title="Duplicar pestaña">
+                                            <i class="ki-filled ki-copy"></i>
+                                        </button>
+                                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="save" title="Guardar">
+                                            <i class="ki-filled ki-check"></i>
+                                        </button>
+                                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="download" title="Descargar">
+                                            <i class="ki-filled ki-exit-down"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="xpanel-editor-group-body">
@@ -869,11 +844,15 @@
                                 </div>
                             </section>
                             <section id="xpanel_editor_group_clone" class="xpanel-editor-group ikode_hidden">
-                                <div class="xpanel-editor-group-tabs">
-                                    <div class="xpanel-editor-group-tab">
-                                        <i class="ki-filled ki-document" id="xpanel_editor_clone_icon"></i>
-                                        <span id="xpanel_editor_clone_title">-</span>
-                                        <strong id="xpanel_editor_clone_dirty" class="text-warning"></strong>
+                                <div class="ikode_tabs xpanel-editor-group-tabs">
+                                    <div class="flex min-w-0" id="xpanel_file_tabs_clone" style="width: 100%; overflow-x: auto;"></div>
+                                    <div class="ikode_tabs_actions">
+                                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="save" title="Guardar">
+                                            <i class="ki-filled ki-check"></i>
+                                        </button>
+                                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="download" title="Descargar">
+                                            <i class="ki-filled ki-exit-down"></i>
+                                        </button>
                                         <button class="xpanel-editor-group-close" type="button" data-duplicate-close title="Cerrar duplicado">x</button>
                                     </div>
                                 </div>
@@ -1477,23 +1456,6 @@
                 const agentActive = $('#xpanel_agent_active');
                 if (agentActive) agentActive.textContent = activeTab()?.name || state.selected?.name || '-';
             };
-            const syncEditorGroupTitles = () => {
-                const tab = activeTab();
-                const name = tab?.name || '-';
-                const iconClass = tab ? icon({ name: tab.name, is_dir: false }) : 'ki-document';
-                ['#xpanel_editor_group_title', '#xpanel_editor_clone_title'].forEach((selector) => {
-                    const target = $(selector);
-                    if (target) target.textContent = name;
-                });
-                ['#xpanel_editor_group_icon', '#xpanel_editor_clone_icon'].forEach((selector) => {
-                    const target = $(selector);
-                    if (target) target.className = `ki-filled ${iconClass}`;
-                });
-                ['#xpanel_editor_group_dirty', '#xpanel_editor_clone_dirty'].forEach((selector) => {
-                    const target = $(selector);
-                    if (target) target.textContent = tab?.isDirty ? 'M' : '';
-                });
-            };
             const closeDuplicatePane = () => {
                 destroyEditorSplit();
                 $('#xpanel_file_shell').classList.remove('xpanel-editor-duplicated');
@@ -1508,10 +1470,10 @@
                     button.classList.toggle('ikode_hidden', !tab || tab.kind !== 'code');
                 });
             };
-            const renderTabs = () => {
-                const tabs = $('#xpanel_file_tabs');
+            const renderTabsInto = (tabs, activePath = state.activeTab) => {
+                if (!tabs) return;
                 tabs.innerHTML = state.tabs.map((tab) => `
-                    <button class="ikode_tab ${tab.path === state.activeTab ? 'ikode_tab_active' : ''}" type="button" data-tab-path="${escapeHtml(tab.path)}">
+                    <button class="ikode_tab ${tab.path === activePath ? 'ikode_tab_active' : ''}" type="button" data-tab-path="${escapeHtml(tab.path)}">
                         <i class="ki-filled ${icon({ name: tab.name, is_dir: false })}"></i>
                         <span>${escapeHtml(tab.name)}</span>
                         ${tab.isDirty ? '<span class="text-warning">*</span>' : ''}
@@ -1530,8 +1492,11 @@
                         closeTab(closeButton.dataset.tabClose);
                     });
                 });
+            };
+            const renderTabs = () => {
+                renderTabsInto($('#xpanel_file_tabs'));
+                renderTabsInto($('#xpanel_file_tabs_clone'));
                 syncEditorActions();
-                syncEditorGroupTitles();
             };
             const showEmptyEditor = () => {
                 state.openPath = null;
@@ -1589,7 +1554,7 @@
                 state.isDirty = !!tab.isDirty;
                 $('#xpanel_empty_state').classList.add('ikode_hidden');
                 $('#xpanel_outline_file').textContent = tab.name;
-                syncEditorGroupTitles();
+                renderTabs();
                 if (tab.kind === 'code') {
                     $('#xpanel_file_preview').classList.add('ikode_hidden');
                     $('#xpanel_editor_groups').classList.remove('ikode_hidden');
@@ -2269,7 +2234,7 @@
                         });
                     }
                     state.cloneEditor.setModel(tab.model);
-                    syncEditorGroupTitles();
+                    renderTabs();
                     buildEditorSplit();
                     log(`Pestana duplicada: ${tab.path}`);
                 } else {
