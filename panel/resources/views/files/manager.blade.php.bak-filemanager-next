@@ -58,17 +58,7 @@
         .xpanel-file-shell .ikode_tabs_action_btn.is-active {
             background: rgba(59, 130, 246, .18);
         }
-        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_code_pane {
-            display: flex;
-            align-items: stretch;
-        }
-        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_monaco_editor,
-        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_monaco_clone {
-            flex: 1 1 0;
-            width: auto;
-            min-width: 0;
-            height: 100%;
-        }
+        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_code_pane { display: flex; }
         .xpanel-file-shell.xpanel-editor-duplicated #xpanel_monaco_editor {
             border-right: 1px solid hsl(var(--border));
         }
@@ -115,11 +105,6 @@
         .xpanel-file-row.drop-target {
             outline: 1px dashed hsl(var(--primary));
             background: hsl(var(--primary) / 0.08);
-        }
-        .xpanel-file-row.xpanel-file-row-muted {
-            color: var(--muted-foreground);
-            cursor: default;
-            opacity: .75;
         }
         .xpanel-file-row .xpanel-file-toggle {
             width: 14px;
@@ -220,58 +205,36 @@
         .xpanel-file-shell .ikode_tab_close {
             display: inline-flex;
         }
-        .xpanel-file-progress-wrap {
-            display: grid;
-            gap: 3px;
-            padding: 5px 10px;
-            border-bottom: 1px solid hsl(var(--border));
-        }
-        .xpanel-file-progress-wrap[hidden] {
-            display: none;
-        }
-        .xpanel-file-progress-wrap progress {
-            width: 100%;
-            height: 6px;
-            accent-color: hsl(var(--primary));
-        }
-        .xpanel-file-progress-label {
-            font-size: 10px;
-            color: var(--muted-foreground);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .xpanel-terminal-workspace {
-            height: 100%;
-            min-height: 0;
-            display: flex;
-            background: hsl(var(--background));
-        }
-        .xpanel-terminal-sidebar {
-            flex: 0 0 30%;
-            min-width: 150px;
-            max-width: 360px;
-            border-right: 1px solid hsl(var(--border));
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .xpanel-terminal-sidebar-head {
-            height: 34px;
+        .xpanel-terminal-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            padding: 0 8px 0 10px;
+            gap: 10px;
+            padding: 6px 10px;
             border-bottom: 1px solid hsl(var(--border));
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--muted-foreground);
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .xpanel-terminal-selector {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+        .xpanel-terminal-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 6px;
+            background: hsl(var(--muted));
+            color: hsl(var(--foreground));
         }
         .xpanel-terminal-actions {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
         }
         .xpanel-terminal-action {
             width: 24px;
@@ -281,294 +244,8 @@
             justify-content: center;
             border: 1px solid hsl(var(--border));
             border-radius: 6px;
-            color: hsl(var(--foreground));
         }
         .xpanel-terminal-action:hover { background: hsl(var(--muted)); }
-        .xpanel-terminal-list {
-            flex: 1;
-            min-height: 0;
-            overflow: auto;
-            padding: 6px;
-        }
-        .xpanel-terminal-item {
-            position: relative;
-            width: 100%;
-            display: grid;
-            grid-template-columns: 8px 18px 1fr auto;
-            align-items: center;
-            gap: 7px;
-            min-height: 30px;
-            padding: 5px 7px;
-            border: 1px solid transparent;
-            border-radius: 6px;
-            color: hsl(var(--foreground));
-            text-align: left;
-            font-size: 12px;
-        }
-        .xpanel-terminal-item:hover,
-        .xpanel-terminal-item.active { background: hsl(var(--muted)); }
-        .xpanel-terminal-item.active {
-            border-color: hsl(var(--primary) / 0.55);
-            box-shadow: inset 3px 0 0 hsl(var(--primary));
-        }
-        .xpanel-terminal-item.active .xpanel-terminal-active-dot {
-            opacity: 1;
-        }
-        .xpanel-terminal-active-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 999px;
-            background: hsl(var(--primary));
-            opacity: 0;
-        }
-        .xpanel-terminal-badge {
-            color: var(--muted-foreground);
-            font-size: 10px;
-        }
-        .xpanel-terminal-main {
-            flex: 1;
-            min-width: 0;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        .xpanel-terminal-output {
-            flex: 1;
-            min-height: 0;
-            overflow: auto;
-            padding: 10px;
-            font-family: Consolas, 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.55;
-            white-space: pre-wrap;
-        }
-        .xpanel-terminal-inputbar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-height: 36px;
-            padding: 6px 10px;
-            border-top: 1px solid hsl(var(--border));
-            font-family: Consolas, 'Courier New', monospace;
-            font-size: 12px;
-        }
-        .xpanel-terminal-input {
-            flex: 1;
-            min-width: 0;
-            background: transparent;
-            outline: none;
-            color: hsl(var(--foreground));
-        }
-        .ikode_right_view {
-            min-height: 0;
-            overflow: auto;
-        }
-        .xpanel-setting-control {
-            display: grid;
-            gap: 6px;
-            font-size: 12px;
-        }
-        .xpanel-setting-control span {
-            color: var(--muted-foreground);
-        }
-        .xpanel-setting-control select,
-        .xpanel-setting-control input[type="number"] {
-            width: 100%;
-            height: 32px;
-            border: 1px solid hsl(var(--border));
-            border-radius: 6px;
-            background: hsl(var(--background));
-            padding: 0 9px;
-            color: hsl(var(--foreground));
-        }
-        .xpanel-right-kpis {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-        }
-        .xpanel-right-kpi {
-            border: 1px solid hsl(var(--border));
-            border-radius: 6px;
-            padding: 8px;
-            background: hsl(var(--muted) / 0.35);
-        }
-        .xpanel-right-kpi span {
-            display: block;
-            font-size: 10px;
-            color: var(--muted-foreground);
-        }
-        .xpanel-right-kpi strong {
-            display: block;
-            margin-top: 2px;
-            font-size: 13px;
-            color: hsl(var(--foreground));
-            overflow-wrap: anywhere;
-        }
-        .xpanel-agent-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            width: 100%;
-            border: 1px solid hsl(var(--border));
-            border-radius: 7px;
-            background: hsl(var(--muted) / 0.3);
-            padding: 10px;
-            text-align: left;
-            transition: border-color .15s ease, background .15s ease;
-        }
-        .xpanel-agent-card:hover {
-            border-color: hsl(var(--primary) / 0.45);
-            background: hsl(var(--primary) / 0.06);
-        }
-        .xpanel-agent-card span:first-child {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .xpanel-agent-card strong,
-        .xpanel-agent-card small {
-            display: block;
-        }
-        .xpanel-agent-card strong {
-            font-size: 13px;
-            color: hsl(var(--foreground));
-        }
-        .xpanel-agent-card small {
-            margin-top: 1px;
-            font-size: 11px;
-            color: var(--muted-foreground);
-        }
-        .xpanel-search-wrap {
-            position: relative;
-            width: min(520px, 46vw);
-            min-width: 260px;
-        }
-        .xpanel-search-wrap .ikode_quick_btn {
-            width: 100%;
-            max-width: none;
-            justify-content: flex-start;
-        }
-        .xpanel-search-scope {
-            display: inline-flex;
-            align-items: center;
-            max-width: 170px;
-            color: hsl(var(--primary));
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .xpanel-search-button-text {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: var(--muted-foreground);
-            font-size: 13px;
-        }
-        .xpanel-search-popover {
-            position: absolute;
-            top: -4px;
-            left: 50%;
-            right: auto;
-            z-index: 60;
-            width: min(760px, calc(100vw - 48px));
-            transform: translateX(-50%);
-            border: 1px solid hsl(var(--border));
-            border-radius: 8px;
-            background: var(--background);
-            box-shadow: 0 18px 50px rgb(0 0 0 / 0.28);
-            overflow: hidden;
-        }
-        .xpanel-search-input-row {
-            display: grid;
-            grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
-            gap: 8px;
-            padding: 8px;
-            border-bottom: 1px solid hsl(var(--border));
-        }
-        .xpanel-search-scope-select {
-            min-width: 0;
-            height: 34px;
-        }
-        .xpanel-search-field {
-            display: flex;
-            align-items: center;
-            min-width: 0;
-            height: 34px;
-            gap: 8px;
-            border: 1px solid hsl(var(--border));
-            border-radius: 6px;
-            padding: 0 10px;
-            background: hsl(var(--background));
-        }
-        .xpanel-search-field input {
-            flex: 1;
-            min-width: 0;
-            height: 100%;
-            background: transparent;
-            outline: none;
-            color: hsl(var(--foreground));
-            font-size: 13px;
-        }
-        .xpanel-search-tools {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            padding: 8px;
-            border-bottom: 1px solid hsl(var(--border));
-        }
-        .xpanel-search-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            min-height: 24px;
-            padding: 0 7px;
-            border: 1px solid hsl(var(--border));
-            border-radius: 6px;
-            font-size: 11px;
-            color: var(--muted-foreground);
-        }
-        .xpanel-search-toggle.active {
-            color: hsl(var(--primary));
-            background: hsl(var(--primary) / 0.08);
-            border-color: hsl(var(--primary) / 0.4);
-        }
-        .xpanel-search-results {
-            max-height: min(48vh, 420px);
-            overflow: auto;
-            padding: 6px;
-        }
-        .xpanel-search-result {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 18px 1fr auto;
-            gap: 8px;
-            align-items: start;
-            padding: 7px;
-            border-radius: 7px;
-            text-align: left;
-        }
-        .xpanel-search-result:hover { background: hsl(var(--muted)); }
-        .xpanel-search-result-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: hsl(var(--foreground));
-            overflow-wrap: anywhere;
-        }
-        .xpanel-search-result-path,
-        .xpanel-search-result-preview {
-            margin-top: 2px;
-            font-size: 11px;
-            color: var(--muted-foreground);
-            overflow-wrap: anywhere;
-        }
-        .xpanel-search-result-kind {
-            font-size: 10px;
-            color: var(--muted-foreground);
-        }
         .xpanel-console-line {
             display: flex;
             gap: 10px;
@@ -587,8 +264,6 @@
             .xpanel-file-shell { height: 78dvh; min-height: 560px; }
             .xpanel-file-shell .xpanel-site-select { width: 150px; }
             .xpanel-file-shell .ikode_editor_header_center { padding-inline: 6px; }
-            .xpanel-search-wrap { width: min(460px, 62vw); }
-            .xpanel-search-input-row { grid-template-columns: 1fr; }
         }
     </style>
 @endpush
@@ -607,63 +282,44 @@
                     <button class="ikode_header_btn" type="button" data-left-mode="settings" title="Settings">
                         <i class="ki-filled ki-setting-2"></i>
                     </button>
+                    <button class="ikode_header_btn" type="button" data-fm-action="refresh" title="Refrescar">
+                        <i class="ki-filled ki-arrows-circle"></i>
+                    </button>
+                    <select id="xpanel_site_jump" class="kt-select xpanel-site-select" title="Raiz del gestor">
+                        <option value="{{ $isAdminFiles ? route('admin.files.index') : route('client.files.index') }}">
+                            {{ $isAdminFiles ? 'www/ todos los sitios' : 'www/ mis sitios' }}
+                        </option>
+                        @foreach($filesSites as $fileSite)
+                            <option value="{{ $fileSite['url'] }}" @selected($filesDomain === $fileSite['domain'])>
+                                {{ $fileSite['domain'] }}{{ $fileSite['tenant'] ? ' - ' . $fileSite['tenant'] : '' }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
             <div class="ikode_editor_header_center">
                 <div class="flex items-center gap-3 min-w-0 w-full justify-center">
-                    <div class="xpanel-search-wrap">
-                        <button class="kt-input max-w-96 ikode_quick_btn" type="button" id="xpanel_quick_focus">
-                            <i class="ki-outline ki-magnifier"></i>
-                            <span class="xpanel-search-scope" id="xpanel_search_scope_label">{{ $filesDomain ?: 'www/' }} -</span>
-                            <span class="xpanel-search-button-text" id="xpanel_search_button_text">Buscar archivo, carpeta o contenido</span>
-                        </button>
-                        <div class="xpanel-search-popover hidden" id="xpanel_search_popover">
-                            <div class="xpanel-search-input-row">
-                                <select id="xpanel_site_jump" class="kt-select xpanel-search-scope-select text-primary" title="Raiz del gestor">
-                                    <option value="{{ $isAdminFiles ? route('admin.files.index') : route('client.files.index') }}">
-                                        {{ $isAdminFiles ? 'www/ todos los sitios' : 'www/ mis sitios' }}
-                                    </option>
-                                    @foreach($filesSites as $fileSite)
-                                        <option value="{{ $fileSite['url'] }}" @selected($filesDomain === $fileSite['domain'])>
-                                            {{ $fileSite['domain'] }}{{ $fileSite['tenant'] ? ' - ' . $fileSite['tenant'] : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <label class="xpanel-search-field">
-                                    <i class="ki-outline ki-magnifier"></i>
-                                    <input id="xpanel_file_filter" placeholder="Buscar archivo, carpeta o contenido" type="text" autocomplete="off">
-                                </label>
-                            </div>
-                            <div class="xpanel-search-tools">
-                                <div class="flex items-center gap-1">
-                                    <button class="xpanel-search-toggle active" type="button" data-search-toggle="content" title="Buscar dentro de archivos">
-                                        <i class="ki-filled ki-document"></i>
-                                        Contenido
-                                    </button>
-                                    <button class="xpanel-search-toggle" type="button" data-search-toggle="case" title="Distinguir mayusculas">
-                                        Aa
-                                    </button>
-                                </div>
-                                <button class="xpanel-terminal-action" type="button" data-search-action="clear" title="Limpiar busqueda">
-                                    <i class="ki-filled ki-cross"></i>
-                                </button>
-                            </div>
-                            <div class="xpanel-search-results" id="xpanel_search_results">
-                                <div class="p-3 text-xs text-secondary-foreground">Escribe al menos 2 caracteres para buscar.</div>
-                            </div>
-                        </div>
+                    <div class="hidden md:flex items-center gap-2 min-w-0">
+                        <i class="ki-filled ki-folder text-primary"></i>
+                        <span class="text-sm font-semibold text-mono truncate">
+                            {{ $filesTitle }} - <span class="font-mono text-primary">{{ $filesDomain ?: 'www/' }}</span>
+                        </span>
                     </div>
+                    <button class="kt-input max-w-96 ikode_quick_btn" type="button" id="xpanel_quick_focus">
+                    <i class="ki-outline ki-magnifier"></i>
+                    <input id="xpanel_file_filter" placeholder="Buscar archivo o carpeta" type="text">
+                    </button>
                 </div>
             </div>
             <div class="ikode_editor_header_right">
                 <button class="ikode_header_btn ikode_header_btn_active" type="button" data-layout-toggle="left" title="Panel izquierdo">
-                    <i class="ki-filled ki-element-4"></i>
+                    <i class="ki-filled ki-row-horizontal"></i>
                 </button>
                 <button class="ikode_header_btn ikode_header_btn_active" type="button" data-layout-toggle="bottom" title="Consola inferior">
                     <i class="ki-filled ki-element-9"></i>
                 </button>
                 <button class="ikode_header_btn" type="button" data-layout-toggle="right" title="Panel de informacion">
-                    <i class="ki-filled ki-element-3"></i>
+                    <i class="ki-filled ki-grid-2"></i>
                 </button>
                 <button class="ikode_header_btn" type="button" data-layout-action="fullscreen" title="Pantalla completa">
                     <i class="ki-filled ki-maximize"></i>
@@ -683,14 +339,7 @@
                             <button class="ikode_left_action_btn" type="button" data-fm-action="new-folder" title="Nueva carpeta">
                                 <i class="ki-filled ki-folder-up"></i>
                             </button>
-                            <button class="ikode_left_action_btn" type="button" data-fm-action="refresh" title="Refrescar">
-                                <i class="ki-filled ki-arrows-circle"></i>
-                            </button>
                         </div>
-                    </div>
-                    <div class="xpanel-file-progress-wrap" id="xpanel_file_progress_wrap" hidden>
-                        <progress id="xpanel_file_progress" max="100" value="0">0%</progress>
-                        <div class="xpanel-file-progress-label" id="xpanel_file_progress_label">Preparando...</div>
                     </div>
 
                     <div class="ikode_left_files" id="xpanel_left_files_pane"
@@ -738,10 +387,23 @@
                     <div class="ikode_simple_head border-b border-border">SETTINGS</div>
                     <div class="ikode_simple_list">
                         <div class="ikode_panel">
+                            <div class="ikode_panel_title">Raiz activa</div>
+                            <div class="grid gap-2 text-sm">
+                                <div class="xpanel-file-meta"><span>Scope</span><strong>{{ $isAdminFiles ? 'Admin' : 'Cliente' }}</strong></div>
+                                <div class="xpanel-file-meta"><span>Directorio</span><strong>{{ $filesDomain ?: 'www/' }}</strong></div>
+                                <div class="xpanel-file-meta"><span>Sitios</span><strong>{{ $filesSites->count() }}</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="ikode_panel">
                             <div class="ikode_panel_title">Preferencias</div>
                             <label class="ikode_setting_row">
                                 <span class="ikode_setting_label"><i class="ki-filled ki-eye"></i> Mostrar ocultos</span>
                                 <span class="ikode_setting_check"><input type="checkbox" disabled></span>
+                            </label>
+                            <label class="ikode_setting_row">
+                                <span class="ikode_setting_label"><i class="ki-filled ki-code"></i> Word wrap</span>
+                                <span class="ikode_setting_check"><input type="checkbox" checked disabled></span>
                             </label>
                             <label class="ikode_setting_row">
                                 <span class="ikode_setting_label"><i class="ki-filled ki-shield-tick"></i> Edicion segura</span>
@@ -750,42 +412,16 @@
                         </div>
 
                         <div class="ikode_panel">
-                            <div class="ikode_panel_title">Editor</div>
-                            <label class="xpanel-setting-control">
-                                <span>Tamano de texto</span>
-                                <input type="number" min="11" max="24" step="1" id="xpanel_editor_font_size">
+                            <div class="ikode_panel_title">Subida</div>
+                            <label class="kt-btn kt-btn-primary justify-start cursor-pointer w-full">
+                                <i class="ki-filled ki-file-up"></i>
+                                Seleccionar archivos
+                                <input type="file" id="xpanel_upload_input" class="hidden" multiple>
                             </label>
-                            <label class="xpanel-setting-control mt-3">
-                                <span>Fuente</span>
-                                <select id="xpanel_editor_font_family">
-                                    <option value="jetbrains">JetBrains / Fira Code</option>
-                                    <option value="consolas">Consolas</option>
-                                    <option value="system">Sistema monoespaciado</option>
-                                </select>
-                            </label>
-                            <label class="xpanel-setting-control mt-3">
-                                <span>Color</span>
-                                <select id="xpanel_editor_theme">
-                                    <option value="auto">Seguir tema del panel</option>
-                                    <option value="dark">Oscuro</option>
-                                    <option value="light">Claro</option>
-                                </select>
-                            </label>
-                            <label class="ikode_setting_row mt-3">
-                                <span class="ikode_setting_label"><i class="ki-filled ki-code"></i> Ajustar lineas</span>
-                                <span class="ikode_setting_check"><input type="checkbox" id="xpanel_editor_word_wrap"></span>
-                            </label>
-                            <label class="ikode_setting_row">
-                                <span class="ikode_setting_label"><i class="ki-filled ki-row-horizontal"></i> Minimap</span>
-                                <span class="ikode_setting_check"><input type="checkbox" id="xpanel_editor_minimap"></span>
-                            </label>
-                            <button class="kt-btn kt-btn-outline w-full mt-3" type="button" data-settings-action="reset-editor">
-                                <i class="ki-filled ki-arrows-circle"></i>
-                                Restablecer editor
-                            </button>
+                            <div class="mt-3 h-1 rounded-full bg-muted overflow-hidden">
+                                <div id="xpanel_upload_progress" class="h-full bg-primary transition-all" style="width:0%"></div>
+                            </div>
                         </div>
-
-
                     </div>
                 </div>
             </aside>
@@ -823,7 +459,7 @@
                         <div class="ikode_terminal_tabs border-b border-border">
                             <button class="ikode_terminal_tab" type="button" data-console-tab="problems">Problemas</button>
                             <button class="ikode_terminal_tab" type="button" data-console-tab="output">Output</button>
-                            <button class="ikode_terminal_tab" type="button" data-console-tab="logs">Logs</button>
+                            <button class="ikode_terminal_tab" type="button" data-console-tab="debug">Debug</button>
                             <button class="ikode_terminal_tab ikode_terminal_tab_active" type="button" data-console-tab="terminal">Terminal</button>
                             <button class="ikode_terminal_tab" type="button" data-console-tab="ports">Ports</button>
                         </div>
@@ -835,33 +471,36 @@
                             <div class="xpanel-console-line"><span class="xpanel-console-time">xpanel</span><span class="xpanel-console-text">Esperando tareas del sitio {{ $filesDomain ?: 'www/' }}.</span></div>
                             <div id="xpanel_output_log"></div>
                         </div>
-                        <div class="ikode_terminal_body ikode_hidden" data-console-view="logs">
-                            <div class="xpanel-console-line"><span class="xpanel-console-time">logs</span><span class="xpanel-console-text">Esperando eventos del gestor.</span></div>
-                            <div id="xpanel_logs_output"></div>
+                        <div class="ikode_terminal_body ikode_hidden" data-console-view="debug">
+                            <div class="xpanel-console-line"><span class="xpanel-console-time">debug</span><span class="xpanel-console-text">Sesion de inspeccion lista.</span></div>
+                            <div id="xpanel_bottom_details">Selecciona un archivo para ver detalles.</div>
                         </div>
                         <div data-console-view="terminal">
-                            <div class="xpanel-terminal-workspace">
-                                <aside class="xpanel-terminal-sidebar" id="xpanel_terminal_sidebar">
-                                    <div class="xpanel-terminal-sidebar-head">
-                                        <span>TERMINALES</span>
-                                        <div class="xpanel-terminal-actions">
-                                            <button class="xpanel-terminal-action" type="button" data-terminal-action="new" title="Nueva terminal">
-                                                <i class="ki-filled ki-plus"></i>
-                                            </button>
-                                            <button class="xpanel-terminal-action" type="button" data-terminal-action="remove" title="Eliminar terminal">
-                                                <i class="ki-filled ki-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="xpanel-terminal-list" id="xpanel_terminal_list"></div>
-                                </aside>
-                                <section class="xpanel-terminal-main" id="xpanel_terminal_main">
-                                    <div class="xpanel-terminal-output" id="xpanel_terminal_output"></div>
-                                    <form class="xpanel-terminal-inputbar" id="xpanel_terminal_form" autocomplete="off">
-                                        <span class="ikode_prompt" id="xpanel_terminal_prompt">xpanel:/ $</span>
-                                        <input class="xpanel-terminal-input" id="xpanel_terminal_input" type="text" spellcheck="false" placeholder="help, ls, cd, open, mkdir, touch, extract...">
-                                    </form>
-                                </section>
+                            <div class="xpanel-terminal-toolbar">
+                                <div class="xpanel-terminal-selector">
+                                    <button class="xpanel-terminal-pill" type="button" data-terminal-session="site">
+                                        <i class="ki-filled ki-screen"></i>
+                                        Terminal 1
+                                    </button>
+                                    <button class="xpanel-terminal-pill" type="button" data-terminal-session="logs">
+                                        <i class="ki-filled ki-document"></i>
+                                        Logs
+                                    </button>
+                                </div>
+                                <div class="xpanel-terminal-actions">
+                                    <button class="xpanel-terminal-action" type="button" data-terminal-action="new" title="Nueva terminal">
+                                        <i class="ki-filled ki-plus"></i>
+                                    </button>
+                                    <button class="xpanel-terminal-action" type="button" data-terminal-action="clear" title="Limpiar">
+                                        <i class="ki-filled ki-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ikode_terminal_body" id="xpanel_activity_log" data-terminal-view="site">
+                                <div><span class="ikode_prompt">xpanel:{{ $filesDomain ?: 'www' }}$</span> gestor listo</div>
+                            </div>
+                            <div class="ikode_terminal_body ikode_hidden" data-terminal-view="logs">
+                                <div><span class="ikode_prompt">logs:{{ $filesDomain ?: 'www' }}$</span> esperando eventos del sitio</div>
                             </div>
                         </div>
                         <div class="ikode_terminal_body ikode_hidden" data-console-view="ports">
@@ -879,7 +518,7 @@
             <aside class="ikode_editor_right border-l border-border ikode_hidden" id="xpanel_right_pane">
                 <div class="ikode_left_bottom_tabs border-b border-border ikode_right_tabs">
                     <button class="ikode_left_bottom_tab ikode_left_bottom_tab_active ikode_right_tab" type="button" data-right-tab="info">Info</button>
-                    <button class="ikode_left_bottom_tab ikode_right_tab" type="button" data-right-tab="agents">Agentes</button>
+                    <button class="ikode_left_bottom_tab ikode_right_tab" type="button" data-right-tab="summary">Resumen</button>
                 </div>
 
                 <div class="ikode_right_view" data-right-view="info">
@@ -890,15 +529,6 @@
                         </div>
                     </div>
                     <div class="ikode_panel">
-                        <div class="ikode_panel_title">Estado</div>
-                        <div class="xpanel-right-kpis">
-                            <div class="xpanel-right-kpi"><span>Vista</span><strong id="xpanel_info_preview">-</strong></div>
-                            <div class="xpanel-right-kpi"><span>Extension</span><strong id="xpanel_info_ext">-</strong></div>
-                            <div class="xpanel-right-kpi"><span>Pestanas</span><strong id="xpanel_info_tabs">0</strong></div>
-                            <div class="xpanel-right-kpi"><span>Terminal</span><strong id="xpanel_info_terminal">Terminal 1</strong></div>
-                        </div>
-                    </div>
-                    <div class="ikode_panel">
                         <div class="ikode_panel_title">Contexto</div>
                         <div class="grid gap-2 text-sm">
                             <div class="xpanel-file-meta"><span>Scope</span><strong>{{ $isAdminFiles ? 'Admin' : 'Cliente' }}</strong></div>
@@ -906,6 +536,9 @@
                             <div class="xpanel-file-meta"><span>Sitios</span><strong>{{ $filesSites->count() }}</strong></div>
                         </div>
                     </div>
+                </div>
+
+                <div class="ikode_right_view ikode_hidden" data-right-view="summary">
                     <div class="ikode_panel">
                         <div class="ikode_panel_title">Resumen del gestor</div>
                         <div class="grid gap-2 text-sm text-secondary-foreground">
@@ -913,48 +546,6 @@
                             <div class="xpanel-file-meta"><span>Elementos</span><strong id="xpanel_summary_count">0</strong></div>
                             <div class="xpanel-file-meta"><span>Carpetas</span><strong id="xpanel_summary_dirs">0</strong></div>
                             <div class="xpanel-file-meta"><span>Archivos</span><strong id="xpanel_summary_files">0</strong></div>
-                            <div class="xpanel-file-meta"><span>Pestanas</span><strong id="xpanel_summary_tabs">0</strong></div>
-                            <div class="xpanel-file-meta"><span>Activo</span><strong id="xpanel_summary_active" class="text-end break-all">-</strong></div>
-                            <div class="xpanel-file-meta"><span>Editor</span><strong id="xpanel_summary_editor">-</strong></div>
-                            <div class="xpanel-file-meta"><span>Paneles</span><strong id="xpanel_summary_layout">-</strong></div>
-                            <div class="xpanel-file-meta"><span>Terminal</span><strong id="xpanel_summary_terminal">Terminal 1</strong></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ikode_right_view ikode_hidden" data-right-view="agents">
-                    <div class="ikode_panel">
-                        <div class="ikode_panel_title">Agentes</div>
-                        <div class="grid gap-2">
-                            <button class="xpanel-agent-card" type="button" data-agent="claude">
-                                <span>
-                                    <i class="ki-filled ki-message-programming"></i>
-                                    <span><strong>Claude</strong><small>Proyecto actual</small></span>
-                                </span>
-                                <span class="kt-badge kt-badge-outline">Pronto</span>
-                            </button>
-                            <button class="xpanel-agent-card" type="button" data-agent="gpt">
-                                <span>
-                                    <i class="ki-filled ki-artificial-intelligence"></i>
-                                    <span><strong>GPT</strong><small>Edicion asistida</small></span>
-                                </span>
-                                <span class="kt-badge kt-badge-outline">Pronto</span>
-                            </button>
-                            <button class="xpanel-agent-card" type="button" data-agent="local">
-                                <span>
-                                    <i class="ki-filled ki-setting-2"></i>
-                                    <span><strong>Agente local</strong><small>Servidor del sitio</small></span>
-                                </span>
-                                <span class="kt-badge kt-badge-outline">Pronto</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="ikode_panel">
-                        <div class="ikode_panel_title">Contexto de agente</div>
-                        <div class="grid gap-2 text-sm text-secondary-foreground">
-                            <div class="xpanel-file-meta"><span>Raiz</span><strong>{{ $filesDomain ?: 'www/' }}</strong></div>
-                            <div class="xpanel-file-meta"><span>Archivo</span><strong id="xpanel_agent_active" class="text-end break-all">-</strong></div>
-                            <div class="xpanel-file-meta"><span>Modo</span><strong id="xpanel_agent_mode">Lectura</strong></div>
                         </div>
                     </div>
                 </div>
@@ -968,14 +559,11 @@
     <button type="button" data-fm-action="new-folder" class="w-full text-left px-4 py-2 hover:bg-muted">Nueva carpeta</button>
     <div class="border-t border-border my-1"></div>
     <button type="button" data-fm-action="open" class="w-full text-left px-4 py-2 hover:bg-muted">Abrir / editar</button>
-    <button type="button" data-fm-action="extract" data-archive-only class="w-full text-left px-4 py-2 hover:bg-muted">Descomprimir aqui</button>
     <button type="button" data-fm-action="rename" class="w-full text-left px-4 py-2 hover:bg-muted">Renombrar</button>
     <button type="button" data-fm-action="download" class="w-full text-left px-4 py-2 hover:bg-muted">Descargar</button>
     <div class="border-t border-border my-1"></div>
     <button type="button" data-fm-action="delete" class="w-full text-left px-4 py-2 hover:bg-destructive/10 text-destructive">Eliminar</button>
 </div>
-
-<input type="file" id="xpanel_upload_input" class="hidden" multiple>
 
 <div id="xpanel_input_modal" class="fixed inset-0 hidden z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
     <div class="w-full max-w-sm bg-background border border-border rounded-md p-6 shadow-2xl">
@@ -1008,7 +596,6 @@
                 entries: [],
                 dirCache: {},
                 expanded: new Set(['/']),
-                loadingDirs: new Set(),
                 selected: null,
                 ctxEntry: null,
                 ctxDirectory: '/',
@@ -1022,12 +609,6 @@
                 isDirty: false,
                 inputCallback: null,
                 pendingCreate: null,
-                terminals: [],
-                activeTerminalId: null,
-                terminalSeq: 1,
-                searchTimer: null,
-                searchAbort: null,
-                searchResults: [],
             };
 
             const $ = (selector) => document.querySelector(selector);
@@ -1036,15 +617,8 @@
             const storageKey = `xpanel:files:${config.scope}:${config.domain || 'www'}`;
             const defaultUiState = {
                 layout: { left: true, right: false, bottom: true },
-                split: { mainThree: [24, 52, 24], mainTwo: [28, 72], center: [68, 32], left: [68, 32], editor: [50, 50], terminal: [30, 70] },
+                split: { mainThree: [24, 52, 24], mainTwo: [28, 72], center: [68, 32], left: [68, 32], editor: [50, 50] },
                 ui: { leftMode: 'explorer', rightTab: 'info', outlineTab: 'outline', consoleTab: 'terminal' },
-                editor: { fontSize: 14, fontFamily: 'jetbrains', theme: 'auto', wordWrap: true, minimap: false },
-                search: { includeContent: true, caseSensitive: false },
-                terminal: {
-                    active: 'terminal-1',
-                    seq: 1,
-                    sessions: [{ id: 'terminal-1', name: 'Terminal 1', cwd: '/' }],
-                },
             };
             const clone = (value) => JSON.parse(JSON.stringify(value));
             const loadUiState = () => {
@@ -1064,35 +638,12 @@
                             center: Array.isArray(parsed?.split?.center) ? parsed.split.center : defaultUiState.split.center,
                             left: Array.isArray(parsed?.split?.left) ? parsed.split.left : defaultUiState.split.left,
                             editor: Array.isArray(parsed?.split?.editor) ? parsed.split.editor : defaultUiState.split.editor,
-                            terminal: Array.isArray(parsed?.split?.terminal) ? parsed.split.terminal : defaultUiState.split.terminal,
                         },
                         ui: {
                             leftMode: parsed?.ui?.leftMode || defaultUiState.ui.leftMode,
-                            rightTab: ['info', 'agents'].includes(parsed?.ui?.rightTab) ? parsed.ui.rightTab : defaultUiState.ui.rightTab,
+                            rightTab: parsed?.ui?.rightTab || defaultUiState.ui.rightTab,
                             outlineTab: parsed?.ui?.outlineTab || defaultUiState.ui.outlineTab,
                             consoleTab: parsed?.ui?.consoleTab || defaultUiState.ui.consoleTab,
-                        },
-                        editor: {
-                            fontSize: Number(parsed?.editor?.fontSize || defaultUiState.editor.fontSize),
-                            fontFamily: parsed?.editor?.fontFamily || defaultUiState.editor.fontFamily,
-                            theme: parsed?.editor?.theme || defaultUiState.editor.theme,
-                            wordWrap: parsed?.editor?.wordWrap !== false,
-                            minimap: parsed?.editor?.minimap === true,
-                        },
-                        search: {
-                            includeContent: parsed?.search?.includeContent !== false,
-                            caseSensitive: parsed?.search?.caseSensitive === true,
-                        },
-                        terminal: {
-                            active: parsed?.terminal?.active || defaultUiState.terminal.active,
-                            seq: Number(parsed?.terminal?.seq || defaultUiState.terminal.seq),
-                            sessions: Array.isArray(parsed?.terminal?.sessions) && parsed.terminal.sessions.length
-                                ? parsed.terminal.sessions.map((session, index) => ({
-                                    id: session.id || `terminal-${index + 1}`,
-                                    name: session.name || `Terminal ${index + 1}`,
-                                    cwd: session.cwd || '/',
-                                }))
-                                : clone(defaultUiState.terminal.sessions),
                         },
                     };
                 } catch (error) {
@@ -1107,104 +658,14 @@
                     console.warn('No se pudo guardar estado del gestor', error);
                 }
             };
-            const editorFontFamilies = {
-                jetbrains: "'JetBrains Mono','Fira Code','Consolas',monospace",
-                consolas: "'Consolas','Courier New',monospace",
-                system: "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace",
-            };
-            state.terminals = uiState.terminal.sessions.map((session, index) => ({
-                ...session,
-                history: [],
-                commandHistory: [],
-                commandIndex: 0,
-            }));
-            state.terminalSeq = Math.max(uiState.terminal.seq || 1, state.terminals.length);
-            state.activeTerminalId = state.terminals.some((terminal) => terminal.id === uiState.terminal.active)
-                ? uiState.terminal.active
-                : state.terminals[0]?.id;
-
-            const activeTerminal = () => state.terminals.find((terminal) => terminal.id === state.activeTerminalId) || state.terminals[0] || null;
-            const persistTerminals = () => {
-                uiState.terminal.active = state.activeTerminalId;
-                uiState.terminal.seq = state.terminalSeq;
-                uiState.terminal.sessions = state.terminals.map(({ id, name, cwd }) => ({ id, name, cwd }));
-                persistUiState();
-                updateSummary();
-            };
-            const resolveMonacoTheme = () => {
-                if (uiState.editor.theme === 'dark') return 'vs-dark';
-                if (uiState.editor.theme === 'light') return 'vs';
-                return document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs';
-            };
-            const editorOptions = () => ({
-                fontSize: Math.max(11, Math.min(24, Number(uiState.editor.fontSize) || 14)),
-                minimap: { enabled: uiState.editor.minimap === true },
-                wordWrap: uiState.editor.wordWrap === false ? 'off' : 'on',
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                fontFamily: editorFontFamilies[uiState.editor.fontFamily] || editorFontFamilies.jetbrains,
-            });
-            const applyEditorSettings = () => {
-                state.editor?.updateOptions(editorOptions());
-                state.cloneEditor?.updateOptions(editorOptions());
-                if (window.monaco?.editor) monaco.editor.setTheme(resolveMonacoTheme());
-                updateSummary();
-            };
-            const hydrateSettings = () => {
-                const fontSize = $('#xpanel_editor_font_size');
-                const fontFamily = $('#xpanel_editor_font_family');
-                const theme = $('#xpanel_editor_theme');
-                const wordWrap = $('#xpanel_editor_word_wrap');
-                const minimap = $('#xpanel_editor_minimap');
-                if (fontSize) fontSize.value = uiState.editor.fontSize;
-                if (fontFamily) fontFamily.value = uiState.editor.fontFamily;
-                if (theme) theme.value = uiState.editor.theme;
-                if (wordWrap) wordWrap.checked = uiState.editor.wordWrap !== false;
-                if (minimap) minimap.checked = uiState.editor.minimap === true;
-            };
-            const bindSettings = () => {
-                $('#xpanel_editor_font_size')?.addEventListener('input', (event) => {
-                    uiState.editor.fontSize = Number(event.target.value) || 14;
-                    persistUiState();
-                    applyEditorSettings();
-                });
-                $('#xpanel_editor_font_family')?.addEventListener('change', (event) => {
-                    uiState.editor.fontFamily = event.target.value;
-                    persistUiState();
-                    applyEditorSettings();
-                });
-                $('#xpanel_editor_theme')?.addEventListener('change', (event) => {
-                    uiState.editor.theme = event.target.value;
-                    persistUiState();
-                    applyEditorSettings();
-                });
-                $('#xpanel_editor_word_wrap')?.addEventListener('change', (event) => {
-                    uiState.editor.wordWrap = event.target.checked;
-                    persistUiState();
-                    applyEditorSettings();
-                });
-                $('#xpanel_editor_minimap')?.addEventListener('change', (event) => {
-                    uiState.editor.minimap = event.target.checked;
-                    persistUiState();
-                    applyEditorSettings();
-                });
-                $('[data-settings-action="reset-editor"]')?.addEventListener('click', () => {
-                    uiState.editor = clone(defaultUiState.editor);
-                    hydrateSettings();
-                    persistUiState();
-                    applyEditorSettings();
-                    toast('Editor restablecido');
-                });
-            };
 
             const log = (message) => {
+                const target = $('#xpanel_activity_log');
                 const timeline = $('#xpanel_timeline_list');
                 const output = $('#xpanel_output_log');
-                const logs = $('#xpanel_logs_output');
                 const line = document.createElement('div');
-                line.className = 'xpanel-console-line';
-                line.innerHTML = `<span class="xpanel-console-time">${new Date().toLocaleTimeString()}</span><span class="xpanel-console-text">${message}</span>`;
-                logs?.prepend(line);
+                line.innerHTML = `<span class="ikode_prompt">xpanel$</span> ${message}`;
+                target.prepend(line);
                 if (output) {
                     const out = document.createElement('div');
                     out.className = 'xpanel-console-line';
@@ -1227,27 +688,8 @@
                 setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 250); }, 2600);
             };
 
-            const showProgress = (label = 'Procesando...', value = 0) => {
-                $('#xpanel_file_progress_wrap').hidden = false;
-                $('#xpanel_file_progress').value = Math.max(0, Math.min(100, value));
-                $('#xpanel_file_progress').textContent = `${Math.round(value)}%`;
-                $('#xpanel_file_progress_label').textContent = label;
-            };
-            const setProgress = (value, label = null) => {
-                $('#xpanel_file_progress').value = Math.max(0, Math.min(100, value));
-                $('#xpanel_file_progress').textContent = `${Math.round(value)}%`;
-                if (label) $('#xpanel_file_progress_label').textContent = label;
-            };
-            const hideProgress = (delay = 450) => {
-                setTimeout(() => {
-                    $('#xpanel_file_progress_wrap').hidden = true;
-                    $('#xpanel_file_progress').value = 0;
-                }, delay);
-            };
-
-            const api = async (method, endpoint, body = null, signal = null) => {
+            const api = async (method, endpoint, body = null) => {
                 const options = { method, headers: { 'X-CSRF-TOKEN': CSRF, Accept: 'application/json' } };
-                if (signal) options.signal = signal;
                 if (body instanceof FormData) {
                     options.body = body;
                 } else if (body) {
@@ -1268,8 +710,6 @@
             const isImage = (name) => /^(png|jpg|jpeg|gif|svg|webp|ico|bmp)$/i.test(ext(name));
             const isVideo = (name) => /^(mp4|webm|ogg|mov|m4v)$/i.test(ext(name));
             const isPdf = (name) => ext(name) === 'pdf';
-            const isArchive = (name) => /^(zip|jar|zipx|rar|7z|tar|gz|tgz)$/i.test(ext(name));
-            const isExtractable = (name) => /^(zip|jar)$/i.test(ext(name));
             const codeExtensions = new Set(['php', 'js', 'ts', 'jsx', 'tsx', 'html', 'htm', 'css', 'scss', 'json', 'yml', 'yaml', 'py', 'sh', 'bash', 'md', 'xml', 'sql', 'txt', 'env', 'gitignore', 'htaccess', 'ini', 'conf', 'log']);
             const isCode = (name) => codeExtensions.has(ext(name)) || !ext(name);
             const previewKind = (name) => {
@@ -1297,19 +737,6 @@
                 parts.pop();
                 return parts.length ? `/${parts.join('/')}` : '/';
             };
-            const normalizePath = (path = '/') => {
-                const parts = String(path || '/').replace(/\\/g, '/').split('/');
-                const clean = [];
-                parts.forEach((part) => {
-                    if (!part || part === '.') return;
-                    if (part === '..') {
-                        clean.pop();
-                        return;
-                    }
-                    clean.push(part);
-                });
-                return clean.length ? `/${clean.join('/')}` : '/';
-            };
             const downloadUrl = (path, inline = false) => `${config.baseUrl}/download?domain=${domainParam()}&path=${encodeURIComponent(path)}${inline ? '&inline=1' : ''}`;
 
             const icon = (entry) => {
@@ -1317,7 +744,6 @@
                 if (isImage(entry.name)) return 'ki-picture';
                 if (isVideo(entry.name)) return 'ki-youtube';
                 if (isPdf(entry.name)) return 'ki-document';
-                if (isArchive(entry.name)) return 'ki-archive';
                 return ({
                     php: 'ki-code', js: 'ki-js', ts: 'ki-code', html: 'ki-html', css: 'ki-css',
                     json: 'ki-code', md: 'ki-document', sql: 'ki-data', sh: 'ki-setting-2',
@@ -1331,17 +757,14 @@
                 return `${(bytes / 1048576).toFixed(1)} MB`;
             };
 
-            const pathJoin = (base, name) => normalizePath(`${base.replace(/\/$/, '')}/${name}`);
+            const pathJoin = (base, name) => `${base.replace(/\/$/, '')}/${name}`.replace('//', '/');
 
             const renderInfo = (entry = state.selected) => {
                 const box = $('#xpanel_file_info');
-                const preview = $('#xpanel_info_preview');
-                const extBox = $('#xpanel_info_ext');
+                const bottom = $('#xpanel_bottom_details');
                 if (!entry) {
                     box.textContent = 'No hay seleccion.';
-                    if (preview) preview.textContent = '-';
-                    if (extBox) extBox.textContent = '-';
-                    updateSummary();
+                    bottom.textContent = 'Selecciona un archivo para ver detalles.';
                     return;
                 }
 
@@ -1355,9 +778,7 @@
                     </div>
                 `;
                 box.innerHTML = html;
-                if (preview) preview.textContent = entry.is_dir ? 'Arbol' : previewKind(entry.name);
-                if (extBox) extBox.textContent = entry.is_dir ? '-' : (ext(entry.name) || 'sin ext');
-                updateSummary();
+                bottom.innerHTML = html;
             };
 
             const activeTab = () => state.tabs.find((tab) => tab.path === state.activeTab) || null;
@@ -1389,20 +810,6 @@
                 $('#xpanel_summary_dirs').textContent = dirCount;
                 $('#xpanel_summary_files').textContent = fileCount;
                 $('#xpanel_outline_count').textContent = `${entries.length} elemento(s)`;
-                $('#xpanel_summary_tabs').textContent = state.tabs.length;
-                $('#xpanel_summary_active').textContent = activeTab()?.name || '-';
-                $('#xpanel_summary_editor').textContent = `${uiState.editor.fontSize}px / ${uiState.editor.wordWrap ? 'wrap' : 'nowrap'}`;
-                $('#xpanel_summary_layout').textContent = [
-                    uiState.layout.left ? 'izq' : null,
-                    uiState.layout.bottom ? 'terminal' : null,
-                    uiState.layout.right ? 'info' : null,
-                ].filter(Boolean).join(' + ') || 'editor';
-                const terminal = activeTerminal();
-                $('#xpanel_summary_terminal').textContent = terminal?.name || '-';
-                $('#xpanel_info_tabs').textContent = state.tabs.length;
-                $('#xpanel_info_terminal').textContent = terminal?.name || '-';
-                const agentActive = $('#xpanel_agent_active');
-                if (agentActive) agentActive.textContent = activeTab()?.name || state.selected?.name || '-';
             };
             const closeDuplicatePane = () => {
                 destroyEditorSplit();
@@ -1547,19 +954,12 @@
                 const iconClass = state.pendingCreate.type === 'folder' ? 'ki-folder-up' : 'ki-file-up';
                 const placeholder = state.pendingCreate.type === 'folder' ? 'nueva-carpeta' : 'nuevo-archivo.txt';
                 return `
-                    <div class="xpanel-file-inline" style="padding-left:${8 + depth * 14}px">
+                    <div class="xpanel-file-inline" style="margin-left:${depth * 14}px">
                         <i class="ki-filled ${iconClass}"></i>
                         <input data-inline-create="true" placeholder="${placeholder}" autocomplete="off">
                     </div>
                 `;
             };
-            const renderLoadingRow = (depth) => `
-                <div class="xpanel-file-row xpanel-file-row-muted" style="padding-left:${8 + depth * 14}px">
-                    <span class="xpanel-file-toggle"></span>
-                    <i class="ki-filled ki-arrows-circle"></i>
-                    <span class="xpanel-file-name">Cargando...</span>
-                </div>
-            `;
             const renderDirectoryRows = (parentPath = '/', depth = 0) => {
                 const filter = ($('#xpanel_file_filter').value || '').toLowerCase();
                 const entries = entriesFor(parentPath).filter((entry) => !filter || entry.name.toLowerCase().includes(filter) || entry.is_dir);
@@ -1568,9 +968,7 @@
                     const expanded = state.expanded.has(entry.path);
                     const selected = state.selected?.path === entry.path;
                     const toggle = entry.is_dir ? (expanded ? 'ki-down' : 'ki-right') : '';
-                    const childRows = entry.is_dir && expanded
-                        ? (state.loadingDirs.has(entry.path) ? renderLoadingRow(depth + 1) : renderDirectoryRows(entry.path, depth + 1))
-                        : '';
+                    const childRows = entry.is_dir && expanded ? renderDirectoryRows(entry.path, depth + 1) : '';
                     return `
                         <div class="xpanel-file-row ${selected ? 'active' : ''}"
                              style="padding-left:${8 + depth * 14}px"
@@ -1612,15 +1010,6 @@
                 attachTreeEvents();
                 focusPendingInput();
             };
-            const draggedEntryFromEvent = (event) => {
-                if (state.draggedEntry) return state.draggedEntry;
-                const path = event.dataTransfer?.getData('application/x-xpanel-path') || event.dataTransfer?.getData('text/plain');
-                return path ? getEntry(path) : null;
-            };
-            const canMoveEntryTo = (entry, targetDir) => {
-                if (!entry || !targetDir || targetDir === dirname(entry.path)) return false;
-                return !(entry.is_dir && (targetDir === entry.path || targetDir.startsWith(`${entry.path}/`)));
-            };
             const attachTreeEvents = () => {
                 $$('.xpanel-file-row').forEach((row) => {
                     const entry = getEntry(row.dataset.path);
@@ -1640,7 +1029,6 @@
                     row.addEventListener('dragstart', (event) => {
                         state.draggedEntry = entry;
                         event.dataTransfer.effectAllowed = 'move';
-                        event.dataTransfer.setData('application/x-xpanel-path', entry.path);
                         event.dataTransfer.setData('text/plain', entry.path);
                     });
                     row.addEventListener('dragend', () => {
@@ -1649,10 +1037,7 @@
                     });
                     row.addEventListener('dragover', (event) => {
                         if (!entry.is_dir) return;
-                        const hasFiles = Array.from(event.dataTransfer?.types || []).includes('Files');
-                        if (!hasFiles && !canMoveEntryTo(state.draggedEntry, entry.path)) return;
                         event.preventDefault();
-                        event.dataTransfer.dropEffect = hasFiles ? 'copy' : 'move';
                         row.classList.add('drop-target');
                     });
                     row.addEventListener('dragleave', () => row.classList.remove('drop-target'));
@@ -1661,9 +1046,8 @@
                         event.preventDefault();
                         event.stopPropagation();
                         row.classList.remove('drop-target');
-                        const dragged = draggedEntryFromEvent(event);
-                        if (dragged) {
-                            await moveEntry(dragged, entry.path);
+                        if (state.draggedEntry) {
+                            await moveEntry(state.draggedEntry, entry.path);
                             state.draggedEntry = null;
                         } else {
                             await upload(Array.from(event.dataTransfer.files || []), entry.path);
@@ -1702,118 +1086,6 @@
                 }
             };
             const renderList = renderTree;
-            const searchLabel = (result) => result.kind === 'content' ? `Linea ${result.line || 1}` : (result.is_dir ? 'Carpeta' : 'Nombre');
-            const syncSearchButton = () => {
-                const query = ($('#xpanel_file_filter')?.value || '').trim();
-                const label = $('#xpanel_search_button_text');
-                if (label) label.textContent = query || 'Buscar archivo, carpeta o contenido';
-            };
-            const openSearchLauncher = () => {
-                $('#xpanel_search_popover')?.classList.remove('hidden');
-                syncSearchButton();
-                renderSearchResults();
-                setTimeout(() => $('#xpanel_file_filter')?.focus(), 30);
-            };
-            const closeSearchLauncher = () => {
-                $('#xpanel_search_popover')?.classList.add('hidden');
-                syncSearchButton();
-            };
-            const renderSearchResults = (payload = null, loading = false) => {
-                const popover = $('#xpanel_search_popover');
-                const target = $('#xpanel_search_results');
-                const query = ($('#xpanel_file_filter').value || '').trim();
-                if (!popover || !target) return;
-                syncSearchButton();
-                if (!query) {
-                    target.innerHTML = '<div class="p-3 text-xs text-secondary-foreground">Escribe al menos 2 caracteres para buscar.</div>';
-                    return;
-                }
-                if (query.length < 2) {
-                    target.innerHTML = '<div class="p-3 text-xs text-secondary-foreground">Escribe al menos 2 caracteres para buscar.</div>';
-                    return;
-                }
-                if (loading) {
-                    target.innerHTML = '<div class="p-3 text-xs text-secondary-foreground">Buscando en archivos...</div>';
-                    return;
-                }
-                const results = payload?.results || state.searchResults || [];
-                if (!results.length) {
-                    target.innerHTML = '<div class="p-3 text-xs text-secondary-foreground">Sin coincidencias.</div>';
-                    return;
-                }
-                target.innerHTML = `
-                    ${payload?.truncated ? '<div class="px-2 py-1 text-[11px] text-warning">Resultados limitados. Refina la busqueda.</div>' : ''}
-                    ${results.map((result, index) => `
-                        <button class="xpanel-search-result" type="button" data-search-index="${index}">
-                            <i class="ki-filled ${icon({ name: result.name, is_dir: result.is_dir })}"></i>
-                            <span>
-                                <span class="xpanel-search-result-title">${escapeHtml(result.name)}</span>
-                                <span class="xpanel-search-result-path">${escapeHtml(result.path || '/')}</span>
-                                ${result.preview ? `<span class="xpanel-search-result-preview">${escapeHtml(result.preview)}</span>` : ''}
-                            </span>
-                            <span class="xpanel-search-result-kind">${escapeHtml(searchLabel(result))}</span>
-                        </button>
-                    `).join('')}
-                `;
-            };
-            const performSearch = async () => {
-                const query = ($('#xpanel_file_filter').value || '').trim();
-                syncSearchButton();
-                renderList();
-                if (state.searchAbort) state.searchAbort.abort();
-                if (query.length < 2) {
-                    state.searchResults = [];
-                    renderSearchResults();
-                    return;
-                }
-                state.searchAbort = new AbortController();
-                renderSearchResults(null, true);
-                try {
-                    const payload = await api('POST', '/search', {
-                        domain: config.domain,
-                        path: state.currentPath || '/',
-                        query,
-                        include_content: uiState.search.includeContent,
-                        case_sensitive: uiState.search.caseSensitive,
-                    }, state.searchAbort.signal);
-                    state.searchResults = payload.results || [];
-                    renderSearchResults(payload);
-                    log(`Busqueda: "${query}" (${state.searchResults.length})`);
-                } catch (error) {
-                    if (error.name === 'AbortError') return;
-                    $('#xpanel_search_results').innerHTML = `<div class="p-3 text-xs text-destructive">${escapeHtml(error.message)}</div>`;
-                }
-            };
-            const queueSearch = () => {
-                clearTimeout(state.searchTimer);
-                state.searchTimer = setTimeout(performSearch, 320);
-            };
-            const revealEditorLine = (line = 1, column = 1) => {
-                const safeLine = Math.max(1, Number(line) || 1);
-                const safeColumn = Math.max(1, Number(column) || 1);
-                setTimeout(() => {
-                    state.editor?.setPosition({ lineNumber: safeLine, column: safeColumn });
-                    state.editor?.revealLineInCenter(safeLine);
-                    state.editor?.focus();
-                }, 120);
-            };
-            const openSearchResult = async (index) => {
-                const result = state.searchResults[index];
-                if (!result) return;
-                $('#xpanel_search_popover')?.classList.add('hidden');
-                if (result.is_dir) {
-                    state.expanded.add(result.path);
-                    await loadDirectory(result.path);
-                    select({ ...result, is_dir: true });
-                    return;
-                }
-                const parent = dirname(result.path);
-                state.expanded.add(parent);
-                await ensureDirectory(parent);
-                const entry = getEntry(result.path) || { name: result.name, path: result.path, is_dir: false, size: 0 };
-                await open(entry);
-                if (result.kind === 'content') revealEditorLine(result.line, result.column);
-            };
             const ensureDirectory = async (path = '/') => {
                 if (state.dirCache[path]) return state.dirCache[path];
                 await loadDirectory(path, { render: false, setCurrent: false });
@@ -1854,16 +1126,7 @@
                     return;
                 }
                 state.expanded.add(path);
-                if (!state.dirCache[path]) {
-                    state.loadingDirs.add(path);
-                    renderTree();
-                    try {
-                        await loadDirectory(path, { render: false, setCurrent: false });
-                    } finally {
-                        state.loadingDirs.delete(path);
-                    }
-                }
-                renderTree();
+                await loadDirectory(path);
             };
             const open = async (entry = state.selected) => {
                 if (!entry) return;
@@ -2018,71 +1281,21 @@
                 toast('Eliminado');
             };
 
-            const uploadOne = (file, targetPath, index, total) => new Promise((resolve, reject) => {
-                const form = new FormData();
-                form.append('domain', config.domain || '');
-                form.append('path', targetPath);
-                form.append('file', file);
-
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', `${config.baseUrl}/upload`);
-                xhr.setRequestHeader('X-CSRF-TOKEN', CSRF);
-                xhr.setRequestHeader('Accept', 'application/json');
-                xhr.upload.onprogress = (event) => {
-                    if (!event.lengthComputable) return;
-                    const filePercent = event.loaded / event.total;
-                    const totalPercent = ((index + filePercent) / total) * 100;
-                    setProgress(totalPercent, `Subiendo ${index + 1}/${total}: ${file.name} (${Math.round(totalPercent)}%)`);
-                };
-                xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        resolve(xhr.responseText ? JSON.parse(xhr.responseText) : {});
-                        return;
-                    }
-                    reject(new Error(xhr.responseText || `HTTP ${xhr.status}`));
-                };
-                xhr.onerror = () => reject(new Error('Error de red al subir archivo'));
-                xhr.send(form);
-            });
-
             const upload = async (files, targetPath = state.currentPath) => {
                 if (!files.length) return;
-                showProgress(`Subiendo ${files.length} archivo(s)...`, 0);
-                try {
-                    for (let index = 0; index < files.length; index++) {
-                        await uploadOne(files[index], targetPath, index, files.length);
-                    }
-                    setProgress(100, 'Subida completada');
-                    await loadDirectory(targetPath);
-                    toast(`${files.length} archivo(s) subido(s)`);
-                } catch (error) {
-                    toast(error.message, 'error');
-                    log(`Error al subir: ${error.message}`);
-                    throw error;
-                } finally {
-                    hideProgress();
+                let done = 0;
+                for (const file of files) {
+                    const form = new FormData();
+                    form.append('domain', config.domain || '');
+                    form.append('path', targetPath);
+                    form.append('file', file);
+                    await api('POST', '/upload', form);
+                    done++;
+                    $('#xpanel_upload_progress').style.width = `${Math.round((done / files.length) * 100)}%`;
                 }
-            };
-
-            const extractArchive = async (entry = state.selected || state.ctxEntry) => {
-                if (!entry || entry.is_dir) return;
-                if (!isExtractable(entry.name)) {
-                    toast('Por ahora solo se puede descomprimir ZIP/JAR', 'error');
-                    return;
-                }
-                const parent = dirname(entry.path);
-                showProgress(`Descomprimiendo ${entry.name}...`, 10);
-                try {
-                    const response = await api('POST', '/extract', { domain: config.domain, path: entry.path });
-                    setProgress(100, `Descompresion completada (${response.count || 0} archivo(s))`);
-                    state.expanded.add(parent);
-                    clearCachedBranch(parent);
-                    await loadDirectory(parent);
-                    toast('Archivo descomprimido');
-                    log(`Descomprimido: ${entry.path}`);
-                } finally {
-                    hideProgress(700);
-                }
+                setTimeout(() => $('#xpanel_upload_progress').style.width = '0%', 700);
+                await loadDirectory(targetPath);
+                toast(`${done} archivo(s) subido(s)`);
             };
 
             const updateOpenPaths = (oldPath, newPath) => {
@@ -2121,36 +1334,14 @@
                     return;
                 }
                 const newPath = pathJoin(targetDir, entry.name);
-                if (!state.dirCache[targetDir]) {
-                    await loadDirectory(targetDir, { render: false, setCurrent: false });
-                }
-                if (entriesFor(targetDir).some((item) => item.path !== entry.path && item.name.toLowerCase() === entry.name.toLowerCase())) {
-                    toast('Ya existe un elemento con ese nombre en destino', 'error');
-                    return;
-                }
-                const oldPath = entry.path;
-                const oldParent = dirname(oldPath);
                 await api('POST', '/rename', { domain: config.domain, old_path: entry.path, new_path: newPath });
                 updateOpenPaths(entry.path, newPath);
                 clearCachedBranch(entry.path);
                 state.expanded.add(targetDir);
-                if (state.selected?.path === oldPath || state.selected?.path?.startsWith(`${oldPath}/`)) {
-                    const selectedPath = newPath + state.selected.path.slice(oldPath.length);
-                    state.selected = { ...state.selected, path: selectedPath, name: basename(selectedPath) };
-                    renderInfo(state.selected);
-                }
-                if (state.currentPath === oldPath || state.currentPath.startsWith(`${oldPath}/`)) {
-                    setCurrentPath(newPath + state.currentPath.slice(oldPath.length));
-                }
-                if (state.expanded.has(oldPath)) {
-                    state.expanded.delete(oldPath);
-                    state.expanded.add(newPath);
-                }
-                await loadDirectory(oldParent, { render: false, setCurrent: false });
-                await loadDirectory(targetDir, { render: false, setCurrent: false });
-                renderTree();
+                await loadDirectory(dirname(entry.path), { render: false });
+                await loadDirectory(targetDir);
                 toast('Elemento movido');
-                log(`Movido: ${oldPath} -> ${newPath}`);
+                log(`Movido: ${entry.path} -> ${newPath}`);
             };
             const duplicateTab = () => {
                 const tab = activeTab();
@@ -2171,20 +1362,21 @@
                         state.cloneEditor = monaco.editor.create(cloneHost, {
                             value: '',
                             language: 'plaintext',
-                            theme: resolveMonacoTheme(),
-                            ...editorOptions(),
+                            theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs',
+                            fontSize: 14,
+                            minimap: { enabled: false },
+                            wordWrap: 'on',
+                            automaticLayout: true,
+                            scrollBeyondLastLine: false,
+                            fontFamily: "'JetBrains Mono','Fira Code','Consolas',monospace",
                         });
                     }
                     state.cloneEditor.setModel(tab.model);
                     buildEditorSplit();
                     log(`Pestana duplicada: ${tab.path}`);
-                } else {
-                    destroyEditorSplit();
-                    state.cloneEditor?.setModel(null);
                 }
 
                 layoutEditor();
-                window.setTimeout(layoutEditor, 60);
             };
 
             const context = (event, entry = null) => {
@@ -2196,9 +1388,6 @@
                 state.ctxEntry = entry;
                 state.ctxDirectory = entry?.is_dir ? entry.path : (entry ? dirname(entry.path) : state.currentPath);
                 if (entry) select(entry);
-                $$('[data-archive-only]').forEach((item) => {
-                    item.classList.toggle('hidden', !entry || entry.is_dir || !isExtractable(entry.name));
-                });
                 const menu = $('#xpanel_ctx_menu');
                 menu.style.left = `${event.clientX}px`;
                 menu.style.top = `${event.clientY}px`;
@@ -2213,7 +1402,6 @@
                     if (name === 'duplicate-tab') duplicateTab();
                     if (name === 'new-file') newFile();
                     if (name === 'new-folder') newFolder();
-                    if (name === 'extract') await extractArchive(state.selected || state.ctxEntry);
                     if (name === 'refresh') await loadDirectory(state.currentPath);
                     if (name === 'rename') rename();
                     if (name === 'delete') await remove();
@@ -2230,7 +1418,6 @@
             let bottomSplit = null;
             let leftSplit = null;
             let editorSplit = null;
-            let terminalSplit = null;
 
             const layoutEditor = () => {
                 window.requestAnimationFrame(() => {
@@ -2245,7 +1432,7 @@
             };
 
             const resetSplitStyles = () => {
-                ['#xpanel_left_pane', '#xpanel_center_pane', '#xpanel_right_pane', '#xpanel_code_pane', '#xpanel_bottom_pane', '#xpanel_left_files_pane', '#xpanel_left_outline_pane', '#xpanel_monaco_editor', '#xpanel_monaco_clone', '#xpanel_terminal_sidebar', '#xpanel_terminal_main'].forEach((selector) => {
+                ['#xpanel_left_pane', '#xpanel_center_pane', '#xpanel_right_pane', '#xpanel_code_pane', '#xpanel_bottom_pane', '#xpanel_left_files_pane', '#xpanel_left_outline_pane', '#xpanel_monaco_editor', '#xpanel_monaco_clone'].forEach((selector) => {
                     const el = $(selector);
                     if (!el) return;
                     el.style.width = '';
@@ -2266,7 +1453,6 @@
                 if (bottomSplit) uiState.split.center = bottomSplit.getSizes();
                 if (leftSplit) uiState.split.left = leftSplit.getSizes();
                 if (editorSplit) uiState.split.editor = editorSplit.getSizes();
-                if (terminalSplit) uiState.split.terminal = terminalSplit.getSizes();
                 persistUiState();
             };
 
@@ -2303,7 +1489,7 @@
                 mainSplit = Split(panes, {
                     sizes,
                     minSize: panes.map((selector) => minByPane[selector]),
-                    gutterSize: 3,
+                    gutterSize: 6,
                     elementStyle: splitElementStyle,
                     gutterStyle: splitGutterStyle,
                     snapOffset: 0,
@@ -2330,7 +1516,7 @@
                     direction: 'vertical',
                     sizes: uiState.split.center,
                     minSize: [240, 120],
-                    gutterSize: 3,
+                    gutterSize: 6,
                     elementStyle: splitElementStyle,
                     gutterStyle: splitGutterStyle,
                     snapOffset: 0,
@@ -2356,7 +1542,7 @@
                     direction: 'vertical',
                     sizes: uiState.split.left,
                     minSize: [120, 110],
-                    gutterSize: 3,
+                    gutterSize: 6,
                     elementStyle: splitElementStyle,
                     gutterStyle: splitGutterStyle,
                     snapOffset: 0,
@@ -2373,49 +1559,19 @@
 
             const buildEditorSplit = () => {
                 destroyEditorSplit();
-                if (!$('#xpanel_file_shell').classList.contains('xpanel-editor-duplicated')) return;
-                const editorHost = $('#xpanel_monaco_editor');
-                const cloneHost = $('#xpanel_monaco_clone');
-                editorHost.style.flexBasis = `${uiState.split.editor[0] || 50}%`;
-                cloneHost.style.flexBasis = `${uiState.split.editor[1] || 50}%`;
-                if (!window.Split) return;
-                try {
-                    editorSplit = Split(['#xpanel_monaco_editor', '#xpanel_monaco_clone'], {
-                        sizes: uiState.split.editor,
-                        minSize: [220, 220],
-                        gutterSize: 3,
-                        elementStyle: splitElementStyle,
-                        gutterStyle: splitGutterStyle,
-                        snapOffset: 0,
-                        onDrag: layoutEditor,
-                        onDragEnd: () => {
-                            saveSplitState();
-                            layoutEditor();
-                        },
-                    });
-                } catch (error) {
-                    editorSplit = null;
-                    console.warn('No se pudo iniciar el split del editor duplicado.', error);
-                }
-            };
-            const buildTerminalSplit = () => {
-                if (terminalSplit) {
-                    terminalSplit.destroy();
-                    terminalSplit = null;
-                }
-
-                if (!window.Split || uiState.ui.consoleTab !== 'terminal' || !splitVisible('#xpanel_bottom_pane') || window.matchMedia('(max-width: 760px)').matches) {
-                    return;
-                }
-
-                terminalSplit = Split(['#xpanel_terminal_sidebar', '#xpanel_terminal_main'], {
-                    sizes: uiState.split.terminal,
-                    minSize: [150, 260],
-                    gutterSize: 3,
+                if (!window.Split || !$('#xpanel_file_shell').classList.contains('xpanel-editor-duplicated')) return;
+                editorSplit = Split(['#xpanel_monaco_editor', '#xpanel_monaco_clone'], {
+                    sizes: uiState.split.editor,
+                    minSize: [220, 220],
+                    gutterSize: 6,
                     elementStyle: splitElementStyle,
                     gutterStyle: splitGutterStyle,
                     snapOffset: 0,
-                    onDragEnd: saveSplitState,
+                    onDrag: layoutEditor,
+                    onDragEnd: () => {
+                        saveSplitState();
+                        layoutEditor();
+                    },
                 });
             };
 
@@ -2425,7 +1581,6 @@
                 buildBottomSplit();
                 buildLeftSplit();
                 buildEditorSplit();
-                buildTerminalSplit();
                 layoutEditor();
             };
 
@@ -2490,204 +1645,50 @@
                     view.classList.toggle('ikode_hidden', view.dataset.consoleView !== tab);
                 });
                 persistUiState();
-                if (tab === 'terminal') rebuildLayout();
             };
 
             const switchRightTab = (tab) => {
-                const nextTab = tab === 'summary' ? 'info' : (['info', 'agents'].includes(tab) ? tab : 'info');
-                uiState.ui.rightTab = nextTab;
+                uiState.ui.rightTab = tab;
                 $$('[data-right-tab]').forEach((button) => {
-                    button.classList.toggle('ikode_left_bottom_tab_active', button.dataset.rightTab === nextTab);
+                    button.classList.toggle('ikode_left_bottom_tab_active', button.dataset.rightTab === tab);
                 });
                 $$('[data-right-view]').forEach((view) => {
-                    view.classList.toggle('ikode_hidden', view.dataset.rightView !== nextTab);
+                    view.classList.toggle('ikode_hidden', view.dataset.rightView !== tab);
                 });
                 persistUiState();
             };
 
-            const terminalPrompt = (terminal = activeTerminal()) => `xpanel:${terminal?.cwd || '/'} $`;
-            const terminalWrite = (terminal, text, kind = 'output') => {
-                if (!terminal) return;
-                terminal.history.push({ kind, text: String(text) });
-                if (terminal.history.length > 250) terminal.history.shift();
-                if (terminal.id === state.activeTerminalId) renderTerminalOutput();
+            const switchTerminalSession = (session) => {
+                $$('[data-terminal-session]').forEach((button) => {
+                    button.classList.toggle('ikode_header_btn_active', button.dataset.terminalSession === session);
+                });
+                $$('[data-terminal-view]').forEach((view) => {
+                    view.classList.toggle('ikode_hidden', view.dataset.terminalView !== session);
+                });
             };
-            const renderTerminalList = () => {
-                const list = $('#xpanel_terminal_list');
-                if (!list) return;
-                list.innerHTML = state.terminals.map((terminal) => `
-                    <button class="xpanel-terminal-item ${terminal.id === state.activeTerminalId ? 'active' : ''}" type="button" data-terminal-id="${terminal.id}">
-                        <span class="xpanel-terminal-active-dot"></span>
-                        <i class="ki-filled ki-screen"></i>
-                        <span>${escapeHtml(terminal.name)}</span>
-                        <span class="xpanel-terminal-badge">${escapeHtml(terminal.cwd || '/')}</span>
-                    </button>
-                `).join('');
-            };
-            const renderTerminalOutput = () => {
-                const terminal = activeTerminal();
-                const output = $('#xpanel_terminal_output');
-                if (!terminal || !output) return;
-                $('#xpanel_terminal_prompt').textContent = terminalPrompt(terminal);
-                output.innerHTML = terminal.history.map((item) => {
-                    if (item.kind === 'command') {
-                        return `<div><span class="ikode_prompt">${escapeHtml(item.prompt || terminalPrompt(terminal))}</span> ${escapeHtml(item.text)}</div>`;
-                    }
-                    const color = item.kind === 'error' ? 'text-destructive' : (item.kind === 'system' ? 'text-secondary-foreground' : '');
-                    return `<div class="${color}">${escapeHtml(item.text)}</div>`;
-                }).join('');
-                output.scrollTop = output.scrollHeight;
-                renderTerminalList();
-                updateSummary();
-            };
-            const switchTerminalSession = (id) => {
-                if (!state.terminals.some((terminal) => terminal.id === id)) return;
-                state.activeTerminalId = id;
-                const terminal = activeTerminal();
-                if (terminal) terminal.commandIndex = terminal.commandHistory.length;
-                persistTerminals();
-                renderTerminalOutput();
-                setTimeout(() => $('#xpanel_terminal_input')?.focus(), 20);
-            };
-            const createTerminal = () => {
-                state.terminalSeq += 1;
-                const terminal = {
-                    id: `terminal-${Date.now()}`,
-                    name: `Terminal ${state.terminalSeq}`,
-                    cwd: state.currentPath || '/',
-                    history: [],
-                    commandHistory: [],
-                    commandIndex: 0,
-                };
-                state.terminals.push(terminal);
-                switchTerminalSession(terminal.id);
-            };
-            const resetSingleTerminal = () => {
-                state.terminalSeq = 1;
-                const terminal = {
-                    id: `terminal-${Date.now()}`,
-                    name: 'Terminal 1',
-                    cwd: state.currentPath || '/',
-                    history: [],
-                    commandHistory: [],
-                    commandIndex: 0,
-                };
-                state.terminals = [terminal];
-                state.activeTerminalId = terminal.id;
-                persistTerminals();
-                renderTerminalOutput();
-            };
-            const removeActiveTerminal = () => {
-                const index = state.terminals.findIndex((terminal) => terminal.id === state.activeTerminalId);
-                if (index < 0) return;
-                if (state.terminals.length <= 1) {
-                    resetSingleTerminal();
+
+            const terminalAction = (action) => {
+                if (action === 'clear') {
+                    $('#xpanel_activity_log').innerHTML = `<div><span class="ikode_prompt">xpanel:${config.rootLabel.replace('/', '')}$</span> limpio</div>`;
                     return;
                 }
-                state.terminals.splice(index, 1);
-                const next = state.terminals[Math.max(0, index - 1)] || state.terminals[0];
-                state.activeTerminalId = next?.id || null;
-                persistTerminals();
-                renderTerminalOutput();
-            };
-            const terminalAction = (action) => {
-                if (action === 'new') createTerminal();
-                if (action === 'remove') removeActiveTerminal();
-            };
-            const resolveTerminalPath = (terminal, value = '') => {
-                const raw = String(value || '').trim();
-                if (!raw) return terminal?.cwd || '/';
-                return normalizePath(raw.startsWith('/') ? raw : pathJoin(terminal?.cwd || '/', raw));
-            };
-            const commandHelp = [
-                'Comandos: help, pwd, ls [ruta], cd <carpeta>, open <archivo>, mkdir <nombre>, touch <archivo>, extract <zip>, refresh, clear.',
-                'Esta terminal opera sobre el gestor de archivos; una shell real del servidor requiere PTY/WebSocket seguro.',
-            ];
-            const executeTerminalCommand = async (command) => {
-                const terminal = activeTerminal();
-                if (!terminal || !command.trim()) return;
-                const raw = command.trim();
-                terminal.history.push({ kind: 'command', text: raw, prompt: terminalPrompt(terminal) });
-                terminal.commandHistory.push(raw);
-                terminal.commandIndex = terminal.commandHistory.length;
-                renderTerminalOutput();
+                if (action === 'new') {
+                    const count = $$('[data-terminal-session]').length + 1;
+                    const selector = document.querySelector('.xpanel-terminal-selector');
+                    const button = document.createElement('button');
+                    button.className = 'xpanel-terminal-pill';
+                    button.type = 'button';
+                    button.dataset.terminalSession = `terminal-${count}`;
+                    button.innerHTML = `<i class="ki-filled ki-screen"></i> Terminal ${count}`;
+                    selector.appendChild(button);
 
-                const [name = '', ...rest] = raw.split(/\s+/);
-                const arg = rest.join(' ');
-                try {
-                    if (name === 'help') {
-                        commandHelp.forEach((line) => terminalWrite(terminal, line, 'system'));
-                        return;
-                    }
-                    if (name === 'clear') {
-                        terminal.history = [];
-                        renderTerminalOutput();
-                        return;
-                    }
-                    if (name === 'pwd') {
-                        terminalWrite(terminal, terminal.cwd || '/');
-                        return;
-                    }
-                    if (name === 'refresh') {
-                        clearCachedBranch(terminal.cwd || '/');
-                        await loadDirectory(terminal.cwd || '/');
-                        terminalWrite(terminal, `Actualizado ${terminal.cwd || '/'}`);
-                        return;
-                    }
-                    if (name === 'ls') {
-                        const path = resolveTerminalPath(terminal, arg || terminal.cwd);
-                        const entries = await ensureDirectory(path);
-                        terminalWrite(terminal, entries.length ? entries.map((entry) => `${entry.is_dir ? '[dir] ' : '      '}${entry.name}`).join('\n') : '(vacio)');
-                        return;
-                    }
-                    if (name === 'cd') {
-                        const path = resolveTerminalPath(terminal, arg || '/');
-                        await ensureDirectory(path);
-                        terminal.cwd = path;
-                        state.expanded.add(path);
-                        await loadDirectory(path);
-                        persistTerminals();
-                        terminalWrite(terminal, `Directorio actual: ${path}`);
-                        return;
-                    }
-                    if (name === 'open') {
-                        const path = resolveTerminalPath(terminal, arg);
-                        const parent = dirname(path);
-                        await ensureDirectory(parent);
-                        const entry = getEntry(path);
-                        if (!entry || entry.is_dir) throw new Error('Archivo no encontrado');
-                        await open(entry);
-                        terminalWrite(terminal, `Abierto ${path}`);
-                        return;
-                    }
-                    if (name === 'mkdir') {
-                        const target = resolveTerminalPath(terminal, arg || uniqueName(terminal.cwd || '/', 'folder'));
-                        await api('POST', '/mkdir', { domain: config.domain, path: target });
-                        clearCachedBranch(dirname(target));
-                        await loadDirectory(dirname(target));
-                        terminalWrite(terminal, `Carpeta creada: ${target}`);
-                        return;
-                    }
-                    if (name === 'touch') {
-                        const target = resolveTerminalPath(terminal, arg || uniqueName(terminal.cwd || '/', 'file'));
-                        await api('POST', '/write', { domain: config.domain, path: target, content: '' });
-                        clearCachedBranch(dirname(target));
-                        await loadDirectory(dirname(target));
-                        terminalWrite(terminal, `Archivo creado: ${target}`);
-                        return;
-                    }
-                    if (name === 'extract') {
-                        const path = resolveTerminalPath(terminal, arg);
-                        await ensureDirectory(dirname(path));
-                        const entry = getEntry(path) || { path, name: basename(path), is_dir: false };
-                        await extractArchive(entry);
-                        terminalWrite(terminal, `Descomprimido: ${path}`);
-                        return;
-                    }
-                    terminalWrite(terminal, `Comando no reconocido: ${name}. Escribe help.`, 'error');
-                } catch (error) {
-                    terminalWrite(terminal, error.message, 'error');
-                    log(`Terminal: ${error.message}`);
+                    const view = document.createElement('div');
+                    view.className = 'ikode_terminal_body ikode_hidden';
+                    view.dataset.terminalView = `terminal-${count}`;
+                    view.innerHTML = `<div><span class="ikode_prompt">xpanel:${config.rootLabel.replace('/', '')}$</span> nueva terminal</div>`;
+                    $('#xpanel_activity_log').parentElement.appendChild(view);
+                    button.addEventListener('click', () => switchTerminalSession(button.dataset.terminalSession));
+                    switchTerminalSession(button.dataset.terminalSession);
                 }
             };
 
@@ -2701,8 +1702,7 @@
                 switchOutlineTab(uiState.ui.outlineTab);
                 switchConsoleTab(uiState.ui.consoleTab);
                 switchRightTab(uiState.ui.rightTab);
-                renderTerminalList();
-                switchTerminalSession(state.activeTerminalId);
+                switchTerminalSession('site');
             };
 
             window.XPanelFM = {
@@ -2716,9 +1716,8 @@
                 async drop(event) {
                     event.preventDefault();
                     ($('#xpanel_drop_hint') || $('#xpanel_file_list')).classList.remove('dragover');
-                    const dragged = draggedEntryFromEvent(event);
-                    if (dragged) {
-                        await moveEntry(dragged, state.currentPath);
+                    if (state.draggedEntry) {
+                        await moveEntry(state.draggedEntry, state.currentPath);
                         state.draggedEntry = null;
                         return;
                     }
@@ -2733,70 +1732,13 @@
             $$('[data-outline-tab]').forEach((button) => button.addEventListener('click', () => switchOutlineTab(button.dataset.outlineTab)));
             $$('[data-console-tab]').forEach((button) => button.addEventListener('click', () => switchConsoleTab(button.dataset.consoleTab)));
             $$('[data-right-tab]').forEach((button) => button.addEventListener('click', () => switchRightTab(button.dataset.rightTab)));
+            $$('[data-terminal-session]').forEach((button) => button.addEventListener('click', () => switchTerminalSession(button.dataset.terminalSession)));
             $$('[data-terminal-action]').forEach((button) => button.addEventListener('click', () => terminalAction(button.dataset.terminalAction)));
-            $('#xpanel_terminal_list')?.addEventListener('click', (event) => {
-                const button = event.target.closest('[data-terminal-id]');
-                if (button) switchTerminalSession(button.dataset.terminalId);
-            });
-            $('#xpanel_terminal_form')?.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const input = $('#xpanel_terminal_input');
-                const command = input.value;
-                input.value = '';
-                await executeTerminalCommand(command);
-            });
-            $('#xpanel_terminal_input')?.addEventListener('keydown', (event) => {
-                const terminal = activeTerminal();
-                if (!terminal) return;
-                if (event.key === 'ArrowUp') {
-                    event.preventDefault();
-                    terminal.commandIndex = Math.max(0, terminal.commandIndex - 1);
-                    event.target.value = terminal.commandHistory[terminal.commandIndex] || '';
-                }
-                if (event.key === 'ArrowDown') {
-                    event.preventDefault();
-                    terminal.commandIndex = Math.min(terminal.commandHistory.length, terminal.commandIndex + 1);
-                    event.target.value = terminal.commandHistory[terminal.commandIndex] || '';
-                }
-            });
-            hydrateSettings();
-            bindSettings();
 
             $('#xpanel_site_jump')?.addEventListener('change', (event) => {
                 window.location.href = event.target.value;
             });
-            $('#xpanel_quick_focus')?.addEventListener('click', openSearchLauncher);
-            $('#xpanel_file_filter').addEventListener('input', queueSearch);
-            $('#xpanel_file_filter').addEventListener('focus', renderSearchResults);
-            $('#xpanel_search_results')?.addEventListener('click', async (event) => {
-                const button = event.target.closest('[data-search-index]');
-                if (!button) return;
-                try {
-                    await openSearchResult(Number(button.dataset.searchIndex));
-                } catch (error) {
-                    toast(error.message, 'error');
-                }
-            });
-            $$('[data-search-toggle]').forEach((button) => {
-                const key = button.dataset.searchToggle;
-                const active = key === 'content' ? uiState.search.includeContent : uiState.search.caseSensitive;
-                button.classList.toggle('active', active);
-                button.addEventListener('click', () => {
-                    if (key === 'content') uiState.search.includeContent = !uiState.search.includeContent;
-                    if (key === 'case') uiState.search.caseSensitive = !uiState.search.caseSensitive;
-                    button.classList.toggle('active', key === 'content' ? uiState.search.includeContent : uiState.search.caseSensitive);
-                    persistUiState();
-                    queueSearch();
-                });
-            });
-            $('[data-search-action="clear"]')?.addEventListener('click', () => {
-                $('#xpanel_file_filter').value = '';
-                state.searchResults = [];
-                syncSearchButton();
-                renderList();
-                renderSearchResults();
-                $('#xpanel_file_filter')?.focus();
-            });
+            $('#xpanel_file_filter').addEventListener('input', renderList);
             $('#xpanel_upload_input').addEventListener('change', (event) => upload(Array.from(event.target.files || [])));
             $('#xpanel_left_files_pane').addEventListener('contextmenu', (event) => context(event));
             $('[data-input-cancel]').addEventListener('click', closeInput);
@@ -2810,15 +1752,11 @@
             });
             document.addEventListener('click', (event) => {
                 if (!event.target.closest('#xpanel_ctx_menu')) $('#xpanel_ctx_menu').classList.add('hidden');
-                if (!event.target.closest('.xpanel-search-wrap')) closeSearchLauncher();
             });
             document.addEventListener('keydown', (event) => {
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     save();
-                }
-                if (event.key === 'Escape') {
-                    closeSearchLauncher();
                 }
             });
 
@@ -2827,16 +1765,20 @@
                 state.editor = monaco.editor.create($('#xpanel_monaco_editor'), {
                     value: '',
                     language: 'plaintext',
-                    theme: resolveMonacoTheme(),
-                    ...editorOptions(),
+                    theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs',
+                    fontSize: 14,
+                    minimap: { enabled: false },
+                    wordWrap: 'on',
+                    automaticLayout: true,
+                    scrollBeyondLastLine: false,
+                    fontFamily: "'JetBrains Mono','Fira Code','Consolas',monospace",
                 });
                 $('#xpanel_monaco_editor').classList.add('ikode_hidden');
                 $('#xpanel_monaco_editor').style.display = 'none';
                 $('#xpanel_monaco_clone').classList.add('ikode_hidden');
                 new MutationObserver(() => {
-                    monaco.editor.setTheme(resolveMonacoTheme());
+                    monaco.editor.setTheme(document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs');
                 }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-                applyEditorSettings();
                 applyStoredLayout();
                 loadDirectory('/');
             });
