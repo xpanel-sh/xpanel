@@ -93,3 +93,35 @@ type FileRenameRequest struct {
 	OldPath string `json:"old_path"`
 	NewPath string `json:"new_path"`
 }
+
+type FileExtractRequest struct {
+	Domain string `json:"domain"`
+	Path   string `json:"path"`
+}
+
+type FileSearchRequest struct {
+	Domain         string `json:"domain"`
+	Path           string `json:"path"`
+	Query          string `json:"query"`
+	IncludeContent bool   `json:"include_content"`
+	CaseSensitive  bool   `json:"case_sensitive"`
+	MaxResults     int    `json:"max_results"`
+}
+
+type FileSearchResult struct {
+	Name    string `json:"name"`
+	Path    string `json:"path"`
+	IsDir   bool   `json:"is_dir"`
+	Kind    string `json:"kind"`
+	Line    int    `json:"line,omitempty"`
+	Column  int    `json:"column,omitempty"`
+	Preview string `json:"preview,omitempty"`
+}
+
+type FileSearchResponse struct {
+	Query     string             `json:"query"`
+	Path      string             `json:"path"`
+	Results   []FileSearchResult `json:"results"`
+	Truncated bool               `json:"truncated"`
+	Scanned   int                `json:"scanned"`
+}

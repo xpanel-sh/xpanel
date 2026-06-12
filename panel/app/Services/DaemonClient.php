@@ -207,6 +207,23 @@ class DaemonClient
         return $this->post('/api/files/rename', ['domain' => $domain, 'old_path' => $oldPath, 'new_path' => $newPath], 'Daemon fileRename failed');
     }
 
+    public function fileExtract(?string $domain, string $path): array
+    {
+        return $this->post('/api/files/extract', ['domain' => $domain, 'path' => $path], 'Daemon fileExtract failed');
+    }
+
+    public function fileSearch(?string $domain, string $path, string $query, bool $includeContent = true, bool $caseSensitive = false): array
+    {
+        return $this->post('/api/files/search', [
+            'domain' => $domain,
+            'path' => $path,
+            'query' => $query,
+            'include_content' => $includeContent,
+            'case_sensitive' => $caseSensitive,
+            'max_results' => 200,
+        ], 'Daemon fileSearch failed');
+    }
+
     public function fileUpload(?string $domain, string $destDir, \Illuminate\Http\UploadedFile $file): array
     {
         $response = $this->http()

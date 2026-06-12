@@ -1,76 +1,96 @@
 @csrf
 
-<div class="grid grid-cols-1 gap-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:grid-cols-2">
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Nombre del plan</label>
-        <input type="text" name="name" value="{{ old('name', $plan->name) }}" required
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white"
-            placeholder="Starter">
+@if($errors->any())
+    <div class="kt-card border-destructive/30">
+        <div class="kt-card-content p-4 text-sm text-destructive">
+            <ul class="list-disc list-inside">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
+
+<div class="flex grow gap-5 lg:gap-7.5">
+    <div class="hidden lg:block w-[230px] shrink-0">
+        <div class="w-[230px]">
+            <div class="flex flex-col grow relative before:absolute before:left-[11px] before:top-0 before:bottom-0 before:border-l before:border-border">
+                <a class="flex items-center rounded-lg pl-2.5 pr-2.5 py-2.5 gap-1.5 active border border-transparent text-sm text-foreground hover:text-primary hover:font-medium" href="#plan_basic">
+                    <span class="flex w-1.5 relative before:absolute before:top-0 before:size-1.5 before:rounded-full before:-translate-x-2/4 before:-translate-y-2/4 before:bg-primary"></span>
+                    Datos del plan
+                </a>
+                <a class="flex items-center rounded-lg pl-2.5 pr-2.5 py-2.5 gap-1.5 border border-transparent text-sm text-foreground hover:text-primary hover:font-medium" href="#plan_limits">
+                    <span class="flex w-1.5 relative before:absolute before:top-0 before:size-1.5 before:rounded-full before:-translate-x-2/4 before:-translate-y-2/4"></span>
+                    Limites
+                </a>
+                <a class="flex items-center rounded-lg pl-2.5 pr-2.5 py-2.5 gap-1.5 border border-transparent text-sm text-foreground hover:text-primary hover:font-medium" href="#plan_publish">
+                    <span class="flex w-1.5 relative before:absolute before:top-0 before:size-1.5 before:rounded-full before:-translate-x-2/4 before:-translate-y-2/4"></span>
+                    Publicacion
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Slug</label>
-        <input type="text" name="slug" value="{{ old('slug', $plan->slug) }}"
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white"
-            placeholder="starter">
-        <p class="mt-2 text-xs text-gray-500">Si lo dejas vacío, se genera desde el nombre.</p>
+    <div class="flex flex-col items-stretch grow gap-5 lg:gap-7.5">
+        <div class="kt-card">
+            <div class="kt-card-header" id="plan_basic">
+                <h3 class="kt-card-title">Datos del plan</h3>
+            </div>
+            <div class="kt-card-content grid gap-5">
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Nombre</label>
+                    <input class="kt-input" type="text" name="name" value="{{ old('name', $plan->name) }}" required placeholder="Starter">
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Slug</label>
+                    <div class="grow grid gap-1.5">
+                        <input class="kt-input" type="text" name="slug" value="{{ old('slug', $plan->slug) }}" placeholder="starter">
+                        <p class="kt-form-description">Si lo dejas vacio, se genera desde el nombre.</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Descripcion</label>
+                    <textarea class="kt-textarea" name="description" rows="4" placeholder="Plan base para sitios pequenos...">{{ old('description', $plan->description) }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="kt-card">
+            <div class="kt-card-header" id="plan_limits">
+                <h3 class="kt-card-title">Limites del paquete</h3>
+            </div>
+            <div class="kt-card-content grid gap-5">
+                @foreach([
+                    ['max_sites', 'Sitios web', $plan->max_sites ?? 1],
+                    ['max_databases', 'Bases de datos', $plan->max_databases ?? 1],
+                    ['storage_mb', 'Almacenamiento MB', $plan->storage_mb ?? 1024],
+                    ['bandwidth_gb', 'Transferencia GB', $plan->bandwidth_gb ?? 10],
+                    ['email_accounts', 'Cuentas de correo', $plan->email_accounts ?? 0],
+                    ['monthly_price', 'Precio mensual', $plan->monthly_price ?? 0],
+                ] as [$name, $label, $value])
+                    <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                        <label class="kt-form-label max-w-56">{{ $label }}</label>
+                        <input class="kt-input" type="number" name="{{ $name }}" value="{{ old($name, $value) }}" min="0" step="{{ $name === 'monthly_price' ? '0.01' : '1' }}" required>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="kt-card">
+            <div class="kt-card-header" id="plan_publish">
+                <h3 class="kt-card-title">Publicacion</h3>
+            </div>
+            <div class="kt-card-content grid gap-5">
+                <label class="kt-label">
+                    <input class="kt-switch" type="checkbox" name="is_active" value="1" @checked(old('is_active', $plan->exists ? $plan->is_active : true))>
+                    Plan activo para nuevas asignaciones
+                </label>
+                <div class="flex justify-end gap-2.5">
+                    <a href="{{ route('admin.plans.index') }}" class="kt-btn kt-btn-outline">Cancelar</a>
+                    <button class="kt-btn kt-btn-primary">Guardar plan</button>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Sitios web</label>
-        <input type="number" name="max_sites" value="{{ old('max_sites', $plan->max_sites ?? 1) }}" min="0" required
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white">
-    </div>
-
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Bases de datos</label>
-        <input type="number" name="max_databases" value="{{ old('max_databases', $plan->max_databases ?? 1) }}" min="0" required
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white">
-    </div>
-
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Almacenamiento MB</label>
-        <input type="number" name="storage_mb" value="{{ old('storage_mb', $plan->storage_mb ?? 1024) }}" min="0" required
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white">
-    </div>
-
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Transferencia GB</label>
-        <input type="number" name="bandwidth_gb" value="{{ old('bandwidth_gb', $plan->bandwidth_gb ?? 10) }}" min="0" required
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white">
-    </div>
-
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Cuentas de correo</label>
-        <input type="number" name="email_accounts" value="{{ old('email_accounts', $plan->email_accounts ?? 0) }}" min="0" required
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white">
-    </div>
-
-    <div>
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Precio mensual</label>
-        <input type="number" step="0.01" name="monthly_price" value="{{ old('monthly_price', $plan->monthly_price ?? 0) }}" min="0" required
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white">
-    </div>
-
-    <div class="md:col-span-2">
-        <label class="mb-2 block text-sm font-semibold text-gray-300">Descripción</label>
-        <textarea name="description" rows="4"
-            class="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-white"
-            placeholder="Plan base para sitios pequeños...">{{ old('description', $plan->description) }}</textarea>
-    </div>
-
-    <label class="flex items-center gap-3 md:col-span-2">
-        <input type="checkbox" name="is_active" value="1" class="h-4 w-4 rounded border-white/20 bg-black"
-            @checked(old('is_active', $plan->exists ? $plan->is_active : true))>
-        <span class="text-sm text-gray-300">Plan activo para nuevas asignaciones</span>
-    </label>
-</div>
-
-<div class="mt-6 flex flex-col gap-3 sm:flex-row">
-    <button class="rounded-xl bg-white px-6 py-3 font-bold text-black transition hover:bg-gray-200">
-        Guardar plan
-    </button>
-    <a href="{{ route('admin.plans.index') }}" class="rounded-xl border border-white/10 px-6 py-3 text-center font-bold text-white transition hover:bg-white/10">
-        Cancelar
-    </a>
 </div>

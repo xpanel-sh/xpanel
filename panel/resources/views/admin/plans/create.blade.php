@@ -6,11 +6,17 @@
             <main class="grow" role="content">
                 <div class="kt-container-fluid">
                     <div class="grid gap-5 lg:gap-7.5">
-<section class="mx-auto max-w-4xl">
-        <div class="mb-8">
-            <a href="{{ route('admin.plans.index') }}" class="text-sm text-gray-400 hover:text-white">Volver a planes</a>
-            <h1 class="mt-4 text-3xl font-black">Crear Plan de Hosting</h1>
-            <p class="mt-2 text-gray-400">Define límites iniciales para nuevas cuentas cliente.</p>
+<section class="grid gap-5 lg:gap-7.5">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+                <h1 class="font-medium text-lg text-mono">Crear plan de hosting</h1>
+                <div class="flex items-center gap-1 text-sm">
+                    <a class="text-secondary-foreground hover:text-primary" href="{{ route('admin.plans.index') }}">Planes</a>
+                    <span class="text-muted-foreground">/</span>
+                    <span class="text-mono">Nuevo</span>
+                </div>
+            </div>
+            <a href="{{ route('admin.plans.index') }}" class="kt-btn kt-btn-outline kt-btn-sm">Volver</a>
         </div>
 
         <form action="{{ route('admin.plans.store') }}" method="POST">

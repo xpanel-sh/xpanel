@@ -124,6 +124,45 @@ class FileManagerController extends Controller
         }
     }
 
+    public function extract(Request $request)
+    {
+        $validated = $request->validate([
+            'domain' => ['nullable', 'string', 'max:255'],
+            'path' => ['required', 'string', 'max:2048'],
+        ]);
+        try {
+            return response()->json($this->daemon->fileExtract(
+                $this->normalizeDomain($validated['domain'] ?? null),
+                $validated['path']
+            ));
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'domain' => ['nullable', 'string', 'max:255'],
+            'path' => ['nullable', 'string', 'max:2048'],
+            'query' => ['required', 'string', 'max:255'],
+            'include_content' => ['nullable', 'boolean'],
+            'case_sensitive' => ['nullable', 'boolean'],
+        ]);
+
+        try {
+            return response()->json($this->daemon->fileSearch(
+                $this->normalizeDomain($validated['domain'] ?? null),
+                $validated['path'] ?? '/',
+                $validated['query'],
+                (bool) ($validated['include_content'] ?? true),
+                (bool) ($validated['case_sensitive'] ?? false)
+            ));
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function download(Request $request)
     {
         $domain = $this->normalizeDomain($request->query('domain'));
@@ -134,13 +173,34 @@ class FileManagerController extends Controller
         try {
             $response = $this->daemon->fileDownloadProxy($domain, $path);
             $filename = basename($path);
+            $disposition = $request->boolean('inline') ? 'inline' : 'attachment';
             return response($response->body(), 200, [
-                'Content-Type' => 'application/octet-stream',
-                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Content-Type' => $this->contentTypeFor($filename),
+                'Content-Disposition' => "{$disposition}; filename=\"{$filename}\"",
             ]);
         } catch (\Throwable $e) {
             abort(500, $e->getMessage());
         }
+    }
+
+    private function contentTypeFor(string $filename): string
+    {
+        return match (strtolower(pathinfo($filename, PATHINFO_EXTENSION))) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
+            'ico' => 'image/x-icon',
+            'bmp' => 'image/bmp',
+            'pdf' => 'application/pdf',
+            'mp4' => 'video/mp4',
+            'webm' => 'video/webm',
+            'ogg' => 'video/ogg',
+            'mov' => 'video/quicktime',
+            'm4v' => 'video/x-m4v',
+            default => 'application/octet-stream',
+        };
     }
 
     private function normalizeDomain(?string $domain): ?string

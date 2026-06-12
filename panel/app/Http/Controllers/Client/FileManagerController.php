@@ -155,6 +155,87 @@ class FileManagerController extends Controller
         }
     }
 
+    public function extract(Request $request)
+    {
+        $request->validate([
+            'domain' => ['nullable', 'string', 'max:255'],
+            'path' => ['required', 'string', 'max:2048'],
+        ]);
+        [$domain, $path] = $this->resolveOperationTarget($request, $request->input('path'), $request->input('domain'));
+
+        try {
+            return response()->json($this->daemon->fileExtract($domain, $path));
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function search(Request $request)
+    {
+        $tenant = $request->attributes->get('tenant');
+        $validated = $request->validate([
+            'domain' => ['nullable', 'string', 'max:255'],
+            'path' => ['nullable', 'string', 'max:2048'],
+            'query' => ['required', 'string', 'max:255'],
+            'include_content' => ['nullable', 'boolean'],
+            'case_sensitive' => ['nullable', 'boolean'],
+        ]);
+
+        $domain = $this->normalizeDomain($validated['domain'] ?? null);
+        $path = $validated['path'] ?? '/';
+        $includeContent = (bool) ($validated['include_content'] ?? true);
+        $caseSensitive = (bool) ($validated['case_sensitive'] ?? false);
+
+        try {
+            if (!$domain && ($path === '/' || $path === '')) {
+                $payloads = Site::where('tenant_id', $tenant->id)
+                    ->orderBy('domain')
+                    ->get(['domain'])
+                    ->map(function (Site $site) use ($validated, $includeContent, $caseSensitive) {
+                        $payload = $this->daemon->fileSearch($site->domain, '/', $validated['query'], $includeContent, $caseSensitive);
+                        $payload['results'] = collect($payload['results'] ?? [])
+                            ->map(function (array $result) use ($site) {
+                                $result['path'] = '/' . $site->domain . ($result['path'] ?? '/');
+                                return $result;
+                            })
+                            ->all();
+                        return $payload;
+                    });
+
+                return response()->json([
+                    'query' => $validated['query'],
+                    'path' => '/',
+                    'results' => $payloads->flatMap(fn (array $payload) => $payload['results'] ?? [])->take(200)->values()->all(),
+                    'truncated' => $payloads->contains(fn (array $payload) => (bool) ($payload['truncated'] ?? false)),
+                    'scanned' => $payloads->sum(fn (array $payload) => (int) ($payload['scanned'] ?? 0)),
+                ]);
+            }
+
+            $prefixEntries = false;
+            if (!$domain) {
+                [$domain, $path] = $this->domainAndPathFromRoot($tenant->id, $path);
+                $prefixEntries = true;
+            } else {
+                $this->siteForTenant($tenant->id, $domain);
+            }
+
+            $payload = $this->daemon->fileSearch($domain, $path ?: '/', $validated['query'], $includeContent, $caseSensitive);
+            if ($prefixEntries) {
+                $payload['path'] = '/' . $domain . (($path === '/' || $path === '') ? '' : $path);
+                $payload['results'] = collect($payload['results'] ?? [])
+                    ->map(function (array $result) use ($domain) {
+                        $result['path'] = '/' . $domain . ($result['path'] ?? '/');
+                        return $result;
+                    })
+                    ->all();
+            }
+
+            return response()->json($payload);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function download(Request $request)
     {
         [$domain, $path] = $this->resolveOperationTarget($request, $request->query('path', ''), $request->query('domain'));
@@ -164,13 +245,34 @@ class FileManagerController extends Controller
         try {
             $response = $this->daemon->fileDownloadProxy($domain, $path);
             $filename = basename($path);
+            $disposition = $request->boolean('inline') ? 'inline' : 'attachment';
             return response($response->body(), 200, [
-                'Content-Type' => 'application/octet-stream',
-                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Content-Type' => $this->contentTypeFor($filename),
+                'Content-Disposition' => "{$disposition}; filename=\"{$filename}\"",
             ]);
         } catch (\Throwable $e) {
             abort(500, $e->getMessage());
         }
+    }
+
+    private function contentTypeFor(string $filename): string
+    {
+        return match (strtolower(pathinfo($filename, PATHINFO_EXTENSION))) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
+            'ico' => 'image/x-icon',
+            'bmp' => 'image/bmp',
+            'pdf' => 'application/pdf',
+            'mp4' => 'video/mp4',
+            'webm' => 'video/webm',
+            'ogg' => 'video/ogg',
+            'mov' => 'video/quicktime',
+            'm4v' => 'video/x-m4v',
+            default => 'application/octet-stream',
+        };
     }
 
     private function tenantRootList(int $tenantId): array

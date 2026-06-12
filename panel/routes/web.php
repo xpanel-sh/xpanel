@@ -115,6 +115,8 @@ Route::group(['middleware' => ['web']], function () {
             Route::post('/api/mkdir',   [\App\Http\Controllers\Admin\FileManagerController::class, 'mkdir'])->name('mkdir');
             Route::post('/api/delete',  [\App\Http\Controllers\Admin\FileManagerController::class, 'delete'])->name('delete');
             Route::post('/api/rename',  [\App\Http\Controllers\Admin\FileManagerController::class, 'rename'])->name('rename');
+            Route::post('/api/extract', [\App\Http\Controllers\Admin\FileManagerController::class, 'extract'])->name('extract');
+            Route::post('/api/search',  [\App\Http\Controllers\Admin\FileManagerController::class, 'search'])->name('search');
             Route::post('/api/upload',  [\App\Http\Controllers\Admin\FileManagerController::class, 'upload'])->name('upload');
             Route::get('/api/download', [\App\Http\Controllers\Admin\FileManagerController::class, 'download'])->name('download');
             Route::get('/{domain?}',    [\App\Http\Controllers\Admin\FileManagerController::class, 'index'])
@@ -194,6 +196,8 @@ Route::group(['middleware' => ['web']], function () {
             Route::post('/api/mkdir',   [\App\Http\Controllers\Client\FileManagerController::class, 'mkdir'])->name('mkdir');
             Route::post('/api/delete',  [\App\Http\Controllers\Client\FileManagerController::class, 'delete'])->name('delete');
             Route::post('/api/rename',  [\App\Http\Controllers\Client\FileManagerController::class, 'rename'])->name('rename');
+            Route::post('/api/extract', [\App\Http\Controllers\Client\FileManagerController::class, 'extract'])->name('extract');
+            Route::post('/api/search',  [\App\Http\Controllers\Client\FileManagerController::class, 'search'])->name('search');
             Route::post('/api/upload',  [\App\Http\Controllers\Client\FileManagerController::class, 'upload'])->name('upload');
             Route::get('/api/download', [\App\Http\Controllers\Client\FileManagerController::class, 'download'])->name('download');
             Route::get('/{domain?}',    [\App\Http\Controllers\Client\FileManagerController::class, 'index'])

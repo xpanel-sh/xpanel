@@ -26,49 +26,49 @@
             @endif
         </div>
 
-        <form action="{{ route('client.dns.store') }}" method="POST"
-            class="grid grid-cols-1 gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 lg:grid-cols-6">
+        <form action="{{ route('client.dns.store') }}" method="POST" class="kt-card">
             @csrf
-            <div class="lg:col-span-2">
-                <label class="mb-2 block text-sm text-gray-400">Dominio</label>
-                <select name="domain_id" class="w-full rounded-xl border border-white/10 bg-black/40 dark:bg-black px-3 py-3 text-white outline-none focus:border-white/20">
-                    @foreach($domains as $domain)
-                        <option value="{{ $domain->id }}">{{ $domain->domain }}</option>
-                    @endforeach
-                </select>
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Agregar registro</h3>
             </div>
-            <div>
-                <label class="mb-2 block text-sm text-gray-400">Tipo</label>
-                <select name="type" class="w-full rounded-xl border border-white/10 bg-black/40 dark:bg-black px-3 py-3 text-white outline-none focus:border-white/20">
-                    @foreach(['A','AAAA','CNAME','MX','TXT','NS','SRV','CAA'] as $type)
-                        <option value="{{ $type }}">{{ $type }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="mb-2 block text-sm text-gray-400">Nombre</label>
-                <input name="name" value="{{ old('name', '@') }}"
-                    class="w-full rounded-xl border border-white/10 bg-black/40 dark:bg-black px-3 py-3 text-white outline-none focus:border-white/20">
-            </div>
-            <div class="lg:col-span-2">
-                <label class="mb-2 block text-sm text-gray-400">Valor</label>
-                <input name="value" value="{{ old('value') }}"
-                    class="w-full rounded-xl border border-white/10 bg-black/40 dark:bg-black px-3 py-3 text-white outline-none focus:border-white/20">
-            </div>
-            <div>
-                <label class="mb-2 block text-sm text-gray-400">TTL</label>
-                <input type="number" name="ttl" value="{{ old('ttl', 3600) }}"
-                    class="w-full rounded-xl border border-white/10 bg-black/40 dark:bg-black px-3 py-3 text-white outline-none focus:border-white/20">
-            </div>
-            <div>
-                <label class="mb-2 block text-sm text-gray-400">Prioridad</label>
-                <input type="number" name="priority" value="{{ old('priority') }}"
-                    class="w-full rounded-xl border border-white/10 bg-black/40 dark:bg-black px-3 py-3 text-white outline-none focus:border-white/20">
-            </div>
-            <div class="lg:col-span-5">
-                <button class="rounded-xl bg-gray-900 dark:bg-white px-5 py-3 text-sm font-bold text-white dark:text-black hover:bg-gray-700 dark:hover:bg-gray-200 transition">
-                    Agregar registro
-                </button>
+            <div class="kt-card-content grid gap-5">
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-6">
+                    <div class="lg:col-span-2">
+                        <label class="kt-form-label mb-2">Dominio</label>
+                        <select name="domain_id" class="kt-select">
+                            @foreach($domains as $domain)
+                                <option value="{{ $domain->id }}">{{ $domain->domain }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="kt-form-label mb-2">Tipo</label>
+                        <select name="type" class="kt-select">
+                            @foreach(['A','AAAA','CNAME','MX','TXT','NS','SRV','CAA'] as $type)
+                                <option value="{{ $type }}">{{ $type }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="kt-form-label mb-2">Nombre</label>
+                        <input class="kt-input" name="name" value="{{ old('name', '@') }}">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="kt-form-label mb-2">Valor</label>
+                        <input class="kt-input" name="value" value="{{ old('value') }}">
+                    </div>
+                    <div>
+                        <label class="kt-form-label mb-2">TTL</label>
+                        <input class="kt-input" type="number" name="ttl" value="{{ old('ttl', 3600) }}">
+                    </div>
+                    <div>
+                        <label class="kt-form-label mb-2">Prioridad</label>
+                        <input class="kt-input" type="number" name="priority" value="{{ old('priority') }}">
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button class="kt-btn kt-btn-primary">Agregar registro</button>
+                </div>
             </div>
         </form>
 

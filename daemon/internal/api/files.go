@@ -164,6 +164,57 @@ func handleFileRename(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, model.ActionResponse{Status: "renamed"})
 }
 
+// handleFileExtract extracts a zip archive into its containing directory.
+// POST /api/files/extract   body: { domain, path }
+func handleFileExtract(w http.ResponseWriter, r *http.Request) {
+	var req model.FileExtractRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if strings.TrimSpace(req.Path) == "" {
+		http.Error(w, "path is required", http.StatusBadRequest)
+		return
+	}
+	root, err := filemanager.SiteRoot(req.Domain)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	count, err := filemanager.ExtractZip(root, req.Path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]any{"status": "extracted", "count": count})
+}
+
+// handleFileSearch searches names and text content below a directory.
+// POST /api/files/search   body: { domain, path, query, include_content }
+func handleFileSearch(w http.ResponseWriter, r *http.Request) {
+	var req model.FileSearchRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if strings.TrimSpace(req.Query) == "" {
+		http.Error(w, "query is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(req.Path) == "" {
+		req.Path = "/"
+	}
+	root, err := filemanager.SiteRoot(req.Domain)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	payload, err := filemanager.Search(root, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, payload)
+}
+
 // handleFileUpload handles multipart/form-data file uploads.
 // POST /api/files/upload   fields: domain (string), path (destination dir), file (multipart)
 func handleFileUpload(w http.ResponseWriter, r *http.Request) {

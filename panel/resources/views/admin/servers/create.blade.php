@@ -6,11 +6,17 @@
             <main class="grow" role="content">
                 <div class="kt-container-fluid">
                     <div class="grid gap-5 lg:gap-7.5">
-<div class="max-w-3xl mx-auto p-8">
-        <div class="mb-8">
-            <a href="{{ route('admin.servers.index') }}" class="text-gray-400 hover:text-white">Volver a servidores</a>
-            <h1 class="text-3xl font-bold text-white mt-4">Agregar Servidor Conectado</h1>
-            <p class="mt-2 text-gray-400">Registra un servidor donde el agente XPanel podrá ejecutar tareas seguras.</p>
+<section class="grid gap-5 lg:gap-7.5 max-w-4xl">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+                <h1 class="font-medium text-lg text-mono">Agregar servidor conectado</h1>
+                <div class="flex items-center gap-1 text-sm">
+                    <a class="text-secondary-foreground hover:text-primary" href="{{ route('admin.servers.index') }}">Servidores</a>
+                    <span class="text-muted-foreground">/</span>
+                    <span class="text-mono">Nuevo</span>
+                </div>
+            </div>
+            <a href="{{ route('admin.servers.index') }}" class="kt-btn kt-btn-outline kt-btn-sm">Volver</a>
         </div>
 
         @if($errors->any())
@@ -23,35 +29,39 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.servers.store') }}" method="POST" class="space-y-6 bg-gray-800 rounded-xl border border-gray-700 p-8">
+        <form action="{{ route('admin.servers.store') }}" method="POST" class="kt-card">
             @csrf
 
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">Nombre</label>
-                <input type="text" name="name" value="{{ old('name') }}" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="Servidor LATAM 1">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Conexion del agente</h3>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm text-gray-300 mb-2">IP</label>
-                    <input type="text" name="ip_address" value="{{ old('ip_address') }}" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="10.0.0.10">
+            <div class="kt-card-content grid gap-5">
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Nombre</label>
+                    <input class="kt-input" type="text" name="name" value="{{ old('name') }}" required placeholder="Servidor LATAM 1">
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-300 mb-2">Puerto del Agente</label>
-                    <input type="number" name="port" value="{{ old('port', 7070) }}" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">IP</label>
+                    <input class="kt-input" type="text" name="ip_address" value="{{ old('ip_address') }}" required placeholder="10.0.0.10">
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Puerto del agente</label>
+                    <input class="kt-input" type="number" name="port" value="{{ old('port', 7070) }}" required>
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Token</label>
+                    <div class="grow grid gap-1.5">
+                        <input class="kt-input" type="text" name="auth_token" value="{{ old('auth_token') }}" placeholder="Si lo dejas vacio se genera uno">
+                        <p class="kt-form-description">El token se usa para conectar el panel con el daemon del servidor.</p>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2.5">
+                    <a href="{{ route('admin.servers.index') }}" class="kt-btn kt-btn-outline">Cancelar</a>
+                    <button type="submit" class="kt-btn kt-btn-primary">Agregar servidor</button>
                 </div>
             </div>
-
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">Token (opcional)</label>
-                <input type="text" name="auth_token" value="{{ old('auth_token') }}" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="Si lo dejas vacio se genera uno">
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 rounded-lg py-3 font-semibold text-white">
-                Agregar Servidor
-            </button>
         </form>
-    </div>
+    </section>
                     </div>
                 </div>
             </main>

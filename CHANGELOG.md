@@ -12,6 +12,36 @@ Future releases will include:
 
 ---
 
+## [2.6.0] - File Manager Search, Runtime Metrics and Form Refresh
+**Release date:** 2026-06-12
+
+### Added
+- Added recursive file manager search for admin and client panels, including filename/folder matches and text-content matches in safe, size-limited files.
+- Added daemon `/api/files/search` endpoint plus Laravel admin/client proxy routes.
+- Added tenant-safe client search across all tenant sites from `/client/files`, returning domain-prefixed paths.
+- Added file manager search popover with content search toggle, case-sensitive toggle, live results, result opening and Monaco line reveal for content matches.
+- Added ZIP/JAR extraction support from the file manager context menu, extracting archives in the directory where they are stored.
+- Added visible file operation progress for uploads and extraction.
+- Added file manager terminal workspace with multiple browser-side manager terminals, per-terminal history and file-manager commands such as `ls`, `cd`, `open`, `mkdir`, `touch`, `extract`, `refresh` and `clear`.
+- Added persisted Monaco editor settings for font size, font family, theme, word wrap and minimap.
+- Added daemon runtime system metrics for CPU, memory and disk so admin dashboard charts can receive live server data.
+
+### Changed
+- Changed the file manager explorer into a tree-style view with inline file/folder creation and drag-and-drop movement between folders.
+- Changed file opening to use tabs with close buttons, code/image/video/PDF previews and unsupported-file messaging.
+- Changed duplicate editor support so code tabs can be split into two synchronized Monaco panes.
+- Changed file manager logs into their own bottom tab and simplified the terminal area to reduce wasted space.
+- Changed admin dashboard runtime charts to keep textual metrics working even if ApexCharts is unavailable.
+- Changed admin/client create and edit forms to follow the Metronic settings-card structure using `kt-card`, `kt-input`, `kt-select`, `kt-btn` and compact label/control rows.
+
+### Fixed
+- Fixed file manager contextual menu coverage by handling context actions from the full explorer pane.
+- Fixed several split-pane sizing issues across explorer, terminal, right panel and duplicated editor layouts.
+- Fixed admin dashboard charts showing empty data on servers where the daemon did not previously expose system metrics.
+- Fixed file manager terminal header/initial message taking unnecessary vertical space.
+
+---
+
 ## [2.5.0] - Admin/Client Layout Refresh and Advanced File Manager
 **Release date:** 2026-06-12
 

@@ -1,6 +1,7 @@
 package files
 
 import (
+	"archive/zip"
 	"fmt"
 	"io"
 	"os"
@@ -92,7 +93,9 @@ func List(root, relativePath string) ([]model.FileEntry, error) {
 	return result, nil
 }
 
-const maxReadSize = 2 * 1024 * 1024 // 2MB
+const maxReadSize = 2 * 1024 * 1024   // 2MB
+const maxSearchFileSize = 1024 * 1024 // 1MB
+const defaultSearchLimit = 200
 
 // ReadFile reads a file's content. Returns error if file exceeds 2MB.
 func ReadFile(root, relativePath string) ([]byte, error) {
@@ -111,6 +114,137 @@ func ReadFile(root, relativePath string) ([]byte, error) {
 		return nil, fmt.Errorf("file too large for editor (max 2MB, got %d bytes)", info.Size())
 	}
 	return os.ReadFile(abs)
+}
+
+// Search walks a root path and returns name/content matches for text files.
+func Search(root string, req model.FileSearchRequest) (model.FileSearchResponse, error) {
+	query := strings.TrimSpace(req.Query)
+	if query == "" {
+		return model.FileSearchResponse{Query: query, Path: req.Path, Results: []model.FileSearchResult{}}, nil
+	}
+	searchPath := req.Path
+	if searchPath == "" {
+		searchPath = "/"
+	}
+	abs, err := SafeJoin(root, searchPath)
+	if err != nil {
+		return model.FileSearchResponse{}, err
+	}
+	info, err := os.Stat(abs)
+	if err != nil {
+		return model.FileSearchResponse{}, fmt.Errorf("search path not found: %w", err)
+	}
+	if !info.IsDir() {
+		abs = filepath.Dir(abs)
+		searchPath = filepath.ToSlash(filepath.Dir(searchPath))
+		if searchPath == "." || searchPath == "" {
+			searchPath = "/"
+		}
+	}
+
+	limit := req.MaxResults
+	if limit <= 0 || limit > 500 {
+		limit = defaultSearchLimit
+	}
+
+	needle := query
+	if !req.CaseSensitive {
+		needle = strings.ToLower(needle)
+	}
+	response := model.FileSearchResponse{
+		Query:   query,
+		Path:    searchPath,
+		Results: []model.FileSearchResult{},
+	}
+	skipDirs := map[string]bool{
+		".git": true, "node_modules": true, "vendor": true, "storage": true,
+		"cache": true, ".next": true, "dist": true, "build": true,
+	}
+
+	err = filepath.WalkDir(abs, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if path == abs {
+			return nil
+		}
+		if response.Truncated {
+			return filepath.SkipAll
+		}
+		name := entry.Name()
+		if entry.IsDir() && skipDirs[strings.ToLower(name)] {
+			return filepath.SkipDir
+		}
+
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return nil
+		}
+		rel = "/" + filepath.ToSlash(rel)
+		haystackName := name
+		if !req.CaseSensitive {
+			haystackName = strings.ToLower(haystackName)
+		}
+		if strings.Contains(haystackName, needle) {
+			response.Results = append(response.Results, model.FileSearchResult{
+				Name:  name,
+				Path:  rel,
+				IsDir: entry.IsDir(),
+				Kind:  "name",
+			})
+			if len(response.Results) >= limit {
+				response.Truncated = true
+				return filepath.SkipAll
+			}
+		}
+		if entry.IsDir() || !req.IncludeContent {
+			return nil
+		}
+
+		info, err := entry.Info()
+		if err != nil || info.Size() > maxSearchFileSize {
+			return nil
+		}
+		response.Scanned++
+		content, err := os.ReadFile(path)
+		if err != nil || IsBinary(content) {
+			return nil
+		}
+		lines := strings.Split(string(content), "\n")
+		for index, line := range lines {
+			haystackLine := line
+			if !req.CaseSensitive {
+				haystackLine = strings.ToLower(haystackLine)
+			}
+			column := strings.Index(haystackLine, needle)
+			if column < 0 {
+				continue
+			}
+			preview := strings.TrimSpace(line)
+			if len(preview) > 220 {
+				preview = preview[:220] + "..."
+			}
+			response.Results = append(response.Results, model.FileSearchResult{
+				Name:    name,
+				Path:    rel,
+				IsDir:   false,
+				Kind:    "content",
+				Line:    index + 1,
+				Column:  column + 1,
+				Preview: preview,
+			})
+			if len(response.Results) >= limit {
+				response.Truncated = true
+				return filepath.SkipAll
+			}
+		}
+		return nil
+	})
+	if err != nil && err != filepath.SkipAll {
+		return response, err
+	}
+
+	return response, nil
 }
 
 // WriteFile writes content to a file, creating parent directories as needed.
@@ -160,6 +294,92 @@ func Rename(root, oldRelative, newRelative string) error {
 		return fmt.Errorf("cannot create parent directories: %w", err)
 	}
 	return os.Rename(oldAbs, newAbs)
+}
+
+// ExtractZip extracts a zip-compatible archive into the directory where it lives.
+// Every archive member is validated through SafeJoin to prevent zip-slip traversal.
+func ExtractZip(root, relativePath string) (int, error) {
+	abs, err := SafeJoin(root, relativePath)
+	if err != nil {
+		return 0, err
+	}
+	info, err := os.Stat(abs)
+	if err != nil {
+		return 0, fmt.Errorf("archive not found: %w", err)
+	}
+	if info.IsDir() {
+		return 0, fmt.Errorf("path is a directory, not an archive")
+	}
+	if !strings.EqualFold(filepath.Ext(abs), ".zip") && !strings.EqualFold(filepath.Ext(abs), ".jar") {
+		return 0, fmt.Errorf("only zip archives are supported")
+	}
+
+	reader, err := zip.OpenReader(abs)
+	if err != nil {
+		return 0, fmt.Errorf("cannot open archive: %w", err)
+	}
+	defer reader.Close()
+
+	destDir := filepath.Dir(abs)
+	destRel, err := filepath.Rel(root, destDir)
+	if err != nil {
+		return 0, err
+	}
+	if destRel == "." {
+		destRel = ""
+	}
+
+	extracted := 0
+	for _, file := range reader.File {
+		name := filepath.ToSlash(file.Name)
+		name = strings.TrimLeft(name, "/")
+		if name == "" || strings.Contains(file.Name, "\\") || strings.Contains(name, "../") || strings.HasPrefix(name, "..") {
+			return extracted, fmt.Errorf("unsafe archive entry: %q", file.Name)
+		}
+		targetRel := filepath.ToSlash(filepath.Join(destRel, name))
+		targetAbs, err := SafeJoin(root, targetRel)
+		if err != nil {
+			return extracted, err
+		}
+		mode := file.Mode()
+
+		if file.FileInfo().IsDir() {
+			if mode == 0 {
+				mode = 0755
+			}
+			if err := os.MkdirAll(targetAbs, mode); err != nil {
+				return extracted, fmt.Errorf("cannot create directory %q: %w", file.Name, err)
+			}
+			continue
+		}
+		if mode == 0 {
+			mode = 0644
+		}
+
+		if err := os.MkdirAll(filepath.Dir(targetAbs), 0755); err != nil {
+			return extracted, fmt.Errorf("cannot create parent directory for %q: %w", file.Name, err)
+		}
+
+		src, err := file.Open()
+		if err != nil {
+			return extracted, fmt.Errorf("cannot open archive entry %q: %w", file.Name, err)
+		}
+		dst, err := os.OpenFile(targetAbs, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode)
+		if err != nil {
+			src.Close()
+			return extracted, fmt.Errorf("cannot create file %q: %w", file.Name, err)
+		}
+		if _, err := io.Copy(dst, src); err != nil {
+			src.Close()
+			dst.Close()
+			return extracted, fmt.Errorf("cannot extract file %q: %w", file.Name, err)
+		}
+		src.Close()
+		dst.Close()
+		extracted++
+	}
+
+	return extracted, nil
 }
 
 const maxUploadSize = 50 * 1024 * 1024 // 50MB

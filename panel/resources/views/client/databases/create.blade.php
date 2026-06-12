@@ -6,10 +6,17 @@
             <main class="grow" role="content">
                 <div class="kt-container-fluid">
                     <div class="grid gap-5 lg:gap-7.5">
-<div class="max-w-3xl mx-auto p-8">
-        <div class="mb-8">
-            <a href="{{ route('client.databases.index') }}" class="text-gray-400 hover:text-white">Volver a bases de datos</a>
-            <h1 class="text-3xl font-bold text-white mt-4">Nueva Base de Datos</h1>
+<section class="grid gap-5 lg:gap-7.5 max-w-4xl">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+                <h1 class="font-medium text-lg text-mono">Nueva base de datos</h1>
+                <div class="flex items-center gap-1 text-sm">
+                    <a class="text-secondary-foreground hover:text-primary" href="{{ route('client.databases.index') }}">Bases de datos</a>
+                    <span class="text-muted-foreground">/</span>
+                    <span class="text-mono">Nueva</span>
+                </div>
+            </div>
+            <a href="{{ route('client.databases.index') }}" class="kt-btn kt-btn-outline kt-btn-sm">Volver</a>
         </div>
 
         @if($errors->any())
@@ -22,57 +29,58 @@
             </div>
         @endif
 
-        <form action="{{ route('client.databases.store') }}" method="POST" class="space-y-6 bg-gray-800 rounded-xl border border-gray-700 p-8">
+        <form action="{{ route('client.databases.store') }}" method="POST" class="kt-card">
             @csrf
 
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">Nombre de Base de Datos</label>
-                <input type="text" name="name" value="{{ old('name') }}" required pattern="[A-Za-z0-9_]+"
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white"
-                    placeholder="app_db">
-                <p class="mt-2 text-xs text-gray-500">Usa solo letras, números y guion bajo.</p>
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Credenciales</h3>
             </div>
-
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">Usuario</label>
-                <input type="text" name="username" value="{{ old('username') }}" required pattern="[A-Za-z0-9_]+"
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white"
-                    placeholder="app_user">
-                <p class="mt-2 text-xs text-gray-500">El usuario se creará dentro de MariaDB/MySQL.</p>
+            <div class="kt-card-content grid gap-5">
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Base de datos</label>
+                    <div class="grow grid gap-1.5">
+                        <input class="kt-input" type="text" name="name" value="{{ old('name') }}" required pattern="[A-Za-z0-9_]+" placeholder="app_db">
+                        <p class="kt-form-description">Usa solo letras, numeros y guion bajo.</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Usuario</label>
+                    <div class="grow grid gap-1.5">
+                        <input class="kt-input" type="text" name="username" value="{{ old('username') }}" required pattern="[A-Za-z0-9_]+" placeholder="app_user">
+                        <p class="kt-form-description">El usuario se creara dentro del motor seleccionado.</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Contrasena</label>
+                    <div class="grow grid gap-1.5">
+                        <input class="kt-input" type="password" name="password" required minlength="16" autocomplete="new-password" placeholder="Minimo 16 caracteres">
+                        <p class="kt-form-description">XPanel no mostrara esta contrasena despues de crearla.</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Engine</label>
+                    <select name="engine" class="kt-select">
+                        <option value="mariadb">MariaDB</option>
+                        <option value="mysql">MySQL</option>
+                        <option value="postgresql" disabled>PostgreSQL proximamente</option>
+                    </select>
+                </div>
+                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                    <label class="kt-form-label max-w-56">Sitio asociado</label>
+                    <select name="site_id" class="kt-select">
+                        <option value="">Sin sitio</option>
+                        @foreach($sites as $site)
+                            <option value="{{ $site->id }}" @selected(old('site_id') == $site->id)>{{ $site->domain }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2.5">
+                    <a href="{{ route('client.databases.index') }}" class="kt-btn kt-btn-outline">Cancelar</a>
+                    <button type="submit" class="kt-btn kt-btn-primary">Crear base de datos</button>
+                </div>
             </div>
-
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">Contraseña de la base de datos</label>
-                <input type="password" name="password" required minlength="16" autocomplete="new-password"
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white"
-                    placeholder="Mínimo 16 caracteres">
-                <p class="mt-2 text-xs text-gray-500">XPanel no mostrará esta contraseña después de crearla.</p>
-            </div>
-
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">Engine</label>
-                <select name="engine" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white">
-                    <option value="mariadb">MariaDB</option>
-                    <option value="mysql">MySQL</option>
-                    <option value="postgresql" disabled>PostgreSQL próximamente</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">Sitio Asociado (Opcional)</label>
-                <select name="site_id" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white">
-                    <option value="">Sin sitio</option>
-                    @foreach($sites as $site)
-                        <option value="{{ $site->id }}" @selected(old('site_id') == $site->id)>{{ $site->domain }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 rounded-lg py-3 font-semibold text-white">
-                Crear Base de Datos
-            </button>
         </form>
-    </div>
+    </section>
                     </div>
                 </div>
             </main>

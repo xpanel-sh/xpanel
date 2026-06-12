@@ -1,10 +1,15 @@
 package api
 
 import (
+	"bufio"
 	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"syscall"
 
 	xenv "xpanel/internal/env"
 	"xpanel/internal/state"
@@ -95,6 +100,7 @@ func runtimeStatus() (map[string]any, error) {
 	return map[string]any{
 		"base_path":   base,
 		"runtime_dir": runtimeDir,
+		"system":      systemMetrics(base),
 		"resources": map[string]int{
 			"mail_accounts": len(mailAccounts),
 			"dns_records":   len(dnsRecords),
@@ -117,6 +123,117 @@ func runtimeStatus() (map[string]any, error) {
 			},
 		},
 	}, nil
+}
+
+func systemMetrics(base string) map[string]any {
+	return map[string]any{
+		"cpu_percent": cpuPercent(),
+		"memory":      memoryMetrics(),
+		"disk":        diskMetrics(base),
+	}
+}
+
+func cpuPercent() float64 {
+	data, err := os.ReadFile("/proc/loadavg")
+	if err != nil {
+		return 0
+	}
+	fields := strings.Fields(string(data))
+	if len(fields) == 0 {
+		return 0
+	}
+	load, err := strconv.ParseFloat(fields[0], 64)
+	if err != nil {
+		return 0
+	}
+	cpus := runtime.NumCPU()
+	if cpus < 1 {
+		cpus = 1
+	}
+	percent := (load / float64(cpus)) * 100
+	if percent > 100 {
+		return 100
+	}
+	if percent < 0 {
+		return 0
+	}
+	return percent
+}
+
+func memoryMetrics() map[string]any {
+	file, err := os.Open("/proc/meminfo")
+	if err != nil {
+		var stats runtime.MemStats
+		runtime.ReadMemStats(&stats)
+		return map[string]any{
+			"total": stats.Sys,
+			"used":  stats.Alloc,
+			"free":  stats.Sys - stats.Alloc,
+			"percent": func() float64 {
+				if stats.Sys == 0 {
+					return 0
+				}
+				return (float64(stats.Alloc) / float64(stats.Sys)) * 100
+			}(),
+		}
+	}
+	defer file.Close()
+
+	values := map[string]uint64{}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		parts := strings.Fields(scanner.Text())
+		if len(parts) < 2 {
+			continue
+		}
+		key := strings.TrimSuffix(parts[0], ":")
+		value, err := strconv.ParseUint(parts[1], 10, 64)
+		if err == nil {
+			values[key] = value * 1024
+		}
+	}
+	total := values["MemTotal"]
+	available := values["MemAvailable"]
+	if available == 0 {
+		available = values["MemFree"] + values["Buffers"] + values["Cached"]
+	}
+	used := uint64(0)
+	if total > available {
+		used = total - available
+	}
+	percent := 0.0
+	if total > 0 {
+		percent = (float64(used) / float64(total)) * 100
+	}
+	return map[string]any{
+		"total":   total,
+		"used":    used,
+		"free":    available,
+		"percent": percent,
+	}
+}
+
+func diskMetrics(path string) map[string]any {
+	var stat syscall.Statfs_t
+	if err := syscall.Statfs(path, &stat); err != nil {
+		return map[string]any{"total": 0, "used": 0, "free": 0, "percent": 0}
+	}
+	total := stat.Blocks * uint64(stat.Bsize)
+	free := stat.Bavail * uint64(stat.Bsize)
+	used := uint64(0)
+	if total > free {
+		used = total - free
+	}
+	percent := 0.0
+	if total > 0 {
+		percent = (float64(used) / float64(total)) * 100
+	}
+	return map[string]any{
+		"total":   total,
+		"used":    used,
+		"free":    free,
+		"percent": percent,
+	}
 }
 
 func pathExists(path string) bool {

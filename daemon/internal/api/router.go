@@ -39,6 +39,8 @@ func NewRouter() http.Handler {
 	mux.HandleFunc("/api/files/mkdir", requireAuth(handleFileMkdir))
 	mux.HandleFunc("/api/files/delete", requireAuth(handleFileDelete))
 	mux.HandleFunc("/api/files/rename", requireAuth(handleFileRename))
+	mux.HandleFunc("/api/files/extract", requireAuth(handleFileExtract))
+	mux.HandleFunc("/api/files/search", requireAuth(handleFileSearch))
 	mux.HandleFunc("/api/files/upload", requireAuth(handleFileUpload))
 	mux.HandleFunc("/api/files/download", requireAuth(handleFileDownload))
 

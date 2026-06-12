@@ -347,27 +347,33 @@
         updateText(baseMetrics);
         updateResources(initialRuntime);
 
-        const runtimeChart = new ApexCharts(document.querySelector('#server-runtime-chart'), {
-            chart: { type: 'area', height: 320, toolbar: { show: false }, animations: { enabled: true, easing: 'linear', dynamicAnimation: { speed: 400 } } },
-            series: [
-                { name: 'CPU', data: series.cpu },
-                { name: 'Memoria', data: series.memory },
-                { name: 'Disco', data: series.disk },
-            ],
-            xaxis: { categories: labels },
-            yaxis: { min: 0, max: 100, labels: { formatter: (value) => `${Math.round(value)}%` } },
-            stroke: { curve: 'smooth', width: 2 },
-            fill: { type: 'gradient', gradient: { opacityFrom: 0.22, opacityTo: 0.02 } },
-            colors: ['#2563eb', '#8b5cf6', '#22c55e'],
-            dataLabels: { enabled: false },
-            legend: { position: 'top' },
-            tooltip: { y: { formatter: (value) => `${Number(value).toFixed(1)}%` } },
-        });
+        let runtimeChart = null;
+        if (window.ApexCharts && document.querySelector('#server-runtime-chart')) {
+            runtimeChart = new ApexCharts(document.querySelector('#server-runtime-chart'), {
+                chart: { type: 'area', height: 320, toolbar: { show: false }, animations: { enabled: true, easing: 'linear', dynamicAnimation: { speed: 400 } } },
+                series: [
+                    { name: 'CPU', data: series.cpu },
+                    { name: 'Memoria', data: series.memory },
+                    { name: 'Disco', data: series.disk },
+                ],
+                xaxis: { categories: labels },
+                yaxis: { min: 0, max: 100, labels: { formatter: (value) => `${Math.round(value)}%` } },
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: 'gradient', gradient: { opacityFrom: 0.22, opacityTo: 0.02 } },
+                colors: ['#2563eb', '#8b5cf6', '#22c55e'],
+                dataLabels: { enabled: false },
+                legend: { position: 'top' },
+                tooltip: { y: { formatter: (value) => `${Number(value).toFixed(1)}%` } },
+            });
 
-        runtimeChart.render();
+            runtimeChart.render();
+        } else {
+            const holder = document.querySelector('#server-runtime-chart');
+            if (holder) holder.innerHTML = '<div class="h-full grid place-items-center text-sm text-secondary-foreground">Graficos no disponibles, metricas textuales activas.</div>';
+        }
 
         const revenueChartEl = document.querySelector('#plans-revenue-chart');
-        if (revenueChartEl) {
+        if (window.ApexCharts && revenueChartEl) {
             new ApexCharts(revenueChartEl, {
                 chart: { type: 'bar', height: 145, toolbar: { show: false }, sparkline: { enabled: true } },
                 series: [{ name: 'Mensual', data: planStats.map((plan) => Number(plan.monthly || 0)) }],
@@ -400,12 +406,14 @@
                 updateResources(runtime);
                 markStatus(true);
 
-                runtimeChart.updateOptions({ xaxis: { categories: labels } }, false, false);
-                runtimeChart.updateSeries([
-                    { name: 'CPU', data: series.cpu },
-                    { name: 'Memoria', data: series.memory },
-                    { name: 'Disco', data: series.disk },
-                ], false);
+                if (runtimeChart) {
+                    runtimeChart.updateOptions({ xaxis: { categories: labels } }, false, false);
+                    runtimeChart.updateSeries([
+                        { name: 'CPU', data: series.cpu },
+                        { name: 'Memoria', data: series.memory },
+                        { name: 'Disco', data: series.disk },
+                    ], false);
+                }
 
                 const updated = document.getElementById('runtime-updated');
                 if (updated) updated.textContent = `Actualizado ${new Date().toLocaleTimeString()}`;
