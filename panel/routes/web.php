@@ -24,13 +24,57 @@ Route::group(['middleware' => ['web']], function () {
     // ============================================================
     Route::middleware(['auth:admin'])->group(function () {
 
-        Route::get('/admin/dashboard', function () {
+        Route::get('/admin/dashboard', function (\App\Services\DaemonClient $daemon) {
             $clientCount = \App\Models\Tenant::count();
             $siteCount   = \App\Models\Site::count();
             $nodeCount   = \App\Models\ServerNode::count();
             $planCount   = \App\Models\HostingPlan::count();
-            return view('admin.dashboard', compact('clientCount', 'siteCount', 'nodeCount', 'planCount'));
+            $activeNodeCount = \App\Models\ServerNode::where('is_active', true)->count();
+            $recentSites = \App\Models\Site::with('tenant')->latest()->take(8)->get();
+            $planStats = \App\Models\HostingPlan::withCount('tenants')
+                ->orderByDesc('tenants_count')
+                ->take(5)
+                ->get()
+                ->map(fn ($plan) => [
+                    'name' => $plan->name,
+                    'tenants' => $plan->tenants_count,
+                    'monthly' => (float) $plan->monthly_price * $plan->tenants_count,
+                ]);
+            $runtime = [];
+            $runtimeError = null;
+
+            try {
+                $runtime = $daemon->runtimeStatus();
+            } catch (\Throwable $e) {
+                $runtimeError = $e->getMessage();
+            }
+
+            return view('admin.dashboard', compact(
+                'clientCount',
+                'siteCount',
+                'nodeCount',
+                'planCount',
+                'activeNodeCount',
+                'recentSites',
+                'planStats',
+                'runtime',
+                'runtimeError'
+            ));
         })->name('admin.dashboard');
+
+        Route::get('/admin/dashboard/runtime', function (\App\Services\DaemonClient $daemon) {
+            try {
+                return response()->json([
+                    'ok' => true,
+                    'runtime' => $daemon->runtimeStatus(),
+                ]);
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => $e->getMessage(),
+                ], 503);
+            }
+        })->name('admin.dashboard.runtime');
 
         Route::get('/admin/plans',             [\App\Http\Controllers\Admin\HostingPlanController::class, 'index'])->name('admin.plans.index');
         Route::get('/admin/plans/create',      [\App\Http\Controllers\Admin\HostingPlanController::class, 'create'])->name('admin.plans.create');
@@ -60,17 +104,22 @@ Route::group(['middleware' => ['web']], function () {
         Route::put('/admin/dns/nameservers', [\App\Http\Controllers\Admin\NameserverController::class, 'update'])->name('admin.dns.nameservers.update');
         Route::get('/admin/daemon/operations', [\App\Http\Controllers\Admin\DaemonOperationController::class, 'index'])->name('admin.daemon.operations');
 
+        Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings.index');
+        Route::put('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');
+
         // Gestor de Archivos (Admin)
         Route::prefix('admin/files')->name('admin.files.')->group(function () {
-            Route::get('/{site}',              [\App\Http\Controllers\Admin\FileManagerController::class, 'index'])->name('index');
-            Route::get('/{site}/api/list',     [\App\Http\Controllers\Admin\FileManagerController::class, 'list'])->name('list');
-            Route::get('/{site}/api/read',     [\App\Http\Controllers\Admin\FileManagerController::class, 'read'])->name('read');
-            Route::post('/{site}/api/write',   [\App\Http\Controllers\Admin\FileManagerController::class, 'write'])->name('write');
-            Route::post('/{site}/api/mkdir',   [\App\Http\Controllers\Admin\FileManagerController::class, 'mkdir'])->name('mkdir');
-            Route::post('/{site}/api/delete',  [\App\Http\Controllers\Admin\FileManagerController::class, 'delete'])->name('delete');
-            Route::post('/{site}/api/rename',  [\App\Http\Controllers\Admin\FileManagerController::class, 'rename'])->name('rename');
-            Route::post('/{site}/api/upload',  [\App\Http\Controllers\Admin\FileManagerController::class, 'upload'])->name('upload');
-            Route::get('/{site}/api/download', [\App\Http\Controllers\Admin\FileManagerController::class, 'download'])->name('download');
+            Route::get('/api/list',     [\App\Http\Controllers\Admin\FileManagerController::class, 'list'])->name('list');
+            Route::get('/api/read',     [\App\Http\Controllers\Admin\FileManagerController::class, 'read'])->name('read');
+            Route::post('/api/write',   [\App\Http\Controllers\Admin\FileManagerController::class, 'write'])->name('write');
+            Route::post('/api/mkdir',   [\App\Http\Controllers\Admin\FileManagerController::class, 'mkdir'])->name('mkdir');
+            Route::post('/api/delete',  [\App\Http\Controllers\Admin\FileManagerController::class, 'delete'])->name('delete');
+            Route::post('/api/rename',  [\App\Http\Controllers\Admin\FileManagerController::class, 'rename'])->name('rename');
+            Route::post('/api/upload',  [\App\Http\Controllers\Admin\FileManagerController::class, 'upload'])->name('upload');
+            Route::get('/api/download', [\App\Http\Controllers\Admin\FileManagerController::class, 'download'])->name('download');
+            Route::get('/{domain?}',    [\App\Http\Controllers\Admin\FileManagerController::class, 'index'])
+                ->where('domain', '.*')
+                ->name('index');
         });
     });
 
@@ -139,15 +188,17 @@ Route::group(['middleware' => ['web']], function () {
 
         // Gestor de Archivos (Cliente)
         Route::prefix('files')->name('client.files.')->group(function () {
-            Route::get('/{site}',              [\App\Http\Controllers\Client\FileManagerController::class, 'index'])->name('index');
-            Route::get('/{site}/api/list',     [\App\Http\Controllers\Client\FileManagerController::class, 'list'])->name('list');
-            Route::get('/{site}/api/read',     [\App\Http\Controllers\Client\FileManagerController::class, 'read'])->name('read');
-            Route::post('/{site}/api/write',   [\App\Http\Controllers\Client\FileManagerController::class, 'write'])->name('write');
-            Route::post('/{site}/api/mkdir',   [\App\Http\Controllers\Client\FileManagerController::class, 'mkdir'])->name('mkdir');
-            Route::post('/{site}/api/delete',  [\App\Http\Controllers\Client\FileManagerController::class, 'delete'])->name('delete');
-            Route::post('/{site}/api/rename',  [\App\Http\Controllers\Client\FileManagerController::class, 'rename'])->name('rename');
-            Route::post('/{site}/api/upload',  [\App\Http\Controllers\Client\FileManagerController::class, 'upload'])->name('upload');
-            Route::get('/{site}/api/download', [\App\Http\Controllers\Client\FileManagerController::class, 'download'])->name('download');
+            Route::get('/api/list',     [\App\Http\Controllers\Client\FileManagerController::class, 'list'])->name('list');
+            Route::get('/api/read',     [\App\Http\Controllers\Client\FileManagerController::class, 'read'])->name('read');
+            Route::post('/api/write',   [\App\Http\Controllers\Client\FileManagerController::class, 'write'])->name('write');
+            Route::post('/api/mkdir',   [\App\Http\Controllers\Client\FileManagerController::class, 'mkdir'])->name('mkdir');
+            Route::post('/api/delete',  [\App\Http\Controllers\Client\FileManagerController::class, 'delete'])->name('delete');
+            Route::post('/api/rename',  [\App\Http\Controllers\Client\FileManagerController::class, 'rename'])->name('rename');
+            Route::post('/api/upload',  [\App\Http\Controllers\Client\FileManagerController::class, 'upload'])->name('upload');
+            Route::get('/api/download', [\App\Http\Controllers\Client\FileManagerController::class, 'download'])->name('download');
+            Route::get('/{domain?}',    [\App\Http\Controllers\Client\FileManagerController::class, 'index'])
+                ->where('domain', '.*')
+                ->name('index');
         });
     });
 });

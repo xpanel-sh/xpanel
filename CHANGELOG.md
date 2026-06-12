@@ -12,6 +12,43 @@ Future releases will include:
 
 ---
 
+## [2.5.0] - Admin/Client Layout Refresh and Advanced File Manager
+**Release date:** 2026-06-12
+
+### Added
+- Added shared admin and client layout partials for sidebar, navbar, footer and search modal.
+- Added contextual admin/client navbars with route-aware actions and dropdown support.
+- Added system settings model, migration, controller and admin settings view.
+- Added admin dashboard runtime endpoint and refreshed dashboard panels for server monitoring, resources and operational metrics.
+- Added client dashboard content for tenant/account, plan, resources and site overview.
+- Added a shared advanced file manager view for admin and client panels using the Metronic/iKode editor layout.
+- Added IDE-style file manager controls: explorer/settings modes, outline/timeline panel, right-side info/summary panel, terminal-style bottom panel, context menu actions and Monaco editor.
+- Added persistent file manager UI state in `localStorage` for panel visibility, active tabs and split sizes.
+- Added split panes for explorer/outline, editor/terminal and main left/center/right layout.
+- Added duplicated editor tab support so the same open file can be viewed in two side-by-side Monaco panes.
+- Added drag-and-drop empty-state upload area in the explorer when a directory has no files.
+- Added optional domain-based file manager routes for admin and client access.
+
+### Changed
+- Changed admin and client layouts to noindex/noarchive mode and removed SEO/social metadata from private panels.
+- Changed admin/client file manager routes to support `/admin/files`, `/admin/files/{domain}`, `/client/files` and `/client/files/{domain}`.
+- Changed file manager access to use domains instead of numeric site IDs in admin/client URLs.
+- Changed admin file manager root behavior so `/admin/files` can browse the global `www/` root and a domain route browses that site's root.
+- Changed client file manager root behavior so `/client/files` shows only the authenticated tenant's sites and domain routes are tenant-authorized.
+- Changed all admin/client views, except the legacy admin files example, to use the new content container/footer structure.
+- Changed file manager frontend assets to load from `public/assets/files`.
+- Changed daemon file handling so an empty domain resolves to the global sites root.
+- Changed tenant-scoped migrations to include soft delete timestamps for managed resources.
+
+### Fixed
+- Fixed undefined `$user` in the admin layout by resolving the authenticated admin guard user in the layout.
+- Fixed admin/client navbar visibility so file manager pages can use the full workspace area.
+- Fixed file manager split panes that were not resizing inside flex layouts by using `flex-basis` Split.js styles.
+- Fixed Monaco showing behind the empty state before a file is opened.
+- Fixed duplicated file manager action buttons and moved upload/drop behavior into the explorer flow.
+
+---
+
 ## [2.4.0] - File Manager Fix and Multi-Tenant Domain Access (Port 2083)
 **Release date:** 2026-06-10
 

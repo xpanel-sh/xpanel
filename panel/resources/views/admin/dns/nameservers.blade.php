@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
-    <section class="mx-auto max-w-4xl space-y-6">
+    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
+        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+            <main class="grow" role="content">
+                <div class="kt-container-fluid">
+                    <div class="grid gap-5 lg:gap-7.5">
+<section class="mx-auto max-w-4xl space-y-6">
         <div>
             <p class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Admin Global</p>
             <h1 class="mt-2 text-3xl font-black tracking-tight">Nameservers</h1>
@@ -44,4 +49,11 @@
             <button class="rounded-xl bg-white px-6 py-3 font-bold text-black transition hover:bg-gray-200">Guardar Nameservers</button>
         </form>
     </section>
+                    </div>
+                </div>
+            </main>
+
+            @include('layouts.partials.admin.footer')
+        </div>
+    </div>
 @endsection

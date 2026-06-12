@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
+        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+            <main class="grow" role="content">
+                <div class="kt-container-fluid">
+                    <div class="grid gap-5 lg:gap-7.5">
+<div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
             <div class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Agente XPanel</div>
             <h1 class="mt-2 text-3xl font-black tracking-tight">Operaciones del daemon</h1>
@@ -99,5 +104,12 @@
                 Aún no hay operaciones registradas por el daemon.
             </div>
         @endforelse
+    </div>
+                    </div>
+                </div>
+            </main>
+
+            @include('layouts.partials.admin.footer')
+        </div>
     </div>
 @endsection

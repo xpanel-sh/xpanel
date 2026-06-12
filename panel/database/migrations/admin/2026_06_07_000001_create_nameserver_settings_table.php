@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('nameserver_settings')) {
+            return;
+        }
+
         Schema::create('nameserver_settings', function (Blueprint $table) {
             $table->id();
             $table->string('name')->default('default');

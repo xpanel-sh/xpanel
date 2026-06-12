@@ -12,6 +12,7 @@ import (
 
 // handleFileList lists directory contents.
 // GET /api/files/list?domain=example.com&path=/subdir
+// When domain is empty, lists the global sites root.
 func handleFileList(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -21,10 +22,6 @@ func handleFileList(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Query().Get("path")
 	if path == "" {
 		path = "/"
-	}
-	if domain == "" {
-		http.Error(w, "domain is required", http.StatusBadRequest)
-		return
 	}
 	root, err := filemanager.SiteRoot(domain)
 	if err != nil {
@@ -48,8 +45,8 @@ func handleFileRead(w http.ResponseWriter, r *http.Request) {
 	}
 	domain := strings.TrimSpace(r.URL.Query().Get("domain"))
 	path := r.URL.Query().Get("path")
-	if domain == "" || path == "" {
-		http.Error(w, "domain and path are required", http.StatusBadRequest)
+	if path == "" {
+		http.Error(w, "path is required", http.StatusBadRequest)
 		return
 	}
 	root, err := filemanager.SiteRoot(domain)
@@ -82,8 +79,8 @@ func handleFileWrite(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
-	if strings.TrimSpace(req.Domain) == "" || strings.TrimSpace(req.Path) == "" {
-		http.Error(w, "domain and path are required", http.StatusBadRequest)
+	if strings.TrimSpace(req.Path) == "" {
+		http.Error(w, "path is required", http.StatusBadRequest)
 		return
 	}
 	root, err := filemanager.SiteRoot(req.Domain)
@@ -105,8 +102,8 @@ func handleFileMkdir(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
-	if strings.TrimSpace(req.Domain) == "" || strings.TrimSpace(req.Path) == "" {
-		http.Error(w, "domain and path are required", http.StatusBadRequest)
+	if strings.TrimSpace(req.Path) == "" {
+		http.Error(w, "path is required", http.StatusBadRequest)
 		return
 	}
 	root, err := filemanager.SiteRoot(req.Domain)
@@ -128,8 +125,8 @@ func handleFileDelete(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
-	if strings.TrimSpace(req.Domain) == "" || strings.TrimSpace(req.Path) == "" {
-		http.Error(w, "domain and path are required", http.StatusBadRequest)
+	if strings.TrimSpace(req.Path) == "" {
+		http.Error(w, "path is required", http.StatusBadRequest)
 		return
 	}
 	root, err := filemanager.SiteRoot(req.Domain)
@@ -151,8 +148,8 @@ func handleFileRename(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
-	if strings.TrimSpace(req.Domain) == "" || strings.TrimSpace(req.OldPath) == "" || strings.TrimSpace(req.NewPath) == "" {
-		http.Error(w, "domain, old_path and new_path are required", http.StatusBadRequest)
+	if strings.TrimSpace(req.OldPath) == "" || strings.TrimSpace(req.NewPath) == "" {
+		http.Error(w, "old_path and new_path are required", http.StatusBadRequest)
 		return
 	}
 	root, err := filemanager.SiteRoot(req.Domain)
@@ -191,10 +188,6 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	if domain == "" {
-		http.Error(w, "domain is required", http.StatusBadRequest)
-		return
-	}
 	root, err := filemanager.SiteRoot(domain)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -219,8 +212,8 @@ func handleFileDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	domain := strings.TrimSpace(r.URL.Query().Get("domain"))
 	path := r.URL.Query().Get("path")
-	if domain == "" || path == "" {
-		http.Error(w, "domain and path are required", http.StatusBadRequest)
+	if path == "" {
+		http.Error(w, "path is required", http.StatusBadRequest)
 		return
 	}
 	root, err := filemanager.SiteRoot(domain)

@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="space-y-6" x-data="{ search: '' }">
+    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
+        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+            <main class="grow" role="content">
+                <div class="kt-container-fluid">
+                    <div class="grid gap-5 lg:gap-7.5">
+<div class="space-y-6" x-data="{ search: '' }">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Admin</p>
@@ -60,7 +65,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500">{{ $site->created_at->format('d/m/Y') }}</td>
                                 <td class="px-6 py-4 text-right">
-                                    <a href="{{ route('admin.files.index', $site) }}"
+                                    <a href="{{ route('admin.files.index', $site->domain) }}"
                                         class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-400 hover:text-white transition">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -83,6 +88,13 @@
             <div class="p-4 border-t border-white/10">
                 {{ $sites->links() }}
             </div>
+        </div>
+    </div>
+                    </div>
+                </div>
+            </main>
+
+            @include('layouts.partials.admin.footer')
         </div>
     </div>
 @endsection

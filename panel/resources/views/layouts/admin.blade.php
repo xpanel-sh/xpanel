@@ -1,282 +1,2344 @@
+<!--
+Product: XPanel gestion de serveur hosting
+Version: v9.4.11
+Author: xPanel Team
+Contact: support@xpanel.com
+Website: https://www.xpanel.com
+Support: https://devs.xpanel.com
+Follow: https://www.twitter.com/xpanel
+License: https://xpanel.com/license
+-->
 <!DOCTYPE html>
-<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" lang="es">
+<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>XPanel Admin</title>
-    <link rel="shortcut icon" href="{{ asset('assets/media/app/favicon.ico') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/media/app/favicon-32x32.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="{{ asset('assets/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link href="{{ asset('assets/media/app/apple-touch-icon.png') }}" rel="apple-touch-icon" sizes="180x180" />
+    <link href="{{ asset('assets/media/app/favicon-32x32.png') }}" rel="icon" sizes="32x32" type="image/png" />
+    <link href="{{ asset('assets/media/app/favicon-16x16.png') }}" rel="icon" sizes="16x16" type="image/png" />
+    <link href="{{ asset('assets/media/app/favicon.ico') }}" rel="shortcut icon" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link href="{{ asset('assets/vendors/apexcharts/apexcharts.css') }}" rel="stylesheet" />
+    <link href="{{ asset('assets/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet" />
+    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" />
+    @stack('styles')
 </head>
 
-<body class="antialiased flex h-full text-base text-foreground bg-background [--header-height:58px] [--sidebar-width:58px] [--navbar-height:52px] lg:overflow-hidden bg-muted">
-
-<script>
-    (function () {
-        const t = localStorage.getItem('kt-theme') || 'light';
-        const mode = t === 'system'
-            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-            : t;
-        document.documentElement.classList.add(mode);
-        document.documentElement.setAttribute('data-kt-theme-mode', mode);
-    })();
-</script>
-
-@php
-    use Illuminate\Support\Facades\Auth;
-    $user    = Auth::guard('admin')->user();
-    $isFiles = request()->routeIs('admin.files.*');
-    $sideActive = fn(string ...$patterns) => collect($patterns)->contains(fn($p) => request()->routeIs($p))
-        ? 'bg-background [&_i]:text-primary border-input'
-        : '';
-@endphp
-
-<div class="flex grow">
-
-{{-- ============================================================
-     HEADER
-     ============================================================ --}}
-<header class="flex items-center fixed z-10 top-0 left-0 right-0 shrink-0 h-(--header-height) bg-muted" id="header">
-    <div class="kt-container-fluid flex justify-between items-stretch px-4 lg:ps-0 lg:gap-4" id="header_container">
-
-        <div class="flex items-center gap-3">
-            <button class="kt-btn kt-btn-icon kt-btn-ghost lg:hidden" data-kt-drawer-toggle="#sidebar">
-                <i class="ki-filled ki-menu text-lg"></i>
-            </button>
-            <div class="hidden lg:flex items-center justify-center w-(--sidebar-width) shrink-0">
-                <a href="{{ route('admin.dashboard') }}">
-                    <img class="dark:hidden h-[26px]" src="{{ asset('assets/media/app/mini-logo-primary.svg') }}" alt="XPanel">
-                    <img class="hidden dark:block h-[26px]" src="{{ asset('assets/media/app/mini-logo-primary-dark.svg') }}" alt="XPanel">
-                </a>
-            </div>
-            <span class="text-sm font-bold text-mono tracking-tight">XPanel</span>
-            <span class="text-muted-foreground hidden sm:inline">/</span>
-            <span class="text-sm text-muted-foreground hidden sm:inline">Admin</span>
-        </div>
-
-        <div class="flex items-center gap-1 lg:gap-2">
-
-            <button class="kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full"
-                    title="Cambiar tema"
-                    onclick="(function(){
-                        const html=document.documentElement;
-                        const isDark=html.classList.contains('dark');
-                        const next=isDark?'light':'dark';
-                        html.classList.toggle('dark',!isDark);
-                        html.classList.toggle('light',isDark);
-                        html.setAttribute('data-kt-theme-mode',next);
-                        localStorage.setItem('kt-theme',next);
-                    })()">
-                <i class="ki-filled ki-sun text-lg dark:hidden text-amber-500"></i>
-                <i class="ki-filled ki-moon text-lg hidden dark:block text-indigo-400"></i>
-            </button>
-
-            <div class="kt-menu" data-kt-menu="true">
-                <div class="kt-menu-item"
-                     data-kt-menu-item-offset="0, 8px"
-                     data-kt-menu-item-placement="bottom-end"
-                     data-kt-menu-item-toggle="dropdown"
-                     data-kt-menu-item-trigger="click">
-                    <button class="kt-menu-toggle flex items-center gap-2 kt-btn kt-btn-ghost rounded-xl px-2 h-9">
-                        <span class="size-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <i class="ki-filled ki-user text-sm text-primary"></i>
-                        </span>
-                        <span class="hidden md:block text-sm font-medium text-mono max-w-[120px] truncate">{{ $user?->name }}</span>
-                        <i class="ki-filled ki-down text-xs text-muted-foreground"></i>
-                    </button>
-                    <div class="kt-menu-dropdown kt-menu-default py-2 min-w-[200px]" data-kt-menu-dismiss="true">
-                        <div class="px-4 py-2.5 border-b border-border mb-1">
-                            <div class="text-sm font-semibold text-mono">{{ $user?->name }}</div>
-                            <div class="text-xs text-muted-foreground truncate mt-0.5">{{ $user?->email }}</div>
-                        </div>
-                        <div class="border-t border-border mt-1 pt-1">
-                            <form method="POST" action="{{ route('admin.logout') }}">
-                                @csrf
-                                <button type="submit" class="kt-menu-link w-full">
-                                    <span class="kt-menu-icon"><i class="ki-filled ki-logout text-red-500"></i></span>
-                                    <span class="kt-menu-title text-red-500">Cerrar sesión</span>
-                                </button>
-                            </form>
-                        </div>
+<body
+    class="antialiased flex h-full text-base text-foreground bg-background [--header-height:58px] [--sidebar-width:58px] [--navbar-height:56px] lg:overflow-hidden bg-muted">
+    <!-- Theme Mode -->
+    <script>
+        const defaultThemeMode = 'light'; // light|dark|system
+        let themeMode;
+        if (document.documentElement) {
+            if (localStorage.getItem('kt-theme')) {
+                themeMode = localStorage.getItem('kt-theme');
+            } else if (
+                document.documentElement.hasAttribute('data-kt-theme-mode')
+            ) {
+                themeMode = document.documentElement.getAttribute('data-kt-theme-mode');
+            } else {
+                themeMode = defaultThemeMode;
+            }
+            if (themeMode === 'system') {
+                themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.classList.add(themeMode);
+        }
+    </script>
+    <!-- End of Theme Mode -->
+    @php
+        use Illuminate\Support\Facades\Auth;
+        $user = Auth::guard('admin')->user();
+        $isFiles = request()->routeIs('admin.files.*');
+    @endphp
+    <!-- Page -->
+    <!-- Base -->
+    <div class="flex grow">
+        <!-- Header -->
+        <header class="flex items-center fixed z-10 top-0 left-0 right-0 shrink-0 h-(--header-height) bg-muted"
+            id="header">
+            <!-- Container -->
+            <div class="kt-container-fluid flex justify-between items-stretch px-5 lg:ps-0 lg:gap-4"
+                id="header_container">
+                <div class="flex items-center me-1">
+                    <div class="flex items-center justify-center lg:w-(--sidebar-width) gap-1 shrink-0">
+                        <button class="kt-btn kt-btn-icon kt-btn-ghost -ms-2 lg:hidden"
+                            data-kt-drawer-toggle="#sidebar">
+                            <i class="ki-filled ki-menu">
+                            </i>
+                        </button>
+                        <a class="mx-1" href="{{ route('admin.dashboard') }}">
+                            <img class="dark:hidden min-h-[24px]"
+                                src="{{ asset('assets/media/app/mini-logo-primary.svg') }}" />
+                            <img class="hidden dark:block min-h-[24px]"
+                                src="{{ asset('assets/media/app/mini-logo-primary-dark.svg') }}" />
+                        </a>
+                    </div>
+                    <div class="flex items-center">
+                        <h3 class="text-secondary-foreground text-mono font-medium hidden md:block">
+                            xPanel
+                        </h3> 
                     </div>
                 </div>
-            </div>
-
-        </div>
-    </div>
-</header>
-
-{{-- ============================================================
-     SIDEBAR
-     ============================================================ --}}
-<div class="fixed w-(--sidebar-width) lg:top-(--header-height) top-0 bottom-0 z-20 hidden lg:flex flex-col items-stretch shrink-0 group py-3 lg:py-0 [--kt-drawer-enable:true] lg:[--kt-drawer-enable:false]"
-     data-kt-drawer="true"
-     data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0"
-     id="sidebar">
-    <div class="flex grow shrink-0" id="sidebar_content">
-        <div class="kt-scrollable-y-auto grow gap-2.5 shrink-0 flex items-center flex-col lg:max-h-[calc(100dvh-70px)] pt-2">
-
-            @php
-                $sideBtn = 'kt-btn kt-btn-ghost kt-btn-icon rounded-full size-10 border border-transparent text-secondary-foreground hover:bg-background hover:[&_i]:text-primary hover:border-input';
-            @endphp
-
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.dashboard') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.dashboard') }}">
-                <i class="ki-filled ki-element-11 text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Dashboard</span>
-            </a>
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.clients.*') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.clients.index') }}">
-                <i class="ki-filled ki-people text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Clientes</span>
-            </a>
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.plans.*') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.plans.index') }}">
-                <i class="ki-filled ki-dollar text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Planes</span>
-            </a>
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.sites.*', 'admin.files.*') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.sites.index') }}">
-                <i class="ki-filled ki-website text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Sitios</span>
-            </a>
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.domains.*') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.domains.index') }}">
-                <i class="ki-filled ki-globe text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Dominios</span>
-            </a>
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.servers.*') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.servers.index') }}">
-                <i class="ki-filled ki-setting-3 text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Servidores</span>
-            </a>
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.dns.*') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.dns.nameservers') }}">
-                <i class="ki-filled ki-code text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Nameservers</span>
-            </a>
-            <a class="{{ $sideBtn }} {{ $sideActive('admin.daemon.*') }}"
-               data-kt-tooltip="" data-kt-tooltip-placement="right"
-               href="{{ route('admin.daemon.operations') }}">
-                <i class="ki-filled ki-chart-line-star text-lg"></i>
-                <span class="kt-tooltip" data-kt-tooltip-content="true">Operaciones</span>
-            </a>
-
-        </div>
-    </div>
-</div>
-
-{{-- ============================================================
-     NAVBAR
-     ============================================================ --}}
-@if(!$isFiles)
-<div class="flex items-stretch lg:fixed z-5 top-(--header-height) start-(--sidebar-width) end-5 h-(--navbar-height) mx-5 lg:mx-0 bg-muted" id="navbar">
-    <div class="rounded-t-xl border border-input bg-background flex items-stretch grow">
-        <div class="kt-container-fluid flex justify-between items-stretch gap-5 px-5">
-
-            <div class="grid items-stretch">
-                <div class="kt-scrollable-x-auto flex items-stretch">
-                    <div class="kt-menu gap-4 lg:gap-5" data-kt-menu="true">
-
-                        @php
-                            $tabs = [
-                                'admin.dashboard'   => ['Dashboard',     route('admin.dashboard')],
-                                'admin.clients.*'   => ['Clientes',      route('admin.clients.index')],
-                                'admin.plans.*'     => ['Planes',        route('admin.plans.index')],
-                                'admin.sites.*'     => ['Sitios',        route('admin.sites.index')],
-                                'admin.domains.*'   => ['Dominios',      route('admin.domains.index')],
-                                'admin.servers.*'   => ['Servidores',    route('admin.servers.index')],
-                                'admin.dns.*'       => ['Nameservers',   route('admin.dns.nameservers')],
-                                'admin.daemon.*'    => ['Operaciones',   route('admin.daemon.operations')],
-                            ];
-                        @endphp
-
-                        @foreach($tabs as $pattern => [$label, $href])
-                            @php $tabActive = request()->routeIs($pattern); @endphp
-                            <div class="kt-menu-item border-b-2 {{ $tabActive ? 'border-b-primary' : 'border-b-transparent' }}">
-                                <a class="kt-menu-link gap-1.5 py-3" href="{{ $href }}">
-                                    <span class="kt-menu-title text-nowrap text-sm {{ $tabActive ? 'text-mono font-medium' : 'text-muted-foreground' }}">
-                                        {{ $label }}
-                                    </span>
-                                </a>
+                <!-- End of Logo -->
+                <!-- Topbar -->
+                <div class="flex items-center lg:gap-3.5">
+                    <!-- Action -->
+                    <a class="kt-btn kt-btn-primary mr-1 sm:me-0"
+                        href="/metronic/tailwind/demo3/account/home/get-started">
+                        Get Started
+                    </a>
+                    <!-- End of Action -->
+                    <div class="flex items-center gap-1.5">
+                        <!-- Search -->
+                        <button
+                            class="group kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:[&amp;_i]:text-primary"
+                            data-kt-modal-toggle="#search_modal">
+                            <i class="ki-filled ki-magnifier text-lg group-hover:text-primary">
+                            </i>
+                        </button>
+                        <!-- End of Search -->
+                        <!-- Chat -->
+                        <button
+                            class="kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:[&amp;_i]:text-primary"
+                            data-kt-drawer-toggle="#chat_drawer">
+                            <i class="ki-filled ki-messages text-lg">
+                            </i>
+                        </button>
+                        <!--Chat Drawer-->
+                        <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[450px] top-5 bottom-5 end-5 rounded-xl border border-border"
+                            data-kt-drawer="true" data-kt-drawer-container="body" id="chat_drawer">
+                            <div>
+                                <div
+                                    class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-3.5">
+                                    Chat
+                                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0"
+                                        data-kt-drawer-dismiss="true">
+                                        <i class="ki-filled ki-cross">
+                                        </i>
+                                    </button>
+                                </div>
+                                <div class="border-b border-b-border">
+                                </div>
+                                <div class="border-b border-border py-2.5">
+                                    <div class="flex items-center justify-between flex-wrap gap-2 px-5">
+                                        <div class="flex items-center flex-wrap gap-2">
+                                            <div
+                                                class="flex items-center justify-center shrink-0 rounded-full bg-accent/60 border border-border size-11">
+                                                <img alt="" class="size-7"
+                                                    src="{{ asset('assets/media/brand-logos/gitlab.svg') }}" />
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <a class="text-sm font-semibold text-mono hover:text-primary"
+                                                    href="#">
+                                                    HR Team
+                                                </a>
+                                                <span class="text-xs font-medium italic text-muted-foreground">
+                                                    Jessy is typing..
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="flex -space-x-2">
+                                                <div class="flex">
+                                                    <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-[30px]"
+                                                        src="{{ asset('assets/media/avatars/300-4.png') }}" />
+                                                </div>
+                                                <div class="flex">
+                                                    <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-[30px]"
+                                                        src="{{ asset('assets/media/avatars/300-1.png') }}" />
+                                                </div>
+                                                <div class="flex">
+                                                    <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-[30px]"
+                                                        src="{{ asset('assets/media/avatars/300-2.png') }}" />
+                                                </div>
+                                                <div class="flex">
+                                                    <span
+                                                        class="hover:z-5 relative inline-flex items-center justify-center shrink-0 rounded-full ring-1 font-semibold leading-none text-2xs size-[30px] text-white size-6 ring-background bg-green-500">
+                                                        +10
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="kt-menu" data-kt-menu="true">
+                                                <div class="kt-menu-item" data-kt-menu-item-offset="0, 10px"
+                                                    data-kt-menu-item-placement="bottom-end"
+                                                    data-kt-menu-item-placement-rtl="bottom-start"
+                                                    data-kt-menu-item-toggle="dropdown"
+                                                    data-kt-menu-item-trigger="click|lg:hover">
+                                                    <button
+                                                        class="kt-menu-toggle kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                                                        <i class="ki-filled ki-dots-vertical text-lg">
+                                                        </i>
+                                                    </button>
+                                                    <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]"
+                                                        data-kt-menu-dismiss="true">
+                                                        <div class="kt-menu-item">
+                                                            <a class="kt-menu-link"
+                                                                href="/metronic/tailwind/demo3/account/members/teams">
+                                                                <span class="kt-menu-icon">
+                                                                    <i class="ki-filled ki-users">
+                                                                    </i>
+                                                                </span>
+                                                                <span class="kt-menu-title">
+                                                                    Invite Users
+                                                                </span>
+                                                            </a>
+                                                        </div>
+                                                        <div class="kt-menu-item" data-kt-menu-item-offset="-15px, 0"
+                                                            data-kt-menu-item-placement="right-start"
+                                                            data-kt-menu-item-toggle="dropdown"
+                                                            data-kt-menu-item-trigger="click|lg:hover">
+                                                            <div class="kt-menu-link">
+                                                                <span class="kt-menu-icon">
+                                                                    <i class="ki-filled ki-people">
+                                                                    </i>
+                                                                </span>
+                                                                <span class="kt-menu-title">
+                                                                    Team
+                                                                </span>
+                                                                <span class="kt-menu-arrow">
+                                                                    <i
+                                                                        class="ki-filled ki-right text-xs rtl:transform rtl:rotate-180">
+                                                                    </i>
+                                                                </span>
+                                                            </div>
+                                                            <div
+                                                                class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]">
+                                                                <div class="kt-menu-item">
+                                                                    <a class="kt-menu-link"
+                                                                        href="/metronic/tailwind/demo3/account/members/import-members">
+                                                                        <span class="kt-menu-icon">
+                                                                            <i class="ki-filled ki-shield-search">
+                                                                            </i>
+                                                                        </span>
+                                                                        <span class="kt-menu-title">
+                                                                            Find Members
+                                                                        </span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="kt-menu-item">
+                                                                    <a class="kt-menu-link"
+                                                                        href="/metronic/tailwind/demo3/account/members/import-members">
+                                                                        <span class="kt-menu-icon">
+                                                                            <i class="ki-filled ki-calendar">
+                                                                            </i>
+                                                                        </span>
+                                                                        <span class="kt-menu-title">
+                                                                            Meetings
+                                                                        </span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="kt-menu-item">
+                                                                    <a class="kt-menu-link"
+                                                                        href="/metronic/tailwind/demo3/account/members/import-members">
+                                                                        <span class="kt-menu-icon">
+                                                                            <i class="ki-filled ki-filter-edit">
+                                                                            </i>
+                                                                        </span>
+                                                                        <span class="kt-menu-title">
+                                                                            Group Settings
+                                                                        </span>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="kt-menu-item">
+                                                            <a class="kt-menu-link"
+                                                                href="/metronic/tailwind/demo3/account/security/privacy-settings">
+                                                                <span class="kt-menu-icon">
+                                                                    <i class="ki-filled ki-setting-3">
+                                                                    </i>
+                                                                </span>
+                                                                <span class="kt-menu-title">
+                                                                    Settings
+                                                                </span>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        @endforeach
-
+                            <div class="kt-scrollable-y-auto grow" data-kt-scrollable="true"
+                                data-kt-scrollable-dependencies="#header" data-kt-scrollable-max-height="auto"
+                                data-kt-scrollable-offset="230px">
+                                <div class="flex flex-col gap-5 py-5">
+                                    <div class="flex items-end gap-3.5 px-5">
+                                        <img alt="" class="rounded-full size-9"
+                                            src="{{ asset('assets/media/avatars/300-5.png') }}" />
+                                        <div class="flex flex-col gap-1.5">
+                                            <div
+                                                class="kt-card shadow-none flex flex-col bg-accent/60 gap-2.5 p-3 rounded-bs-none text-2sm">
+                                                Next week we are closing the project. Do You have questions?
+                                            </div>
+                                            <span class="text-xs font-medium text-muted-foreground">
+                                                14:04
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-end justify-end gap-3.5 px-5">
+                                        <div class="flex flex-col gap-1.5">
+                                            <div
+                                                class="kt-card shadow-none flex bg-primary flex-col gap-2.5 p-3 rounded-be-none">
+                                                <p class="text-2sm font-medium text-primary-foreground">
+                                                    This is excellent news!
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center justify-end gap-2 relative">
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    14:08
+                                                </span>
+                                                <i class="ki-filled ki-double-check text-lg absolute text-green-500">
+                                                </i>
+                                            </div>
+                                        </div>
+                                        <div class="relative shrink-0">
+                                            <div class="kt-avatar size-9">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-2.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-end gap-3.5 px-5">
+                                        <img alt="" class="rounded-full size-9"
+                                            src="{{ asset('assets/media/avatars/300-4.png') }}" />
+                                        <div class="flex flex-col gap-1.5">
+                                            <div
+                                                class="kt-card shadow-none flex flex-col bg-accent/60 gap-2.5 p-3 rounded-bs-none text-2sm">
+                                                I have checked the features, can not wait to demo them!
+                                            </div>
+                                            <span class="text-xs font-medium text-muted-foreground">
+                                                14:26
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-end gap-3.5 px-5">
+                                        <img alt="" class="rounded-full size-9"
+                                            src="{{ asset('assets/media/avatars/300-1.png') }}" />
+                                        <div class="flex flex-col gap-1.5">
+                                            <div
+                                                class="kt-card shadow-none flex flex-col bg-accent/60 gap-2.5 p-3 rounded-bs-none text-2sm">
+                                                I have looked over the rollout plan, and everything seems spot on.
+                                            </div>
+                                            <span class="text-xs font-medium text-muted-foreground">
+                                                15:09
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-end justify-end gap-3.5 px-5">
+                                        <div class="flex flex-col gap-1.5">
+                                            <div
+                                                class="kt-card shadow-none flex bg-primary flex-col gap-2.5 p-3 rounded-be-none">
+                                                <p class="text-2sm font-medium text-primary-foreground">
+                                                    Haven't seen the build yet, I'll look now.
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center justify-end gap-2 relative">
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    15:52
+                                                </span>
+                                                <i
+                                                    class="ki-filled ki-double-check text-lg absolute text-muted-foreground">
+                                                </i>
+                                            </div>
+                                        </div>
+                                        <div class="relative shrink-0">
+                                            <div class="kt-avatar size-9">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-2.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-end justify-end gap-3.5 px-5">
+                                        <div class="flex flex-col gap-1.5">
+                                            <div
+                                                class="kt-card shadow-none flex bg-primary flex-col gap-2.5 p-3 rounded-be-none">
+                                                <p class="text-2sm font-medium text-primary-foreground">
+                                                    Checking the build now
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center justify-end gap-2 relative">
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    15:52
+                                                </span>
+                                                <i
+                                                    class="ki-filled ki-double-check text-lg absolute text-muted-foreground">
+                                                </i>
+                                            </div>
+                                        </div>
+                                        <div class="relative shrink-0">
+                                            <div class="kt-avatar size-9">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-2.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-end gap-3.5 px-5">
+                                        <img alt="" class="rounded-full size-9"
+                                            src="{{ asset('assets/media/avatars/300-4.png') }}" />
+                                        <div class="flex flex-col gap-1.5">
+                                            <div
+                                                class="kt-card shadow-none flex flex-col bg-accent/60 gap-2.5 p-3 rounded-bs-none text-2sm">
+                                                Tomorrow, I will send the link for the meeting
+                                            </div>
+                                            <span class="text-xs font-medium text-muted-foreground">
+                                                17:40
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--Chat Footer-->
+                            <div class="mb-2.5">
+                                <div class="flex grow gap-2 px-5 py-3.5 bg-accent/60 mb-2.5 border-y border-border"
+                                    id="join_request">
+                                    <div class="kt-avatar size-9">
+                                        <div class="kt-avatar-image">
+                                            <img alt="avatar" src="{{ asset('assets/media/avatars/300-14.png') }}">
+                                            </img>
+                                        </div>
+                                        <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                            <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-3 grow">
+                                        <div class="flex flex-col">
+                                            <div class="text-sm mb-px">
+                                                <a class="hover:text-primary font-semibold text-mono" href="#">
+                                                    Jane Perez
+                                                </a>
+                                                <span class="text-secondary-foreground">
+                                                    wants to join chat
+                                                </span>
+                                            </div>
+                                            <span class="flex items-center text-xs font-medium text-muted-foreground">
+                                                1 day ago
+                                                <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                </span>
+                                                Design Team
+                                            </span>
+                                        </div>
+                                        <div class="flex gap-2.5">
+                                            <button class="kt-btn kt-btn-sm kt-btn-outline kt-btn-sm"
+                                                data-kt-dismiss="#join_request">
+                                                Decline
+                                            </button>
+                                            <button class="kt-btn kt-btn-sm kt-btn-mono kt-btn-sm">
+                                                Accept
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="relative grow mx-5">
+                                    <img alt=""
+                                        class="rounded-full size-[30px] absolute start-0 top-2/4 -translate-y-2/4 ms-2.5"
+                                        src="{{ asset('assets/media/avatars/300-2.png') }}">
+                                    <input class="kt-input h-auto py-4 ps-12 bg-transparent"
+                                        placeholder="Write a message..." type="text" value="" />
+                                    <div class="flex items-center gap-2.5 absolute end-3 top-1/2 -translate-y-1/2">
+                                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                                            <i class="ki-filled ki-exit-up">
+                                            </i>
+                                        </button>
+                                        <a class="kt-btn kt-btn-mono kt-btn-sm" href="#">
+                                            Send
+                                        </a>
+                                    </div>
+                                    </img>
+                                </div>
+                            </div>
+                            <!--End of Chat Footer-->
+                        </div>
+                        <!--End of Chat Drawer-->
+                        <!-- End of Chat -->
+                        <!-- Apps -->
+                        <div data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px"
+                            data-kt-dropdown-offset-rtl="-10px, 10px" data-kt-dropdown-placement="bottom-end"
+                            data-kt-dropdown-placement-rtl="bottom-start">
+                            <button
+                                class="kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:[&amp;_i]:text-primary kt-dropdown-open:[&amp;_i]:text-primary"
+                                data-kt-dropdown-toggle="true">
+                                <i class="ki-filled ki-element-11 text-lg">
+                                </i>
+                            </button>
+                            <div class="kt-dropdown-menu p-0 w-screen max-w-[320px]" data-kt-dropdown-menu="true">
+                                <div
+                                    class="flex items-center justify-between gap-2.5 text-xs text-secondary-foreground font-medium px-5 py-3 border-b border-b-border">
+                                    <span>
+                                        Apps
+                                    </span>
+                                    <span>
+                                        Enabled
+                                    </span>
+                                </div>
+                                <div class="flex flex-col kt-scrollable-y-auto max-h-[400px] divide-y divide-border">
+                                    <div class="flex items-center justify-between flex-wrap gap-2 px-5 py-3.5">
+                                        <div class="flex items-center flex-wrap gap-2">
+                                            <div
+                                                class="flex items-center justify-center shrink-0 rounded-full bg-accent/60 border border-border size-10">
+                                                <img alt="" class="size-6"
+                                                    src="{{ asset('assets/media/brand-logos/jira.svg') }}">
+                                                </img>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <a class="text-sm font-semibold text-mono hover:text-primary"
+                                                    href="#">
+                                                    Jira
+                                                </a>
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    Project management
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 lg:gap-5">
+                                            <input class="kt-switch" type="checkbox" value="1" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between flex-wrap gap-2 px-5 py-3.5">
+                                        <div class="flex items-center flex-wrap gap-2">
+                                            <div
+                                                class="flex items-center justify-center shrink-0 rounded-full bg-accent/60 border border-border size-10">
+                                                <img alt="" class="size-6"
+                                                    src="{{ asset('assets/media/brand-logos/inferno.svg') }}">
+                                                </img>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <a class="text-sm font-semibold text-mono hover:text-primary"
+                                                    href="#">
+                                                    Inferno
+                                                </a>
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    Ensures healthcare app
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 lg:gap-5">
+                                            <input checked="" class="kt-switch" type="checkbox"
+                                                value="1" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between flex-wrap gap-2 px-5 py-3.5">
+                                        <div class="flex items-center flex-wrap gap-2">
+                                            <div
+                                                class="flex items-center justify-center shrink-0 rounded-full bg-accent/60 border border-border size-10">
+                                                <img alt="" class="size-6"
+                                                    src="{{ asset('assets/media/brand-logos/evernote.svg') }}" />
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <a class="text-sm font-semibold text-mono hover:text-primary"
+                                                    href="#">
+                                                    Evernote
+                                                </a>
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    Notes management app
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 lg:gap-5">
+                                            <input checked="" class="kt-switch" type="checkbox"
+                                                value="1" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between flex-wrap gap-2 px-5 py-3.5">
+                                        <div class="flex items-center flex-wrap gap-2">
+                                            <div
+                                                class="flex items-center justify-center shrink-0 rounded-full bg-accent/60 border border-border size-10">
+                                                <img alt="" class="size-6"
+                                                    src="{{ asset('assets/media/brand-logos/gitlab.svg') }}" />
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <a class="text-sm font-semibold text-mono hover:text-primary"
+                                                    href="#">
+                                                    Gitlab
+                                                </a>
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    DevOps platform
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 lg:gap-5">
+                                            <input class="kt-switch" type="checkbox" value="1" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between flex-wrap gap-2 px-5 py-3.5">
+                                        <div class="flex items-center flex-wrap gap-2">
+                                            <div
+                                                class="flex items-center justify-center shrink-0 rounded-full bg-accent/60 border border-border size-10">
+                                                <img alt="" class="size-6"
+                                                    src="{{ asset('assets/media/brand-logos/google-webdev.svg') }}" />
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <a class="text-sm font-semibold text-mono hover:text-primary"
+                                                    href="#">
+                                                    Google webdev
+                                                </a>
+                                                <span class="text-xs font-medium text-secondary-foreground">
+                                                    Building web expierences
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 lg:gap-5">
+                                            <input checked="" class="kt-switch" type="checkbox"
+                                                value="1" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid p-5 border-t border-t-border">
+                                    <a class="kt-btn kt-btn-outline justify-center"
+                                        href="/metronic/tailwind/demo3/account/integrations">
+                                        Go to Apps
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End of Apps -->
+                        <!-- Notifications -->
+                        <button
+                            class="kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:[&amp;_i]:text-primary"
+                            data-kt-drawer-toggle="#notifications_drawer">
+                            <i class="ki-filled ki-notification-status text-lg">
+                            </i>
+                        </button>
+                        <!--Notifications Drawer-->
+                        <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[450px] top-5 bottom-5 end-5 rounded-xl border border-border"
+                            data-kt-drawer="true" data-kt-drawer-container="body" id="notifications_drawer">
+                            <div class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-2.5 border-b border-b-border"
+                                id="notifications_header">
+                                Notifications
+                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0"
+                                    data-kt-drawer-dismiss="true">
+                                    <i class="ki-filled ki-cross">
+                                    </i>
+                                </button>
+                            </div>
+                            <div class="kt-tabs kt-tabs-line justify-between px-5 mb-2" data-kt-tabs="true"
+                                id="notifications_tabs">
+                                <div class="flex items-center gap-5">
+                                    <button class="kt-tab-toggle py-3 active"
+                                        data-kt-tab-toggle="#notifications_tab_all">
+                                        All
+                                    </button>
+                                    <button class="kt-tab-toggle py-3 relative"
+                                        data-kt-tab-toggle="#notifications_tab_inbox">
+                                        Inbox
+                                        <span
+                                            class="rounded-full bg-green-500 size-[5px] absolute top-2 rtl:start-0 end-0 transform translate-y-1/2 translate-x-full">
+                                        </span>
+                                    </button>
+                                    <button class="kt-tab-toggle py-3" data-kt-tab-toggle="#notifications_tab_team">
+                                        Team
+                                    </button>
+                                    <button class="kt-tab-toggle py-3"
+                                        data-kt-tab-toggle="#notifications_tab_following">
+                                        Following
+                                    </button>
+                                </div>
+                                <div class="kt-menu" data-kt-menu="true">
+                                    <div class="kt-menu-item" data-kt-menu-item-offset="0,10px"
+                                        data-kt-menu-item-placement="bottom-end"
+                                        data-kt-menu-item-placement-rtl="bottom-start"
+                                        data-kt-menu-item-toggle="dropdown"
+                                        data-kt-menu-item-trigger="click|lg:hover">
+                                        <button class="kt-menu-toggle kt-btn kt-btn-icon kt-btn-ghost">
+                                            <i class="ki-filled ki-setting-2">
+                                            </i>
+                                        </button>
+                                        <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]"
+                                            data-kt-menu-dismiss="true">
+                                            <div class="kt-menu-item">
+                                                <a class="kt-menu-link" href="#">
+                                                    <span class="kt-menu-icon">
+                                                        <i class="ki-filled ki-document">
+                                                        </i>
+                                                    </span>
+                                                    <span class="kt-menu-title">
+                                                        View
+                                                    </span>
+                                                </a>
+                                            </div>
+                                            <div class="kt-menu-item" data-kt-menu-item-offset="-15px, 0"
+                                                data-kt-menu-item-placement="right-start"
+                                                data-kt-menu-item-toggle="dropdown"
+                                                data-kt-menu-item-trigger="click|lg:hover">
+                                                <div class="kt-menu-link">
+                                                    <span class="kt-menu-icon">
+                                                        <i class="ki-filled ki-notification-status">
+                                                        </i>
+                                                    </span>
+                                                    <span class="kt-menu-title">
+                                                        Export
+                                                    </span>
+                                                    <span class="kt-menu-arrow">
+                                                        <i
+                                                            class="ki-filled ki-right text-xs rtl:transform rtl:rotate-180">
+                                                        </i>
+                                                    </span>
+                                                </div>
+                                                <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]">
+                                                    <div class="kt-menu-item">
+                                                        <a class="kt-menu-link"
+                                                            href="/metronic/tailwind/demo3/account/home/settings-sidebar">
+                                                            <span class="kt-menu-icon">
+                                                                <i class="ki-filled ki-sms">
+                                                                </i>
+                                                            </span>
+                                                            <span class="kt-menu-title">
+                                                                Email
+                                                            </span>
+                                                        </a>
+                                                    </div>
+                                                    <div class="kt-menu-item">
+                                                        <a class="kt-menu-link"
+                                                            href="/metronic/tailwind/demo3/account/home/settings-sidebar">
+                                                            <span class="kt-menu-icon">
+                                                                <i class="ki-filled ki-message-notify">
+                                                                </i>
+                                                            </span>
+                                                            <span class="kt-menu-title">
+                                                                SMS
+                                                            </span>
+                                                        </a>
+                                                    </div>
+                                                    <div class="kt-menu-item">
+                                                        <a class="kt-menu-link"
+                                                            href="/metronic/tailwind/demo3/account/home/settings-sidebar">
+                                                            <span class="kt-menu-icon">
+                                                                <i class="ki-filled ki-notification-status">
+                                                                </i>
+                                                            </span>
+                                                            <span class="kt-menu-title">
+                                                                Push
+                                                            </span>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="kt-menu-item">
+                                                <a class="kt-menu-link" href="#">
+                                                    <span class="kt-menu-icon">
+                                                        <i class="ki-filled ki-pencil">
+                                                        </i>
+                                                    </span>
+                                                    <span class="kt-menu-title">
+                                                        Edit
+                                                    </span>
+                                                </a>
+                                            </div>
+                                            <div class="kt-menu-item">
+                                                <a class="kt-menu-link" href="#">
+                                                    <span class="kt-menu-icon">
+                                                        <i class="ki-filled ki-trash">
+                                                        </i>
+                                                    </span>
+                                                    <span class="kt-menu-title">
+                                                        Delete
+                                                    </span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grow flex flex-col" id="notifications_tab_all">
+                                <div class="grow kt-scrollable-y-auto" data-kt-scrollable="true"
+                                    data-kt-scrollable-dependencies="#header" data-kt-scrollable-max-height="auto"
+                                    data-kt-scrollable-offset="150px">
+                                    <div class="grow flex flex-col gap-5 pt-3 pb-4 divider-y divider-border">
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-4.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Joe Lincoln
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            mentioned you in
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                            Latest Trends
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            topic
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        18 mins ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Web Design 2024
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex flex-col gap-2.5 p-3.5 rounded-lg bg-muted/70">
+                                                    <div class="text-sm font-semibold text-secondary-foreground mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            @Cody
+                                                        </a>
+                                                        <span class="text-secondary-foreground font-medium">
+                                                            For an expert opinion, check out what Mike has to say on
+                                                            this topic!
+                                                        </span>
+                                                    </div>
+                                                    <div class="kt-input">
+                                                        <input placeholder="Reply" type="text" value="" />
+                                                        <button class="kt-btn kt-btn-ghost kt-btn-icon size-6 -me-1.5">
+                                                            <i class="ki-filled ki-picture">
+                                                            </i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-5.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Leslie Alexander
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            added new tags to
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                            Web Redesign 2024
+                                                        </a>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        53 mins ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        ACME
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <span class="kt-badge kt-badge-sm kt-badge-info kt-badge-outline">
+                                                        Client-Request
+                                                    </span>
+                                                    <span
+                                                        class="kt-badge kt-badge-sm kt-badge-warning kt-badge-outline">
+                                                        Figma
+                                                    </span>
+                                                    <span
+                                                        class="kt-badge kt-badge-sm kt-badge-secondary kt-badge-outline">
+                                                        Redesign
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5" id="notification_request_3">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-27.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Guy Hawkins
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            requested access to
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                            AirSpace
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            project
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        14 hours ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Dev Team
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Decline
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Accept
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-10.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-offline size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5 grow">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Jane Perez
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            invites you to review a file.
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        3 hours ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        742kb
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center flex-row gap-1.5 p-2.5 rounded-lg bg-muted/70">
+                                                    <img class="h-5"
+                                                        src="{{ asset('assets/media/file-types/pdf.svg') }}" />
+                                                    <a class="hover:text-primary font-medium text-secondary-foreground text-xs me-1"
+                                                        href="#">
+                                                        Launch_nov24.pptx
+                                                    </a>
+                                                    <span class="font-medium text-muted-foreground text-xs">
+                                                        Edited 39 mins ago
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-11.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <div class="text-sm font-medium mb-px">
+                                                    <a class="hover:text-primary text-mono font-semibold"
+                                                        href="#">
+                                                        Raymond Pawell
+                                                    </a>
+                                                    <span class="text-secondary-foreground">
+                                                        posted a new article
+                                                    </span>
+                                                    <a class="hover:text-primary text-primary" href="#">
+                                                        2024 Roadmap
+                                                    </a>
+                                                </div>
+                                                <span
+                                                    class="flex items-center text-xs font-medium text-muted-foreground">
+                                                    1 hour ago
+                                                    <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                    </span>
+                                                    Roadmap
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-14.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-offline size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5 grow">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Tyler Hero
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            wants to view your design project
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        3 day ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Metronic Launcher mockups
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center flex-row gap-1.5 p-2.5 rounded-lg bg-muted/70">
+                                                    <div
+                                                        class="flex items-center justify-center w-[26px] h-[30px] shrink-0 bg-background rounded-sm border border-border">
+                                                        <img class="h-5"
+                                                            src="{{ asset('assets/media/file-types/figma.svg') }}" />
+                                                    </div>
+                                                    <a class="hover:text-primary font-medium text-secondary-foreground text-xs me-1"
+                                                        href="#">
+                                                        Launcher-UIkit.fig
+                                                    </a>
+                                                    <span class="font-medium text-muted-foreground text-xs">
+                                                        Edited 2 mins ago
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="border-b border-b-border">
+                                </div>
+                                <div class="grid grid-cols-2 p-5 gap-2.5" id="notifications_all_footer">
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Archive all
+                                    </button>
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Mark all as read
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grow flex flex-col hidden" id="notifications_tab_inbox">
+                                <div class="grow kt-scrollable-y-auto" data-kt-scrollable="true"
+                                    data-kt-scrollable-dependencies="#header" data-kt-scrollable-max-height="auto"
+                                    data-kt-scrollable-offset="150px">
+                                    <div class="flex flex-col gap-5 pt-3 pb-4">
+                                        <div class="flex grow gap-2.5 px-5" id="notification_request_13">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-25.png') }} ">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5 grow">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Samuel Lee
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            requested to add user to
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary font-semibold"
+                                                            href="#">
+                                                            TechSynergy
+                                                        </a>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        22 hours ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Dev Team
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center flex-row justify-between gap-1.5 px-2.5 py-2 rounded-lg bg-muted/70">
+                                                    <div class="flex flex-col">
+                                                        <a class="hover:text-primary font-medium text-mono text-xs"
+                                                            href="#">
+                                                            Ronald Richards
+                                                        </a>
+                                                        <a class="hover:text-primary text-muted-foreground font-medium text-xs"
+                                                            href="#">
+                                                            ronald.richards@gmail.com
+                                                        </a>
+                                                    </div>
+                                                    <a class="hover:text-primary text-secondary-foreground font-medium text-xs"
+                                                        href="#">
+                                                        Go to profile
+                                                    </a>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_13">
+                                                        Decline
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_13">
+                                                        Accept
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex items-center grow gap-2.5 px-5">
+                                            <div
+                                                class="flex items-center justify-center size-8 bg-green-50 rounded-full border border-green-200 dark:border-green-950">
+                                                <i class="ki-filled ki-check text-lg text-green-500">
+                                                </i>
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <span class="text-sm font-medium text-secondary-foreground">
+                                                    You have succesfully verified your account
+                                                </span>
+                                                <span class="font-medium text-muted-foreground text-xs">
+                                                    2 days ago
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-34.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5 grow">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Ava Peterson
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            uploaded attachment
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        3 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        ACME
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center justify-between flex-row gap-1.5 p-2.5 rounded-lg bg-muted/70">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <img class="h-6"
+                                                            src="{{ asset('assets/media/file-types/xls.svg') }}" />
+                                                        <div class="flex flex-col gap-0.5">
+                                                            <a class="hover:text-primary font-medium text-secondary-foreground text-xs"
+                                                                href="#">
+                                                                Redesign-2024.xls
+                                                            </a>
+                                                            <span class="font-medium text-muted-foreground text-xs">
+                                                                2.6 MB
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                                                        <svg fill="none" height="14" viewbox="0 0 14 14"
+                                                            width="14" xmlns="http://www.w3.org/2000/svg">
+                                                            <path clip-rule="evenodd"
+                                                                d="M6.63821 2.60467C4.81926 2.60467 3.32474 3.99623 3.16201 5.77252C3.1386 6.02803 2.92413 6.22253 2.66871 6.22227C1.74915 6.22149 0.976744 6.9868 0.976744 7.90442C0.976744 8.83344 1.72988 9.58657 2.65891 9.58657H3.09302C3.36274 9.58657 3.5814 9.80523 3.5814 10.0749C3.5814 10.3447 3.36274 10.5633 3.09302 10.5633H2.65891C1.19044 10.5633 0 9.37292 0 7.90442C0 6.58614 0.986948 5.48438 2.24496 5.27965C2.62863 3.20165 4.44941 1.62793 6.63821 1.62793C8.26781 1.62793 9.69282 2.50042 10.4729 3.80193C12.3411 3.72829 14 5.2564 14 7.18091C14 8.93508 12.665 10.3769 10.9552 10.5466C10.6868 10.5733 10.4476 10.3773 10.421 10.1089C10.3943 9.84052 10.5903 9.60135 10.8587 9.57465C12.0739 9.45406 13.0233 8.42802 13.0233 7.18091C13.0233 5.74002 11.6905 4.59666 10.2728 4.79968C10.0642 4.82957 9.85672 4.72382 9.76028 4.53181C9.18608 3.38796 8.00318 2.60467 6.63821 2.60467Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                            <path clip-rule="evenodd"
+                                                                d="M6.99909 8.01611L8.28162 9.29864C8.47235 9.48937 8.78158 9.48937 8.97231 9.29864C9.16303 9.10792 9.16303 8.79874 8.97231 8.60802L7.57465 7.2103C7.25675 6.89247 6.74143 6.89247 6.42353 7.2103L5.02585 8.60802C4.83513 8.79874 4.83513 9.10792 5.02585 9.29864C5.21657 9.48937 5.5258 9.48937 5.71649 9.29864L6.99909 8.01611Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                            <path clip-rule="evenodd"
+                                                                d="M7.00009 12.372C7.2698 12.372 7.48846 12.1533 7.48846 11.8836V7.97665C7.48846 7.70694 7.2698 7.48828 7.00009 7.48828C6.73038 7.48828 6.51172 7.70694 6.51172 7.97665V11.8836C6.51172 12.1533 6.73038 12.372 7.00009 12.372Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-29.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3 grow">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Ethan Parker
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            created a new tasks to
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                            Site Sculpt
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            project
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        3 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Web Designer
+                                                    </span>
+                                                </div>
+                                                <div class="kt-card shadow-none p-3.5 gap-3.5 rounded-lg bg-muted/70">
+                                                    <div class="flex items-center justify-between flex-wrap gap-2.5">
+                                                        <div class="flex flex-col gap-1">
+                                                            <span class="font-medium text-mono text-xs">
+                                                                Location history is erased after Logging In
+                                                            </span>
+                                                            <span class="font-medium text-muted-foreground text-xs">
+                                                                Due Date: 15 May, 2024
+                                                            </span>
+                                                        </div>
+                                                        <div class="flex -space-x-2">
+                                                            <div class="flex">
+                                                                <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-6"
+                                                                    src="{{ asset('assets/media/avatars/300-3.png') }}" />
+                                                            </div>
+                                                            <div class="flex">
+                                                                <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-6"
+                                                                    src="{{ asset('assets/media/avatars/300-2.png') }}" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2.5">
+                                                        <span
+                                                            class="kt-badge kt-badge-sm kt-badge-success kt-badge-outline">
+                                                            Improvement
+                                                        </span>
+                                                        <span
+                                                            class="kt-badge kt-badge-sm kt-badge-destructive kt-badge-outline">
+                                                            Bug
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5" id="notification_request_3">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-30.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Benjamin Harris
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            requested to upgrade plan
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        4 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Marketing
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Decline
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Accept
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-24.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <div class="text-sm font-medium mb-px">
+                                                    <a class="hover:text-primary text-mono font-semibold"
+                                                        href="#">
+                                                        Isaac Morgan
+                                                    </a>
+                                                    <span class="text-secondary-foreground">
+                                                        mentioned you in
+                                                    </span>
+                                                    <a class="hover:text-primary text-primary" href="#">
+                                                        Data Transmission
+                                                    </a>
+                                                    topic
+                                                </div>
+                                                <span
+                                                    class="flex items-center text-xs font-medium text-muted-foreground">
+                                                    6 days ago
+                                                    <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                    </span>
+                                                    Dev Team
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="border-b border-b-border">
+                                </div>
+                                <div class="grid grid-cols-2 p-5 gap-2.5" id="notifications_inbox_footer">
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Archive all
+                                    </button>
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Mark all as read
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grow flex flex-col hidden" id="notifications_tab_team">
+                                <div class="grow kt-scrollable-y-auto" data-kt-scrollable="true"
+                                    data-kt-scrollable-dependencies="#header" data-kt-scrollable-max-height="auto"
+                                    data-kt-scrollable-offset="150px">
+                                    <div class="flex flex-col gap-5 pt-3 pb-4">
+                                        <div class="flex grow gap-2 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-15.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3 grow" id="notification_request_10">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Nova Hawthorne
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            sent you an meeting invation
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        2 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Dev Team
+                                                    </span>
+                                                </div>
+                                                <div class="kt-card shadow-none p-2.5 rounded-lg bg-muted/70">
+                                                    <div class="flex items-center justify-between flex-wrap gap-2.5">
+                                                        <div class="flex items-center gap-2.5">
+                                                            <div class="border border-primary/10 rounded-lg">
+                                                                <div
+                                                                    class="flex items-center justify-center border-b border-b-primary/10 bg-primary/10 rounded-t-lg">
+                                                                    <span class="text-xs text-primary fw-medium p-1.5">
+                                                                        Apr
+                                                                    </span>
+                                                                </div>
+                                                                <div class="flex items-center justify-center size-9">
+                                                                    <span
+                                                                        class="fw-semibold text-mono text-md tracking-tight">
+                                                                        12
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex flex-col gap-1.5">
+                                                                <a class="hover:text-primary font-medium text-secondary-foreground text-xs"
+                                                                    href="#">
+                                                                    Peparation For Release
+                                                                </a>
+                                                                <span
+                                                                    class="font-medium text-secondary-foreground text-xs">
+                                                                    9:00 PM - 10:00 PM
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex -space-x-2">
+                                                            <div class="flex">
+                                                                <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-6"
+                                                                    src="{{ asset('assets/media/avatars/300-4.png') }}" />
+                                                            </div>
+                                                            <div class="flex">
+                                                                <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-6"
+                                                                    src="{{ asset('assets/media/avatars/300-1.png') }}" />
+                                                            </div>
+                                                            <div class="flex">
+                                                                <img class="hover:z-5 relative shrink-0 rounded-full ring-1 ring-background size-6"
+                                                                    src="{{ asset('assets/media/avatars/300-2.png') }}" />
+                                                            </div>
+                                                            <div class="flex">
+                                                                <span
+                                                                    class="hover:z-5 relative inline-flex items-center justify-center shrink-0 rounded-full ring-1 font-semibold leading-none text-2xs size-6 text-white size-6 ring-background bg-green-500">
+                                                                    +3
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_10">
+                                                        Decline
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_10">
+                                                        Accept
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-6.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <div class="text-sm font-medium mb-px">
+                                                    <a class="hover:text-primary text-mono font-semibold"
+                                                        href="#">
+                                                        Adrian Vale
+                                                    </a>
+                                                    <span class="text-secondary-foreground">
+                                                        change the due date of
+                                                    </span>
+                                                    <a class="hover:text-primary text-primary" href="#">
+                                                        Marketing
+                                                    </a>
+                                                    to 13 May
+                                                </div>
+                                                <span
+                                                    class="flex items-center text-xs font-medium text-muted-foreground">
+                                                    2 days ago
+                                                    <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                    </span>
+                                                    Marketing
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-12.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5 grow">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Skylar Frost
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            uploaded 2 attachments
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        3 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Web Design
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center justify-between flex-row gap-1.5 p-2.5 rounded-lg bg-muted/70">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <img class="h-6"
+                                                            src="{{ asset('assets/media/file-types/word.svg') }}" />
+                                                        <div class="flex flex-col gap-0.5">
+                                                            <a class="hover:text-primary font-medium text-secondary-foreground text-xs"
+                                                                href="#">
+                                                                Landing-page.docx
+                                                            </a>
+                                                            <span class="font-medium text-muted-foreground text-xs">
+                                                                1.9 MB
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                                                        <svg fill="none" height="14" viewbox="0 0 14 14"
+                                                            width="14" xmlns="http://www.w3.org/2000/svg">
+                                                            <path clip-rule="evenodd"
+                                                                d="M6.63821 2.60467C4.81926 2.60467 3.32474 3.99623 3.16201 5.77252C3.1386 6.02803 2.92413 6.22253 2.66871 6.22227C1.74915 6.22149 0.976744 6.9868 0.976744 7.90442C0.976744 8.83344 1.72988 9.58657 2.65891 9.58657H3.09302C3.36274 9.58657 3.5814 9.80523 3.5814 10.0749C3.5814 10.3447 3.36274 10.5633 3.09302 10.5633H2.65891C1.19044 10.5633 0 9.37292 0 7.90442C0 6.58614 0.986948 5.48438 2.24496 5.27965C2.62863 3.20165 4.44941 1.62793 6.63821 1.62793C8.26781 1.62793 9.69282 2.50042 10.4729 3.80193C12.3411 3.72829 14 5.2564 14 7.18091C14 8.93508 12.665 10.3769 10.9552 10.5466C10.6868 10.5733 10.4476 10.3773 10.421 10.1089C10.3943 9.84052 10.5903 9.60135 10.8587 9.57465C12.0739 9.45406 13.0233 8.42802 13.0233 7.18091C13.0233 5.74002 11.6905 4.59666 10.2728 4.79968C10.0642 4.82957 9.85672 4.72382 9.76028 4.53181C9.18608 3.38796 8.00318 2.60467 6.63821 2.60467Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                            <path clip-rule="evenodd"
+                                                                d="M6.99909 8.01611L8.28162 9.29864C8.47235 9.48937 8.78158 9.48937 8.97231 9.29864C9.16303 9.10792 9.16303 8.79874 8.97231 8.60802L7.57465 7.2103C7.25675 6.89247 6.74143 6.89247 6.42353 7.2103L5.02585 8.60802C4.83513 8.79874 4.83513 9.10792 5.02585 9.29864C5.21657 9.48937 5.5258 9.48937 5.71649 9.29864L6.99909 8.01611Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                            <path clip-rule="evenodd"
+                                                                d="M7.00009 12.372C7.2698 12.372 7.48846 12.1533 7.48846 11.8836V7.97665C7.48846 7.70694 7.2698 7.48828 7.00009 7.48828C6.73038 7.48828 6.51172 7.70694 6.51172 7.97665V11.8836C6.51172 12.1533 6.73038 12.372 7.00009 12.372Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center justify-between flex-row gap-1.5 p-2.5 rounded-lg bg-muted/70">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <img class="h-6"
+                                                            src="{{ asset('assets/media/file-types/svg.svg') }}" />
+                                                        <div class="flex flex-col gap-0.5">
+                                                            <a class="hover:text-primary font-medium text-secondary-foreground text-xs"
+                                                                href="#">
+                                                                New-icon.svg
+                                                            </a>
+                                                            <span class="font-medium text-muted-foreground text-xs">
+                                                                2.3 MB
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                                                        <svg fill="none" height="14" viewbox="0 0 14 14"
+                                                            width="14" xmlns="http://www.w3.org/2000/svg">
+                                                            <path clip-rule="evenodd"
+                                                                d="M6.63821 2.60467C4.81926 2.60467 3.32474 3.99623 3.16201 5.77252C3.1386 6.02803 2.92413 6.22253 2.66871 6.22227C1.74915 6.22149 0.976744 6.9868 0.976744 7.90442C0.976744 8.83344 1.72988 9.58657 2.65891 9.58657H3.09302C3.36274 9.58657 3.5814 9.80523 3.5814 10.0749C3.5814 10.3447 3.36274 10.5633 3.09302 10.5633H2.65891C1.19044 10.5633 0 9.37292 0 7.90442C0 6.58614 0.986948 5.48438 2.24496 5.27965C2.62863 3.20165 4.44941 1.62793 6.63821 1.62793C8.26781 1.62793 9.69282 2.50042 10.4729 3.80193C12.3411 3.72829 14 5.2564 14 7.18091C14 8.93508 12.665 10.3769 10.9552 10.5466C10.6868 10.5733 10.4476 10.3773 10.421 10.1089C10.3943 9.84052 10.5903 9.60135 10.8587 9.57465C12.0739 9.45406 13.0233 8.42802 13.0233 7.18091C13.0233 5.74002 11.6905 4.59666 10.2728 4.79968C10.0642 4.82957 9.85672 4.72382 9.76028 4.53181C9.18608 3.38796 8.00318 2.60467 6.63821 2.60467Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                            <path clip-rule="evenodd"
+                                                                d="M6.99909 8.01611L8.28162 9.29864C8.47235 9.48937 8.78158 9.48937 8.97231 9.29864C9.16303 9.10792 9.16303 8.79874 8.97231 8.60802L7.57465 7.2103C7.25675 6.89247 6.74143 6.89247 6.42353 7.2103L5.02585 8.60802C4.83513 8.79874 4.83513 9.10792 5.02585 9.29864C5.21657 9.48937 5.5258 9.48937 5.71649 9.29864L6.99909 8.01611Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                            <path clip-rule="evenodd"
+                                                                d="M7.00009 12.372C7.2698 12.372 7.48846 12.1533 7.48846 11.8836V7.97665C7.48846 7.70694 7.2698 7.48828 7.00009 7.48828C6.73038 7.48828 6.51172 7.70694 6.51172 7.97665V11.8836C6.51172 12.1533 6.73038 12.372 7.00009 12.372Z"
+                                                                fill="#99A1B7" fill-rule="evenodd">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-21.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Selene Silverleaf
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            commented on
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                            SiteSculpt
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        4 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Manager
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex flex-col gap-2.5 p-3.5 rounded-lg bg-muted/70">
+                                                    <div class="text-sm font-semibold text-secondary-foreground mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            @Cody
+                                                        </a>
+                                                        <span class="text-secondary-foreground font-medium">
+                                                            This
+                                                            design is simply stunning! From layout to color, it's a work
+                                                            of art!
+                                                        </span>
+                                                    </div>
+                                                    <div class="kt-input">
+                                                        <input placeholder="Reply" type="text" value="" />
+                                                        <button class="kt-btn kt-btn-ghost kt-btn-icon size-6 -me-1.5">
+                                                            <i class="ki-filled ki-picture">
+                                                            </i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5" id="notification_request_3">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-13.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Thalia Fox
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            has invited you
+                                                            to join
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                            Design Research
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        4 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Dev
+                                                        Team
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Decline
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Accept
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="border-b border-b-border">
+                                </div>
+                                <div class="grid grid-cols-2 p-5 gap-2.5" id="notifications_team_footer">
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Archive all
+                                    </button>
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Mark all as read
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grow flex flex-col hidden" id="notifications_tab_following">
+                                <div class="grow kt-scrollable-y-auto" data-kt-scrollable="true"
+                                    data-kt-scrollable-dependencies="#header" data-kt-scrollable-max-height="auto"
+                                    data-kt-scrollable-offset="150px">
+                                    <div class="flex flex-col gap-5 pt-3 pb-4">
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-1.png') }}">
+                                                    </img>
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2.5 grow">
+                                                <div class="flex flex-col gap-1 mb-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Jane Perez
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            added 2 new works to
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary font-semibold"
+                                                            href="#">
+                                                            Inspirations 2024
+                                                        </a>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        23 hours ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Craftwork Design
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-2.5">
+                                                    <div
+                                                        class="kt-card shadow-none flex flex-col gap-3.5 bg-muted/70 w-40">
+                                                        <div class="bg-cover bg-no-repeat kt-card-rounded-t shrink-0 h-24"
+                                                            style="background-image: url('{{ asset('assets/media/images/600x600/6.jpg') }}')">
+                                                        </div>
+                                                        <div class="px-2.5 pb-2">
+                                                            <a class="font-medium block text-secondary-foreground hover:text-primary text-xs leading-4 mb-0.5"
+                                                                href="#">
+                                                                Geometric Patterns
+                                                            </a>
+                                                            <div class="text-xs font-medium text-muted-foreground">
+                                                                Token ID:
+                                                                <span
+                                                                    class="text-xs font-medium text-secondary-foreground">
+                                                                    81023
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="kt-card shadow-none flex flex-col gap-3.5 bg-muted/70 w-40">
+                                                        <div class="bg-cover bg-no-repeat kt-card-rounded-t shrink-0 h-24"
+                                                            style="background-image: url('{{ asset('assets/media/images/600x600/1.jpg') }}')">
+                                                        </div>
+                                                        <div class="px-2.5 pb-2">
+                                                            <a class="font-medium block text-secondary-foreground hover:text-primary text-xs leading-4 mb-0.5"
+                                                                href="#">
+                                                                Artistic Expressions
+                                                            </a>
+                                                            <div class="text-xs font-medium text-muted-foreground">
+                                                                Token ID:
+                                                                <span
+                                                                    class="text-xs font-medium text-secondary-foreground">
+                                                                    67890
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5" id="notification_request_17">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-19.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2.5 grow">
+                                                <div class="flex flex-col gap-1 mb-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Natalie Wood
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            wants to edit marketing project
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        1 day ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Designer
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center flex-row gap-1.5 p-2.5 rounded-lg bg-muted/70">
+                                                    <div
+                                                        class="flex items-center justify-center w-[26px] h-[30px] shrink-0 bg-white rounded-sm border border-border">
+                                                        <img class="h-5"
+                                                            src="{{ asset('assets/media/brand-logos/jira.svg') }}" />
+                                                    </div>
+                                                    <a class="hover:text-primary font-medium text-secondary-foreground text-xs me-1"
+                                                        href="#">
+                                                        User-feedback.jira
+                                                    </a>
+                                                    <span class="font-medium text-muted-foreground text-xs">
+                                                        Edited 1 hour ago
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_17">
+                                                        Decline
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_17">
+                                                        Accept
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-17.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2.5 grow">
+                                                <div class="flex flex-col gap-1 mb-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Aaron Foster
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            requested to view
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        3 day ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Larsen Ltd
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="kt-card shadow-none flex items-center flex-row gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/70">
+                                                    <i class="ki-filled ki-user-tick text-green-500 text-base">
+                                                    </i>
+                                                    <span class="font-medium text-green-500 text-sm">
+                                                        You allowed Aaron to view
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-34.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <div class="text-sm font-medium mb-px">
+                                                    <a class="hover:text-primary text-mono font-semibold"
+                                                        href="#">
+                                                        Chloe Morgan
+                                                    </a>
+                                                    <span class="text-secondary-foreground">
+                                                        posted a new
+                                                        article
+                                                    </span>
+                                                    <a class="hover:text-primary text-primary" href="#">
+                                                        User Experience
+                                                    </a>
+                                                </div>
+                                                <span
+                                                    class="flex items-center text-xs font-medium text-muted-foreground">
+                                                    1 day ago
+                                                    <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                    </span>
+                                                    Nexus
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-9.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2.5 grow">
+                                                <div class="flex flex-col gap-1 mb-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Gabriel Bennett
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            started connect you
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        3 day ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Development
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-sm kt-btn-outline">
+                                                        <i class="ki-filled ki-check-circle">
+                                                        </i>
+                                                        Connected
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm">
+                                                        Go to profile
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border-b border-b-border">
+                                        </div>
+                                        <div class="flex grow gap-2.5 px-5" id="notification_request_3">
+                                            <div class="kt-avatar size-8">
+                                                <div class="kt-avatar-image">
+                                                    <img alt="avatar"
+                                                        src="{{ asset('assets/media/avatars/300-13.png') }}" />
+                                                </div>
+                                                <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-3.5">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="text-sm font-medium mb-px">
+                                                        <a class="hover:text-primary text-mono font-semibold"
+                                                            href="#">
+                                                            Thalia Fox
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                            has invited you
+                                                            to join
+                                                        </span>
+                                                        <a class="hover:text-primary text-primary" href="#">
+                                                            Design Research
+                                                        </a>
+                                                        <span class="text-secondary-foreground">
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="flex items-center text-xs font-medium text-muted-foreground">
+                                                        4 days ago
+                                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5">
+                                                        </span>
+                                                        Dev
+                                                        Team
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2.5">
+                                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Decline
+                                                    </button>
+                                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                        data-kt-dismiss="#notification_request_3">
+                                                        Accept
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="border-b border-b-border">
+                                </div>
+                                <div class="grid grid-cols-2 p-5 gap-2.5" id="notifications_following_footer">
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Archive all
+                                    </button>
+                                    <button class="kt-btn kt-btn-outline justify-center">
+                                        Mark all as read
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!--End of Notifications Drawer-->
+                        <!-- End of Notifications -->
                     </div>
+                    <!-- User -->
+                    <div data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px"
+                        data-kt-dropdown-offset-rtl="-20px, 10px" data-kt-dropdown-placement="bottom-end"
+                        data-kt-dropdown-placement-rtl="bottom-start" data-kt-dropdown-trigger="click">
+                        <div class="cursor-pointer shrink-0" data-kt-dropdown-toggle="true">
+                            <img alt="" class="size-9 rounded-full border-2 border-input shrink-0"
+                                src="{{ asset('assets/media/avatars/gray/5.png') }}" />
+                        </div>
+                        <div class="kt-dropdown-menu w-[250px]" data-kt-dropdown-menu="true">
+                            <div class="flex items-center justify-between px-2.5 py-1.5 gap-1.5">
+                                <div class="flex items-center gap-2">
+                                    <img alt=""
+                                        class="size-9 shrink-0 rounded-full border-2 border-green-500"
+                                        src="{{ asset('assets/media/avatars/300-2.png') }}" />
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-sm text-foreground font-semibold leading-none">
+                                            {{ $user?->name }}
+                                        </span>
+                                        <a class="text-xs text-secondary-foreground hover:text-primary font-medium leading-none"
+                                            href="/metronic/tailwind/demo3/account/home/get-started">
+                                            {{ $user?->email }}
+                                        </a>
+                                    </div>
+                                </div>
+                                <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline">
+                                    Free
+                                </span>
+                            </div>
+                            <ul class="kt-dropdown-menu-sub">
+                                <li>
+                                    <div class="kt-dropdown-menu-separator">
+                                    </div>
+                                </li>
+                                <li>
+                                    <a class="kt-dropdown-menu-link"
+                                        href="/metronic/tailwind/demo3/public-profile/profiles/default">
+                                        <i class="ki-filled ki-badge">
+                                        </i>
+                                        Public Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="kt-dropdown-menu-link"
+                                        href="/metronic/tailwind/demo3/account/home/user-profile">
+                                        <i class="ki-filled ki-profile-circle">
+                                        </i>
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
+                                    data-kt-dropdown-trigger="hover">
+                                    <button class="kt-dropdown-menu-toggle" data-kt-dropdown-toggle="true">
+                                        <i class="ki-filled ki-setting-2">
+                                        </i>
+                                        My Account
+                                        <span class="kt-dropdown-menu-indicator">
+                                            <i class="ki-filled ki-right text-xs">
+                                            </i>
+                                        </span>
+                                    </button>
+                                    <div class="kt-dropdown-menu w-[220px]" data-kt-dropdown-menu="true">
+                                        <ul class="kt-dropdown-menu-sub">
+                                            <li>
+                                                <a class="kt-dropdown-menu-link"
+                                                    href="/metronic/tailwind/demo3/account/home/get-started">
+                                                    <i class="ki-filled ki-coffee">
+                                                    </i>
+                                                    Get Started
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="kt-dropdown-menu-link"
+                                                    href="/metronic/tailwind/demo3/account/home/user-profile">
+                                                    <i class="ki-filled ki-some-files">
+                                                    </i>
+                                                    My Profile
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="kt-dropdown-menu-link" href="#">
+                                                    <span class="flex items-center gap-2">
+                                                        <i class="ki-filled ki-icon">
+                                                        </i>
+                                                        Billing
+                                                    </span>
+                                                    <span class="ms-auto inline-flex items-center"
+                                                        data-kt-tooltip="true" data-kt-tooltip-placement="top">
+                                                        <i
+                                                            class="ki-filled ki-information-2 text-base text-muted-foreground">
+                                                        </i>
+                                                        <span class="kt-tooltip" data-kt-tooltip-content="true">
+                                                            Payment and subscription info
+                                                        </span>
+                                                    </span>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="kt-dropdown-menu-link"
+                                                    href="/metronic/tailwind/demo3/account/security/overview">
+                                                    <i class="ki-filled ki-medal-star">
+                                                    </i>
+                                                    Security
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="kt-dropdown-menu-link"
+                                                    href="/metronic/tailwind/demo3/account/members/teams">
+                                                    <i class="ki-filled ki-setting">
+                                                    </i>
+                                                    Members &amp; Roles
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="kt-dropdown-menu-link"
+                                                    href="/metronic/tailwind/demo3/account/integrations">
+                                                    <i class="ki-filled ki-switch">
+                                                    </i>
+                                                    Integrations
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <div class="kt-dropdown-menu-separator">
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <a class="kt-dropdown-menu-link"
+                                                    href="/metronic/tailwind/demo3/account/security/overview">
+                                                    <span class="flex items-center gap-2">
+                                                        <i class="ki-filled ki-shield-tick">
+                                                        </i>
+                                                        Notifications
+                                                    </span>
+                                                    <input checked="" class="ms-auto kt-switch" name="check"
+                                                        type="checkbox" value="1" />
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+                                <li>
+                                    <a class="kt-dropdown-menu-link" href="https://devs.keenthemes.com">
+                                        <i class="ki-filled ki-message-programming">
+                                        </i>
+                                        Dev Forum
+                                    </a>
+                                </li>
+                                <li data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
+                                    data-kt-dropdown-trigger="hover">
+                                    <button class="kt-dropdown-menu-toggle py-1" data-kt-dropdown-toggle="true">
+                                        <span class="flex items-center gap-2">
+                                            <i class="ki-filled ki-icon">
+                                            </i>
+                                            Language
+                                        </span>
+                                        <span class="ms-auto kt-badge kt-badge-stroke shrink-0">
+                                            English
+                                            <img alt="" class="inline-block size-3.5 rounded-full"
+                                                src="{{ asset('assets/media/flags/united-states.svg') }}" />
+                                        </span>
+                                    </button>
+                                    <div class="kt-dropdown-menu w-[180px]" data-kt-dropdown-menu="true">
+                                        <ul class="kt-dropdown-menu-sub">
+                                            <li class="active">
+                                                <a class="kt-dropdown-menu-link" href="?dir=ltr">
+                                                    <span class="flex items-center gap-2">
+                                                        <img alt="" class="inline-block size-4 rounded-full"
+                                                            src="{{ asset('assets/media/flags/united-states.svg') }}" />
+                                                        <span class="kt-menu-title">
+                                                            English
+                                                        </span>
+                                                    </span>
+                                                    <i
+                                                        class="ki-solid ki-check-circle ms-auto text-green-500 text-base">
+                                                    </i>
+                                                </a>
+                                            </li>
+                                            <li class="">
+                                                <a class="kt-dropdown-menu-link" href="?dir=ltr">
+                                                    <span class="flex items-center gap-2">
+                                                        <img alt="" class="inline-block size-4 rounded-full"
+                                                            src="{{ asset('assets/media/flags/spain.svg') }}" />
+                                                        <span class="kt-menu-title">
+                                                            Spanish
+                                                        </span>
+                                                    </span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="kt-dropdown-menu-separator">
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
+                                <div class="flex items-center gap-2 justify-between">
+                                    <span class="flex items-center gap-2">
+                                        <i class="ki-filled ki-moon text-base text-muted-foreground">
+                                        </i>
+                                        <span class="font-medium text-2sm">
+                                            Dark Mode
+                                        </span>
+                                    </span>
+                                    <input class="kt-switch" data-kt-theme-switch-state="dark"
+                                        data-kt-theme-switch-toggle="true" name="check" type="checkbox"
+                                        value="1" />
+                                </div>
+
+                                <form method="POST" action="{{ route('admin.logout') }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-outline justify-center w-full">
+                                        Cerrar sesión</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End of User -->
                 </div>
+                <!-- End of Topbar -->
             </div>
-
-            <div class="flex items-center gap-3">
-                @yield('navbar_actions')
-            </div>
-
+            <!-- End of Container -->
+        </header>
+        <!-- End of Header -->
+        <!-- Wrapper -->
+        <div class="flex flex-col lg:flex-row grow pt-(--header-height)">
+            @include('layouts.partials.admin.sidebar')
+            @unless($isFiles)
+                @include('layouts.partials.admin.navbar')
+            @endunless
+            <!-- Main -->
+            @yield('content')
+            <!-- End of Main -->
         </div>
+        <!-- End of Wrapper -->
     </div>
-</div>
-@endif
+    <!-- End of Base -->
+    @include('layouts.partials.admin.modal_search')
 
-{{-- ============================================================
-     MAIN CONTENT
-     ============================================================ --}}
-<div class="flex grow {{ $isFiles ? '' : 'rounded-b-xl' }} bg-background {{ $isFiles ? '' : 'border-x border-b border-input' }} {{ $isFiles ? '' : 'lg:mt-(--navbar-height)' }} mx-5 lg:ms-(--sidebar-width) mb-5 lg:{{ $isFiles ? 'mb-0 mx-0' : 'mb-5' }}">
-    @if(!$isFiles)
-    <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-6 lg:[&_.kt-container-fluid]:pe-4" id="scrollable_content">
-
-        @if(session('success'))
-        <div class="kt-container-fluid mb-5" x-data="{show:true}" x-show="show" x-init="setTimeout(()=>show=false,5000)"
-             x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-            <div class="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-900/30 px-4 py-3 text-sm text-green-700 dark:text-green-400">
-                <i class="ki-filled ki-check-circle text-green-500 text-base shrink-0"></i>
-                <span class="grow">{{ session('success') }}</span>
-                <button @click="show=false" class="shrink-0 text-green-500 hover:text-green-700 dark:hover:text-green-300">
-                    <i class="ki-filled ki-cross text-xs"></i>
-                </button>
-            </div>
-        </div>
-        @endif
-
-        @if($errors->any())
-        <div class="kt-container-fluid mb-5" x-data="{show:true}" x-show="show" x-init="setTimeout(()=>show=false,7000)"
-             x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-            <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-                <i class="ki-filled ki-information-5 text-red-500 text-base shrink-0"></i>
-                <span class="grow">{{ $errors->first() }}</span>
-                <button @click="show=false" class="shrink-0 text-red-500 hover:text-red-700 dark:hover:text-red-300">
-                    <i class="ki-filled ki-cross text-xs"></i>
-                </button>
-            </div>
-        </div>
-        @endif
-
-        <main class="grow" role="content">
-            <div class="kt-container-fluid">
-                @yield('content')
-            </div>
-        </main>
-    </div>
-    @else
-    <div class="flex flex-col grow overflow-hidden" id="scrollable_content">
-        @yield('content')
-    </div>
-    @endif
-</div>
-
-</div>
-
-<script src="{{ asset('assets/js/core.bundle.js') }}"></script>
-<script src="{{ asset('assets/vendors/ktui/ktui.min.js') }}"></script>
-@stack('scripts')
-
+    <!-- End of Page -->
+    <!-- Scripts -->
+    <script src="{{ asset('assets/js/core.bundle.js') }}"></script>
+    <script src="{{ asset('assets/vendors/ktui/ktui.min.js') }}"></script>
+    <script src="{{ asset('assets/vendors/apexcharts/apexcharts.min.js') }}"></script>
+    <script src="{{ asset('assets/js/widgets/general.js') }}"></script>
+    <!-- End of Scripts -->
+    @stack('scripts')
 </body>
+
 </html>

@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="space-y-6" x-data="{ search: '' }">
+    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
+        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+            <main class="grow" role="content">
+                <div class="kt-container-fluid">
+                    <div class="grid gap-5 lg:gap-7.5">
+<div class="space-y-6" x-data="{ search: '' }">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Admin</p>
@@ -85,6 +90,13 @@
             <div class="p-4 border-t border-white/10">
                 {{ $tenants->links() }}
             </div>
+        </div>
+    </div>
+                    </div>
+                </div>
+            </main>
+
+            @include('layouts.partials.admin.footer')
         </div>
     </div>
 @endsection

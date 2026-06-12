@@ -1,7 +1,12 @@
 @extends('layouts.client')
 
 @section('content')
-    <div class="space-y-8">
+    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
+        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+            <main class="grow" role="content">
+                <div class="kt-container-fluid">
+                    <div class="grid gap-5 lg:gap-7.5">
+<div class="space-y-8">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Panel Cliente</p>
@@ -57,7 +62,7 @@
                     <div class="mt-4 flex flex-wrap gap-2">
                         {{-- Gestionar archivos --}}
                         @if(isset($fileManagerEnabled) ? $fileManagerEnabled : true)
-                        <a href="{{ route('client.files.index', $site) }}"
+                        <a href="{{ route('client.files.index', $site->domain) }}"
                             class="flex items-center gap-1.5 px-3 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-lg transition text-sm font-medium">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -109,6 +114,13 @@
                     </a>
                 </div>
             @endforelse
+        </div>
+    </div>
+                    </div>
+                </div>
+            </main>
+
+            @include('layouts.partials.client.footer')
         </div>
     </div>
 @endsection

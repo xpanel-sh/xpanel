@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="max-w-3xl mx-auto p-8">
+    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
+        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+            <main class="grow" role="content">
+                <div class="kt-container-fluid">
+                    <div class="grid gap-5 lg:gap-7.5">
+<div class="max-w-3xl mx-auto p-8">
         <div class="mb-8">
             <a href="{{ route('admin.servers.index') }}" class="text-gray-400 hover:text-white">Volver a servidores</a>
             <h1 class="text-3xl font-bold text-white mt-4">Agregar Servidor Conectado</h1>
@@ -46,5 +51,12 @@
                 Agregar Servidor
             </button>
         </form>
+    </div>
+                    </div>
+                </div>
+            </main>
+
+            @include('layouts.partials.admin.footer')
+        </div>
     </div>
 @endsection

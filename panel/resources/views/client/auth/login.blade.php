@@ -1,68 +1,136 @@
 <!DOCTYPE html>
-<html lang="es">
-
+<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XPanel Cliente</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+    <title>XPanel — Iniciar Sesión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="{{ asset('assets/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet"/>
+    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet"/>
 </head>
+<body class="antialiased flex h-full text-base text-foreground bg-background">
 
-<body class="min-h-screen bg-[#f6f6f3] text-black">
-    <main class="flex min-h-screen items-center justify-center p-6">
-        <div class="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-black/10 bg-white shadow-2xl shadow-black/10 lg:grid-cols-[0.9fr_1.1fr]">
-            <section class="bg-black p-8 text-white md:p-10">
-                <div class="text-2xl font-black">XPanel</div>
-                <h1 class="mt-10 text-4xl font-black leading-tight tracking-tight">Tu hosting, sin ruido.</h1>
-                <p class="mt-4 text-gray-400">
-                    Administra sitios, bases de datos, dominios y servicios desde tu panel cliente.
-                </p>
-                <div class="mt-10 space-y-3 text-sm text-gray-300">
-                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">Sitios web por proyecto</div>
-                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">Bases de datos aisladas</div>
-                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">SSL y backups en camino</div>
+    {{-- Theme Mode --}}
+    <script>
+        const defaultThemeMode = 'light';
+        let themeMode;
+        if (document.documentElement) {
+            if (localStorage.getItem('kt-theme')) {
+                themeMode = localStorage.getItem('kt-theme');
+            } else if (document.documentElement.hasAttribute('data-kt-theme-mode')) {
+                themeMode = document.documentElement.getAttribute('data-kt-theme-mode');
+            } else {
+                themeMode = defaultThemeMode;
+            }
+            if (themeMode === 'system') {
+                themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.classList.add(themeMode);
+        }
+    </script>
+
+    <style>
+        .page-bg { background-image: url('{{ asset('assets/media/images/2600x1200/bg-10.png') }}'); }
+        .dark .page-bg { background-image: url('{{ asset('assets/media/images/2600x1200/bg-10-dark.png') }}'); }
+    </style>
+
+    <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
+        <div class="kt-card max-w-[370px] w-full">
+            <div class="kt-card-content flex flex-col gap-5 p-10">
+
+                {{-- Header --}}
+                <div class="text-center mb-2.5">
+                    <div class="text-2xl font-bold text-mono mb-1">{{ $appName }}</div>
+                    <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
+                        Iniciar sesión
+                    </h3>
+                    <div class="flex items-center justify-center font-medium">
+                        <span class="text-sm text-secondary-foreground me-1.5">
+                            ¿Problemas para acceder?
+                        </span>
+                        <a class="text-sm link" href="mailto:soporte@xpanel.sh">
+                            Contactar soporte
+                        </a>
+                    </div>
                 </div>
-            </section>
 
-            <section class="p-8 md:p-10">
-                <p class="text-sm font-bold uppercase tracking-[0.3em] text-gray-500">Panel Cliente</p>
-                <h2 class="mt-3 text-3xl font-black tracking-tight">Iniciar sesión</h2>
-
+                {{-- Errors --}}
                 @if ($errors->any())
-                    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <div class="flex items-center gap-2 rounded-lg bg-danger/10 border border-danger/20 px-4 py-3 text-sm text-danger">
+                        <i class="ki-filled ki-information-2 text-base shrink-0"></i>
                         {{ $errors->first() }}
                     </div>
                 @endif
 
                 @if (session('status'))
-                    <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    <div class="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-4 py-3 text-sm text-success">
+                        <i class="ki-filled ki-check-circle text-base shrink-0"></i>
                         {{ session('status') }}
                     </div>
                 @endif
 
-                <form action="{{ route('client.login.post') }}" method="POST" class="mt-8 space-y-5">
+                {{-- Form --}}
+                <form action="{{ route('client.login.post') }}" method="POST" class="flex flex-col gap-5">
                     @csrf
-                    <div>
-                        <label class="mb-2 block text-sm font-bold text-gray-700">Correo electrónico</label>
-                        <input type="email" name="email" value="{{ old('email') }}"
-                            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-black focus:ring-4 focus:ring-black/5"
-                            required autofocus>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label font-normal text-mono">
+                            Correo electrónico
+                        </label>
+                        <input
+                            class="kt-input"
+                            type="email"
+                            name="email"
+                            value="{{ old('email') }}"
+                            placeholder="correo@ejemplo.com"
+                            autofocus
+                            required
+                        />
                     </div>
 
-                    <div>
-                        <label class="mb-2 block text-sm font-bold text-gray-700">Contraseña</label>
-                        <input type="password" name="password"
-                            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-black focus:ring-4 focus:ring-black/5"
-                            required>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center justify-between gap-1">
+                            <label class="kt-form-label font-normal text-mono">
+                                Contraseña
+                            </label>
+                        </div>
+                        <div class="kt-input" data-kt-toggle-password="true">
+                            <input
+                                name="password"
+                                placeholder="Ingresa tu contraseña"
+                                type="password"
+                                required
+                            />
+                            <button
+                                class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-icon bg-transparent! -me-1.5"
+                                data-kt-toggle-password-trigger="true"
+                                type="button"
+                            >
+                                <span class="kt-toggle-password-active:hidden">
+                                    <i class="ki-filled ki-eye text-muted-foreground"></i>
+                                </span>
+                                <span class="hidden kt-toggle-password-active:block">
+                                    <i class="ki-filled ki-eye-slash text-muted-foreground"></i>
+                                </span>
+                            </button>
+                        </div>
                     </div>
 
-                    <button type="submit" class="w-full rounded-2xl bg-black px-5 py-4 font-black text-white transition hover:bg-gray-800">
-                        Entrar al Panel
+                    <label class="kt-label">
+                        <input class="kt-checkbox kt-checkbox-sm" name="remember" type="checkbox" value="1"/>
+                        <span class="kt-checkbox-label">Recordarme</span>
+                    </label>
+
+                    <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">
+                        Iniciar sesión
                     </button>
                 </form>
-            </section>
-        </div>
-    </main>
-</body>
 
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ asset('assets/js/core.bundle.js') }}"></script>
+    <script src="{{ asset('assets/vendors/ktui/ktui.min.js') }}"></script>
+</body>
 </html>

@@ -8,6 +8,7 @@ use App\Models\ServerNode;
 use App\Models\Tenant;
 use App\Models\HostingPlan;
 use App\Models\NameserverSetting;
+use App\Models\SystemSetting;
 use RuntimeException;
 
 class DefaultDataSeeder extends Seeder
@@ -42,6 +43,11 @@ class DefaultDataSeeder extends Seeder
                 'is_active' => true,
                 'description' => 'Plan para clientes con varios sitios y mayor capacidad.'
             ]
+        );
+
+        SystemSetting::firstOrCreate(
+            ['key' => 'app_name'],
+            ['value' => 'XPanel']
         );
 
         NameserverSetting::firstOrCreate(

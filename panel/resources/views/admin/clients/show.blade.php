@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
-    <section class="space-y-6">
+    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
+        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+            <main class="grow" role="content">
+                <div class="kt-container-fluid">
+                    <div class="grid gap-5 lg:gap-7.5">
+<section class="space-y-6">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <a href="{{ route('admin.clients.index') }}" class="text-sm text-gray-400 hover:text-white">Volver a clientes</a>
@@ -81,4 +86,11 @@
             </div>
         </div>
     </section>
+                    </div>
+                </div>
+            </main>
+
+            @include('layouts.partials.admin.footer')
+        </div>
+    </div>
 @endsection

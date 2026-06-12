@@ -161,7 +161,7 @@ class DaemonClient
     // File Manager Methods
     // ===========================
 
-    public function fileList(string $domain, string $path = '/'): array
+    public function fileList(?string $domain, string $path = '/'): array
     {
         $response = $this->http()->get("{$this->baseUrl}/api/files/list", [
             'domain' => $domain,
@@ -174,7 +174,7 @@ class DaemonClient
         return $response->json() ?? [];
     }
 
-    public function fileRead(string $domain, string $path): array
+    public function fileRead(?string $domain, string $path): array
     {
         $response = $this->http()->get("{$this->baseUrl}/api/files/read", [
             'domain' => $domain,
@@ -187,27 +187,27 @@ class DaemonClient
         return $response->json() ?? [];
     }
 
-    public function fileWrite(string $domain, string $path, string $content): array
+    public function fileWrite(?string $domain, string $path, string $content): array
     {
         return $this->post('/api/files/write', ['domain' => $domain, 'path' => $path, 'content' => $content], 'Daemon fileWrite failed');
     }
 
-    public function fileMkdir(string $domain, string $path): array
+    public function fileMkdir(?string $domain, string $path): array
     {
         return $this->post('/api/files/mkdir', ['domain' => $domain, 'path' => $path], 'Daemon fileMkdir failed');
     }
 
-    public function fileDelete(string $domain, string $path): array
+    public function fileDelete(?string $domain, string $path): array
     {
         return $this->post('/api/files/delete', ['domain' => $domain, 'path' => $path], 'Daemon fileDelete failed');
     }
 
-    public function fileRename(string $domain, string $oldPath, string $newPath): array
+    public function fileRename(?string $domain, string $oldPath, string $newPath): array
     {
         return $this->post('/api/files/rename', ['domain' => $domain, 'old_path' => $oldPath, 'new_path' => $newPath], 'Daemon fileRename failed');
     }
 
-    public function fileUpload(string $domain, string $destDir, \Illuminate\Http\UploadedFile $file): array
+    public function fileUpload(?string $domain, string $destDir, \Illuminate\Http\UploadedFile $file): array
     {
         $response = $this->http()
             ->attach('file', $file->getContent(), $file->getClientOriginalName())
@@ -222,7 +222,7 @@ class DaemonClient
         return $response->json() ?? [];
     }
 
-    public function fileDownloadProxy(string $domain, string $path): \Illuminate\Http\Client\Response
+    public function fileDownloadProxy(?string $domain, string $path): \Illuminate\Http\Client\Response
     {
         $response = $this->http()->get("{$this->baseUrl}/api/files/download", [
             'domain' => $domain,

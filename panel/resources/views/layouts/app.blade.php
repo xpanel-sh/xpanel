@@ -84,7 +84,7 @@
                             onchange="if(this.value) window.location=this.value">
                         <option value="">Seleccionar dominio…</option>
                         @foreach($sitesList as $s)
-                            <option value="{{ route('client.files.index', $s) }}"
+                            <option value="{{ route('client.files.index', $s->domain) }}"
                                 {{ (isset($site) && $site->id === $s->id) ? 'selected' : '' }}>
                                 {{ $s->domain }}
                             </option>

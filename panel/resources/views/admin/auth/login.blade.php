@@ -1,69 +1,128 @@
 <!DOCTYPE html>
-<html lang="es">
-
+<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XPanel Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+    <title>XPanel — Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="{{ asset('assets/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet"/>
+    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet"/>
 </head>
+<body class="antialiased flex h-full text-base text-foreground bg-background">
 
-<body class="min-h-screen bg-white text-black">
-    <main class="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
-        <section class="relative hidden overflow-hidden bg-black p-12 text-white lg:flex lg:flex-col lg:justify-between">
-            <div class="absolute inset-0 opacity-30" style="background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px); background-size: 42px 42px;"></div>
-            <div class="relative">
-                <div class="text-3xl font-black">XPanel</div>
-                <p class="mt-4 max-w-xl text-5xl font-black leading-tight tracking-tight">Admin global para operar tu plataforma de hosting.</p>
-            </div>
-            <div class="relative grid grid-cols-3 gap-3 text-sm text-gray-300">
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">Clientes</div>
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">Servidores</div>
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">Sitios</div>
-            </div>
-        </section>
+    {{-- Theme Mode --}}
+    <script>
+        const defaultThemeMode = 'light';
+        let themeMode;
+        if (document.documentElement) {
+            if (localStorage.getItem('kt-theme')) {
+                themeMode = localStorage.getItem('kt-theme');
+            } else if (document.documentElement.hasAttribute('data-kt-theme-mode')) {
+                themeMode = document.documentElement.getAttribute('data-kt-theme-mode');
+            } else {
+                themeMode = defaultThemeMode;
+            }
+            if (themeMode === 'system') {
+                themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.classList.add(themeMode);
+        }
+    </script>
 
-        <section class="flex items-center justify-center p-6">
-            <div class="w-full max-w-md">
-                <p class="text-sm font-bold uppercase tracking-[0.3em] text-gray-500">Acceso Admin</p>
-                <h1 class="mt-3 text-4xl font-black tracking-tight">Entrar a XPanel</h1>
-                <p class="mt-3 text-gray-500">Usa las credenciales que entrega el instalador o `xpanel acceso`.</p>
+    <style>
+        .page-bg { background-image: url('{{ asset('assets/media/images/2600x1200/bg-10.png') }}'); }
+        .dark .page-bg { background-image: url('{{ asset('assets/media/images/2600x1200/bg-10-dark.png') }}'); }
+    </style>
 
+    <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
+        <div class="kt-card max-w-[370px] w-full">
+            <div class="kt-card-content flex flex-col gap-5 p-10">
+
+                {{-- Header --}}
+                <div class="text-center mb-2.5">
+                    <div class="text-2xl font-bold text-mono mb-1">{{ $appName }}</div>
+                    <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
+                        Acceso Admin
+                    </h3>
+                </div>
+
+                {{-- Errors --}}
                 @if ($errors->any())
-                    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <div class="flex items-center gap-2 rounded-lg bg-danger/10 border border-danger/20 px-4 py-3 text-sm text-danger">
+                        <i class="ki-filled ki-information-2 text-base shrink-0"></i>
                         {{ $errors->first() }}
                     </div>
                 @endif
 
                 @if (session('status'))
-                    <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    <div class="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-4 py-3 text-sm text-success">
+                        <i class="ki-filled ki-check-circle text-base shrink-0"></i>
                         {{ session('status') }}
                     </div>
                 @endif
 
-                <form action="{{ route('admin.login.post') }}" method="POST" class="mt-8 space-y-5">
+                {{-- Form --}}
+                <form action="{{ route('admin.login.post') }}" method="POST" class="flex flex-col gap-5">
                     @csrf
-                    <div>
-                        <label class="mb-2 block text-sm font-bold text-gray-700">Correo admin</label>
-                        <input type="email" name="email" value="{{ old('email') }}"
-                            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-black focus:ring-4 focus:ring-black/5"
-                            required autofocus>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label font-normal text-mono">
+                            Correo electrónico
+                        </label>
+                        <input
+                            class="kt-input"
+                            type="email"
+                            name="email"
+                            value="{{ old('email') }}"
+                            placeholder="admin@ejemplo.com"
+                            autofocus
+                            required
+                        />
                     </div>
 
-                    <div>
-                        <label class="mb-2 block text-sm font-bold text-gray-700">Contraseña</label>
-                        <input type="password" name="password"
-                            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-black focus:ring-4 focus:ring-black/5"
-                            required>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center justify-between gap-1">
+                            <label class="kt-form-label font-normal text-mono">
+                                Contraseña
+                            </label>
+                        </div>
+                        <div class="kt-input" data-kt-toggle-password="true">
+                            <input
+                                name="password"
+                                placeholder="Ingresa tu contraseña"
+                                type="password"
+                                required
+                            />
+                            <button
+                                class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-icon bg-transparent! -me-1.5"
+                                data-kt-toggle-password-trigger="true"
+                                type="button"
+                            >
+                                <span class="kt-toggle-password-active:hidden">
+                                    <i class="ki-filled ki-eye text-muted-foreground"></i>
+                                </span>
+                                <span class="hidden kt-toggle-password-active:block">
+                                    <i class="ki-filled ki-eye-slash text-muted-foreground"></i>
+                                </span>
+                            </button>
+                        </div>
                     </div>
 
-                    <button type="submit" class="w-full rounded-2xl bg-black px-5 py-4 font-black text-white transition hover:bg-gray-800">
+                    <label class="kt-label">
+                        <input class="kt-checkbox kt-checkbox-sm" name="remember" type="checkbox" value="1"/>
+                        <span class="kt-checkbox-label">Recordarme</span>
+                    </label>
+
+                    <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">
                         Entrar al Admin
                     </button>
                 </form>
-            </div>
-        </section>
-    </main>
-</body>
 
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ asset('assets/js/core.bundle.js') }}"></script>
+    <script src="{{ asset('assets/vendors/ktui/ktui.min.js') }}"></script>
+</body>
 </html>

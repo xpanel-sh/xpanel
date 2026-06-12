@@ -20,27 +20,39 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (Auth::guard('admin')->attempt($credentials)) {
-            $request->session()->regenerate();
-
-            if (Auth::guard('admin')->user()->role !== 'admin') {
-                Auth::guard('admin')->logout();
-                return back()->withErrors(['email' => 'No tienes permisos de administrador.']);
-            }
-
-            return redirect()->route('admin.dashboard');
+        // Validate credentials and role BEFORE touching the session.
+        // Using a generic error regardless of why it failed prevents
+        // leaking that valid credentials exist for a different guard.
+        if (!Auth::guard('admin')->validate($credentials)) {
+            return back()
+                ->withErrors(['email' => 'Credenciales incorrectas.'])
+                ->withInput(['email' => $request->input('email')]);
         }
 
-        return back()->withErrors(['email' => 'Credenciales incorrectas.']);
+        $user = Auth::guard('admin')->getProvider()->retrieveByCredentials($credentials);
+
+        if (!$user || $user->role !== 'admin') {
+            return back()
+                ->withErrors(['email' => 'Credenciales incorrectas.'])
+                ->withInput(['email' => $request->input('email')]);
+        }
+
+        Auth::guard('admin')->login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('admin.dashboard'));
     }
 
     public function logout(Request $request)
     {
         Auth::guard('admin')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('admin.login');
     }
 }

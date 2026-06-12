@@ -14,11 +14,16 @@ import (
 )
 
 // SiteRoot returns the validated absolute path for a site's files directory.
+// When domain is empty it returns the global sites root.
 // Always call this before any file operation.
 func SiteRoot(domain string) (string, error) {
 	domain = strings.ToLower(strings.TrimSpace(domain))
 	if domain == "" {
-		return "", fmt.Errorf("domain is required")
+		root := filepath.Join(xenv.BasePath(), "runtime", "sites")
+		if err := os.MkdirAll(root, 0755); err != nil {
+			return "", fmt.Errorf("cannot initialize sites root: %w", err)
+		}
+		return root, nil
 	}
 	// Reject domains containing path separators or traversal sequences
 	if strings.ContainsAny(domain, "/\\") || strings.Contains(domain, "..") {

@@ -20,27 +20,38 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (Auth::guard('web')->attempt($credentials)) {
-            $request->session()->regenerate();
-
-            if (Auth::guard('web')->user()->role === 'admin') {
-                Auth::guard('web')->logout();
-                return back()->withErrors(['email' => 'Usa el panel de administrador para iniciar sesión.']);
-            }
-
-            return redirect()->route('client.dashboard');
+        // Validate credentials and role BEFORE touching the session.
+        // Generic error prevents leaking that valid credentials exist for admin.
+        if (!Auth::guard('web')->validate($credentials)) {
+            return back()
+                ->withErrors(['email' => 'Credenciales incorrectas.'])
+                ->withInput(['email' => $request->input('email')]);
         }
 
-        return back()->withErrors(['email' => 'Credenciales incorrectas.']);
+        $user = Auth::guard('web')->getProvider()->retrieveByCredentials($credentials);
+
+        if (!$user || $user->role !== 'client') {
+            return back()
+                ->withErrors(['email' => 'Credenciales incorrectas.'])
+                ->withInput(['email' => $request->input('email')]);
+        }
+
+        Auth::guard('web')->login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('client.dashboard'));
     }
 
     public function logout(Request $request)
     {
         Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('client.login');
     }
 }
