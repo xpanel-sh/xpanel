@@ -53,10 +53,10 @@ class FileManagerController extends Controller
         $validated = $request->validate([
             'domain' => ['nullable', 'string', 'max:255'],
             'path' => ['required', 'string', 'max:2048'],
-            'content' => ['present', 'string'],
+            'content' => ['present', 'nullable', 'string'],
         ]);
         try {
-            return response()->json($this->daemon->fileWrite($this->normalizeDomain($validated['domain'] ?? null), $validated['path'], $validated['content']));
+            return response()->json($this->daemon->fileWrite($this->normalizeDomain($validated['domain'] ?? null), $validated['path'], $validated['content'] ?? ''));
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

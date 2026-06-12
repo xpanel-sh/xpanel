@@ -58,21 +58,69 @@
         .xpanel-file-shell .ikode_tabs_action_btn.is-active {
             background: rgba(59, 130, 246, .18);
         }
-        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_code_pane {
+        .xpanel-file-shell .xpanel-editor-groups {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
             display: flex;
-            align-items: stretch;
+            overflow: hidden;
         }
-        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_monaco_editor,
-        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_monaco_clone {
+        .xpanel-file-shell .xpanel-editor-group {
             flex: 1 1 0;
-            width: auto;
             min-width: 0;
             height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: hsl(var(--background));
         }
-        .xpanel-file-shell.xpanel-editor-duplicated #xpanel_monaco_editor {
+        .xpanel-file-shell .xpanel-editor-group-tabs {
+            flex: 0 0 35px;
+            min-width: 0;
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid hsl(var(--border));
+            background: hsl(var(--muted) / 0.22);
+        }
+        .xpanel-file-shell .xpanel-editor-group-tab {
+            max-width: min(320px, 70%);
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
             border-right: 1px solid hsl(var(--border));
+            color: hsl(var(--foreground));
+            font-size: 13px;
+            font-weight: 600;
         }
-        .xpanel-file-shell .xpanel-monaco-clone {
+        .xpanel-file-shell .xpanel-editor-group-tab span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .xpanel-file-shell .xpanel-editor-group-close {
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: var(--muted-foreground);
+        }
+        .xpanel-file-shell .xpanel-editor-group-close:hover {
+            background: hsl(var(--muted));
+            color: hsl(var(--foreground));
+        }
+        .xpanel-file-shell .xpanel-editor-group-body {
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .xpanel-file-shell .xpanel-editor-group-body .ikode_monaco {
             width: 100%;
             height: 100%;
             min-width: 0;
@@ -140,9 +188,9 @@
         .xpanel-file-inline {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             min-height: 34px;
-            padding: 5px 8px;
+            padding: 7px 10px;
             border-radius: 8px;
             background: hsl(var(--muted));
         }
@@ -807,8 +855,33 @@
                 </div>
                 <div class="ikode_editor_split">
                     <div class="ikode_editor_codepane border-b border-border" id="xpanel_code_pane">
-                        <div id="xpanel_monaco_editor" class="ikode_monaco ikode_hidden"></div>
-                        <div id="xpanel_monaco_clone" class="ikode_monaco xpanel-monaco-clone ikode_hidden"></div>
+                        <div id="xpanel_editor_groups" class="xpanel-editor-groups ikode_hidden">
+                            <section id="xpanel_editor_group_main" class="xpanel-editor-group">
+                                <div class="xpanel-editor-group-tabs">
+                                    <div class="xpanel-editor-group-tab">
+                                        <i class="ki-filled ki-document" id="xpanel_editor_group_icon"></i>
+                                        <span id="xpanel_editor_group_title">-</span>
+                                        <strong id="xpanel_editor_group_dirty" class="text-warning"></strong>
+                                    </div>
+                                </div>
+                                <div class="xpanel-editor-group-body">
+                                    <div id="xpanel_monaco_editor" class="ikode_monaco"></div>
+                                </div>
+                            </section>
+                            <section id="xpanel_editor_group_clone" class="xpanel-editor-group ikode_hidden">
+                                <div class="xpanel-editor-group-tabs">
+                                    <div class="xpanel-editor-group-tab">
+                                        <i class="ki-filled ki-document" id="xpanel_editor_clone_icon"></i>
+                                        <span id="xpanel_editor_clone_title">-</span>
+                                        <strong id="xpanel_editor_clone_dirty" class="text-warning"></strong>
+                                        <button class="xpanel-editor-group-close" type="button" data-duplicate-close title="Cerrar duplicado">x</button>
+                                    </div>
+                                </div>
+                                <div class="xpanel-editor-group-body">
+                                    <div id="xpanel_monaco_clone" class="ikode_monaco"></div>
+                                </div>
+                            </section>
+                        </div>
                         <div class="ikode_file_preview ikode_hidden" id="xpanel_file_preview"></div>
                         <div class="xpanel-file-empty" id="xpanel_empty_state">
                             <i class="ki-filled ki-code text-4xl text-muted-foreground"></i>
@@ -1404,12 +1477,30 @@
                 const agentActive = $('#xpanel_agent_active');
                 if (agentActive) agentActive.textContent = activeTab()?.name || state.selected?.name || '-';
             };
+            const syncEditorGroupTitles = () => {
+                const tab = activeTab();
+                const name = tab?.name || '-';
+                const iconClass = tab ? icon({ name: tab.name, is_dir: false }) : 'ki-document';
+                ['#xpanel_editor_group_title', '#xpanel_editor_clone_title'].forEach((selector) => {
+                    const target = $(selector);
+                    if (target) target.textContent = name;
+                });
+                ['#xpanel_editor_group_icon', '#xpanel_editor_clone_icon'].forEach((selector) => {
+                    const target = $(selector);
+                    if (target) target.className = `ki-filled ${iconClass}`;
+                });
+                ['#xpanel_editor_group_dirty', '#xpanel_editor_clone_dirty'].forEach((selector) => {
+                    const target = $(selector);
+                    if (target) target.textContent = tab?.isDirty ? 'M' : '';
+                });
+            };
             const closeDuplicatePane = () => {
                 destroyEditorSplit();
                 $('#xpanel_file_shell').classList.remove('xpanel-editor-duplicated');
-                $('#xpanel_monaco_clone').classList.add('ikode_hidden');
+                $('#xpanel_editor_group_clone').classList.add('ikode_hidden');
                 state.cloneEditor?.setModel(null);
                 $$('[data-fm-action="duplicate-tab"]').forEach((button) => button.classList.remove('is-active'));
+                layoutEditor();
             };
             const syncEditorActions = () => {
                 const tab = activeTab();
@@ -1440,6 +1531,7 @@
                     });
                 });
                 syncEditorActions();
+                syncEditorGroupTitles();
             };
             const showEmptyEditor = () => {
                 state.openPath = null;
@@ -1447,8 +1539,7 @@
                 state.isDirty = false;
                 $('#xpanel_empty_state').classList.remove('ikode_hidden');
                 $('#xpanel_file_preview').classList.add('ikode_hidden');
-                $('#xpanel_monaco_editor').classList.add('ikode_hidden');
-                $('#xpanel_monaco_editor').style.display = 'none';
+                $('#xpanel_editor_groups').classList.add('ikode_hidden');
                 state.editor?.setModel(null);
                 closeDuplicatePane();
                 syncEditorActions();
@@ -1498,20 +1589,20 @@
                 state.isDirty = !!tab.isDirty;
                 $('#xpanel_empty_state').classList.add('ikode_hidden');
                 $('#xpanel_outline_file').textContent = tab.name;
+                syncEditorGroupTitles();
                 if (tab.kind === 'code') {
                     $('#xpanel_file_preview').classList.add('ikode_hidden');
-                    $('#xpanel_monaco_editor').classList.remove('ikode_hidden');
-                    $('#xpanel_monaco_editor').style.display = 'block';
+                    $('#xpanel_editor_groups').classList.remove('ikode_hidden');
                     state.editor.setModel(tab.model);
                     if ($('#xpanel_file_shell').classList.contains('xpanel-editor-duplicated')) {
                         state.cloneEditor?.setModel(tab.model);
-                        $('#xpanel_monaco_clone').classList.remove('ikode_hidden');
+                        $('#xpanel_editor_group_clone').classList.remove('ikode_hidden');
+                        buildEditorSplit();
                     }
                     $('#xpanel_inline_preview').textContent = 'Este archivo esta en modo editor.';
                     layoutEditor();
                 } else {
-                    $('#xpanel_monaco_editor').classList.add('ikode_hidden');
-                    $('#xpanel_monaco_editor').style.display = 'none';
+                    $('#xpanel_editor_groups').classList.add('ikode_hidden');
                     state.editor?.setModel(null);
                     closeDuplicatePane();
                     renderPreview(tab);
@@ -1548,6 +1639,7 @@
                 const placeholder = state.pendingCreate.type === 'folder' ? 'nueva-carpeta' : 'nuevo-archivo.txt';
                 return `
                     <div class="xpanel-file-inline" style="padding-left:${8 + depth * 14}px">
+                        <span class="xpanel-file-toggle"></span>
                         <i class="ki-filled ${iconClass}"></i>
                         <input data-inline-create="true" placeholder="${placeholder}" autocomplete="off">
                     </div>
@@ -2161,9 +2253,10 @@
 
                 const shell = $('#xpanel_file_shell');
                 const cloneHost = $('#xpanel_monaco_clone');
+                const cloneGroup = $('#xpanel_editor_group_clone');
                 const enabled = !shell.classList.contains('xpanel-editor-duplicated');
                 shell.classList.toggle('xpanel-editor-duplicated', enabled);
-                cloneHost.classList.toggle('ikode_hidden', !enabled);
+                cloneGroup.classList.toggle('ikode_hidden', !enabled);
                 $$('[data-fm-action="duplicate-tab"]').forEach((button) => button.classList.toggle('is-active', enabled));
 
                 if (enabled) {
@@ -2176,6 +2269,7 @@
                         });
                     }
                     state.cloneEditor.setModel(tab.model);
+                    syncEditorGroupTitles();
                     buildEditorSplit();
                     log(`Pestana duplicada: ${tab.path}`);
                 } else {
@@ -2245,7 +2339,7 @@
             };
 
             const resetSplitStyles = () => {
-                ['#xpanel_left_pane', '#xpanel_center_pane', '#xpanel_right_pane', '#xpanel_code_pane', '#xpanel_bottom_pane', '#xpanel_left_files_pane', '#xpanel_left_outline_pane', '#xpanel_monaco_editor', '#xpanel_monaco_clone', '#xpanel_terminal_sidebar', '#xpanel_terminal_main'].forEach((selector) => {
+                ['#xpanel_left_pane', '#xpanel_center_pane', '#xpanel_right_pane', '#xpanel_code_pane', '#xpanel_bottom_pane', '#xpanel_left_files_pane', '#xpanel_left_outline_pane', '#xpanel_editor_group_main', '#xpanel_editor_group_clone', '#xpanel_monaco_editor', '#xpanel_monaco_clone', '#xpanel_terminal_sidebar', '#xpanel_terminal_main'].forEach((selector) => {
                     const el = $(selector);
                     if (!el) return;
                     el.style.width = '';
@@ -2374,15 +2468,15 @@
             const buildEditorSplit = () => {
                 destroyEditorSplit();
                 if (!$('#xpanel_file_shell').classList.contains('xpanel-editor-duplicated')) return;
-                const editorHost = $('#xpanel_monaco_editor');
-                const cloneHost = $('#xpanel_monaco_clone');
-                editorHost.style.flexBasis = `${uiState.split.editor[0] || 50}%`;
-                cloneHost.style.flexBasis = `${uiState.split.editor[1] || 50}%`;
+                const editorGroup = $('#xpanel_editor_group_main');
+                const cloneGroup = $('#xpanel_editor_group_clone');
+                editorGroup.style.flexBasis = `${uiState.split.editor[0] || 50}%`;
+                cloneGroup.style.flexBasis = `${uiState.split.editor[1] || 50}%`;
                 if (!window.Split) return;
                 try {
-                    editorSplit = Split(['#xpanel_monaco_editor', '#xpanel_monaco_clone'], {
+                    editorSplit = Split(['#xpanel_editor_group_main', '#xpanel_editor_group_clone'], {
                         sizes: uiState.split.editor,
-                        minSize: [220, 220],
+                        minSize: [0, 0],
                         gutterSize: 3,
                         elementStyle: splitElementStyle,
                         gutterStyle: splitGutterStyle,
@@ -2734,6 +2828,7 @@
             $$('[data-console-tab]').forEach((button) => button.addEventListener('click', () => switchConsoleTab(button.dataset.consoleTab)));
             $$('[data-right-tab]').forEach((button) => button.addEventListener('click', () => switchRightTab(button.dataset.rightTab)));
             $$('[data-terminal-action]').forEach((button) => button.addEventListener('click', () => terminalAction(button.dataset.terminalAction)));
+            $$('[data-duplicate-close]').forEach((button) => button.addEventListener('click', closeDuplicatePane));
             $('#xpanel_terminal_list')?.addEventListener('click', (event) => {
                 const button = event.target.closest('[data-terminal-id]');
                 if (button) switchTerminalSession(button.dataset.terminalId);
@@ -2830,9 +2925,8 @@
                     theme: resolveMonacoTheme(),
                     ...editorOptions(),
                 });
-                $('#xpanel_monaco_editor').classList.add('ikode_hidden');
-                $('#xpanel_monaco_editor').style.display = 'none';
-                $('#xpanel_monaco_clone').classList.add('ikode_hidden');
+                $('#xpanel_editor_groups').classList.add('ikode_hidden');
+                $('#xpanel_editor_group_clone').classList.add('ikode_hidden');
                 new MutationObserver(() => {
                     monaco.editor.setTheme(resolveMonacoTheme());
                 }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
