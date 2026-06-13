@@ -65,6 +65,20 @@ License: https://xpanel.com/license
 
         $user = Auth::guard('web')->user();
         $isFiles = request()->routeIs('client.files.*');
+        $tenant = request()->attributes->get('tenant');
+        $clientSites = collect();
+
+        if ($tenant) {
+            $clientSites = \App\Models\Site::query()
+                ->where('tenant_id', $tenant->id)
+                ->orderBy('domain')
+                ->get(['id', 'tenant_id', 'domain', 'status', 'project_type']);
+        }
+
+        $routeDomain = trim((string) request()->route('domain'), '/');
+        $routeDomain = $routeDomain !== '' ? strtolower(explode('/', $routeDomain)[0] ?? '') : null;
+        $selectedSite = $routeDomain ? $clientSites->firstWhere('domain', $routeDomain) : null;
+        $selectedSiteDomain = $selectedSite?->domain;
     @endphp
     <!-- Page -->
     <!-- Base -->
@@ -89,7 +103,7 @@ License: https://xpanel.com/license
                                 src="{{ asset('assets/media/app/mini-logo-primary-dark.svg') }}" />
                         </a>
                     </div>
-                    <div class="flex items-center">
+                    <div class="flex items-center min-w-0">
                         <h3 class="text-secondary-foreground text-base hidden md:block">
                             xPanel
                         </h3>
@@ -100,71 +114,93 @@ License: https://xpanel.com/license
                             <div class="kt-menu-item" data-kt-menu-item-offset="0, 10px"
                                 data-kt-menu-item-placement="bottom-start" data-kt-menu-item-toggle="dropdown"
                                 data-kt-menu-item-trigger="hover">
-                                <button class="kt-menu-toggle text-mono font-medium">
-                                    Web 1
+                                <button class="kt-menu-toggle text-mono font-medium flex items-center gap-1.5 max-w-[220px]">
+                                    <span class="truncate">
+                                        {{ $selectedSiteDomain ?? 'Todos los sitios' }}
+                                    </span>
                                     <span class="kt-menu-arrow">
                                         <i class="ki-filled ki-down">
                                         </i>
                                     </span>
                                 </button>
-                                <div class="kt-menu-dropdown w-48 py-2">
-                                    <div class="kt-menu-item active">
-                                        <a class="kt-menu-link"
-                                            href="/metronic/tailwind/demo3/public-profile/profiles/default"
-                                            tabindex="0">
+                                <div class="kt-menu-dropdown w-[270px] py-2">
+                                    <div class="px-3 pb-2">
+                                        <div class="text-[11px] uppercase tracking-wide text-muted-foreground">
+                                            Contexto
+                                        </div>
+                                        <div class="mt-1 text-xs text-secondary-foreground">
+                                            {{ $selectedSiteDomain ? 'Trabajando sobre este sitio' : 'Vista global del cliente' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="kt-menu-separator"></div>
+
+                                    <div class="kt-menu-item {{ $selectedSiteDomain ? '' : 'active' }}">
+                                        <a class="kt-menu-link" href="{{ route('client.sites.index') }}" tabindex="0">
                                             <span class="kt-menu-icon">
-                                                <i class="ki-filled ki-like-shapes">
+                                                <i class="ki-filled ki-category">
                                                 </i>
                                             </span>
                                             <span class="kt-menu-title">
-                                                Web 1
+                                                Todos los sitios
                                             </span>
+                                            @unless($selectedSiteDomain)
+                                                <span class="kt-menu-icon ms-auto">
+                                                    <i class="ki-filled ki-check text-primary">
+                                                    </i>
+                                                </span>
+                                            @endunless
                                         </a>
                                     </div>
-                                    <div class="kt-menu-item ">
-                                        <a class="kt-menu-link" href="/metronic/tailwind/demo3/" tabindex="0">
-                                            <span class="kt-menu-icon">
-                                                <i class="ki-filled ki-setting-2">
-                                                </i>
-                                            </span>
-                                            <span class="kt-menu-title">
-                                                Web 2
-                                            </span>
-                                        </a>
-                                    </div>
+
+                                    @forelse($clientSites as $clientSite)
+                                        @php
+                                            $siteIsActive = $selectedSiteDomain === $clientSite->domain;
+                                        @endphp
+
+                                        <div class="kt-menu-item {{ $siteIsActive ? 'active' : '' }}">
+                                            <a class="kt-menu-link"
+                                                href="{{ route('client.files.index', ['domain' => $clientSite->domain]) }}"
+                                                tabindex="0">
+                                                <span class="kt-menu-icon">
+                                                    <i class="ki-filled ki-screen">
+                                                    </i>
+                                                </span>
+                                                <span class="kt-menu-title min-w-0">
+                                                    <span class="block truncate">
+                                                        {{ $clientSite->domain }}
+                                                    </span>
+                                                    <span class="block text-xs text-muted-foreground font-normal">
+                                                        {{ $clientSite->project_type ?? 'sitio web' }}
+                                                        @if($clientSite->status)
+                                                            - {{ $clientSite->status }}
+                                                        @endif
+                                                    </span>
+                                                </span>
+                                                @if($siteIsActive)
+                                                    <span class="kt-menu-icon ms-auto">
+                                                        <i class="ki-filled ki-check text-primary">
+                                                        </i>
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </div>
+                                    @empty
+                                        <div class="px-3 py-2 text-xs text-secondary-foreground">
+                                            Aun no tienes sitios creados.
+                                        </div>
+                                    @endforelse
+
+                                    <div class="kt-menu-separator"></div>
+
                                     <div class="kt-menu-item">
-                                        <a class="kt-menu-link" href="/metronic/tailwind/demo3/network/get-started"
-                                            tabindex="0">
+                                        <a class="kt-menu-link" href="{{ route('client.sites.create') }}" tabindex="0">
                                             <span class="kt-menu-icon">
-                                                <i class="ki-filled ki-users">
+                                                <i class="ki-filled ki-plus">
                                                 </i>
                                             </span>
                                             <span class="kt-menu-title">
-                                                Network
-                                            </span>
-                                        </a>
-                                    </div>
-                                    <div class="kt-menu-item">
-                                        <a class="kt-menu-link"
-                                            href="/metronic/tailwind/demo3/authentication/get-started" tabindex="0">
-                                            <span class="kt-menu-icon">
-                                                <i class="ki-filled ki-security-user">
-                                                </i>
-                                            </span>
-                                            <span class="kt-menu-title">
-                                                Authentication
-                                            </span>
-                                        </a>
-                                    </div>
-                                    <div class="kt-menu-item">
-                                        <a class="kt-menu-link" href="/metronic/tailwind/demo3/store-client/home"
-                                            tabindex="0">
-                                            <span class="kt-menu-icon">
-                                                <i class="ki-filled ki-handcart">
-                                                </i>
-                                            </span>
-                                            <span class="kt-menu-title">
-                                                Store - Client
+                                                Crear sitio
                                             </span>
                                         </a>
                                     </div>

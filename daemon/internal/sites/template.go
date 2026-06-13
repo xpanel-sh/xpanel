@@ -29,32 +29,19 @@ func Prepare(req model.CreateSiteRequest) (PreparedSite, error) {
 		return PreparedSite{}, err
 	}
 
-	page := landingPage(domain, req.Type, req.WebServer, req.PhpVersion)
-	files := map[string]string{
-		"index.html":        page,
-		"public/index.html": page,
+	isEmpty, err := isDirEmpty(hostDir)
+	if err != nil {
+		return PreparedSite{}, err
 	}
-
-	switch req.Type {
-	case "node":
-		files["index.js"] = nodeEntrypoint()
-	case "python":
-		files["app.py"] = pythonEntrypoint()
-	case "php":
-		files["index.php"] = phpEntrypoint()
-		files["public/index.php"] = phpEntrypoint()
-	}
-
-	for name, content := range files {
-		path := filepath.Join(hostDir, filepath.FromSlash(name))
-		if _, err := os.Stat(path); err == nil {
-			continue
-		}
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			return PreparedSite{}, err
-		}
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-			return PreparedSite{}, err
+	if isEmpty {
+		for name, content := range starterFiles(req, domain) {
+			path := filepath.Join(hostDir, filepath.FromSlash(name))
+			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+				return PreparedSite{}, err
+			}
+			if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+				return PreparedSite{}, err
+			}
 		}
 	}
 
@@ -73,6 +60,43 @@ func Prepare(req model.CreateSiteRequest) (PreparedSite, error) {
 		TargetDir:  targetDir,
 		WorkingDir: workingDir,
 	}, nil
+}
+
+func isDirEmpty(path string) (bool, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return false, err
+	}
+
+	return len(entries) == 0, nil
+}
+
+func starterFiles(req model.CreateSiteRequest, domain string) map[string]string {
+	page := landingPage(domain, req.Type, req.WebServer, req.PhpVersion)
+
+	switch req.Type {
+	case "node":
+		return map[string]string{
+			"index.html": page,
+			"index.js":   nodeEntrypoint(),
+		}
+	case "python":
+		return map[string]string{
+			"index.html": page,
+			"app.py":     pythonEntrypoint(),
+		}
+	case "php":
+		return map[string]string{
+			"index.php":        phpEntrypoint(),
+			"public/index.php": phpEntrypoint(),
+		}
+	case "static":
+		fallthrough
+	default:
+		return map[string]string{
+			"index.html": page,
+		}
+	}
 }
 
 func landingPage(domain string, projectType string, webServer string, phpVersion string) string {

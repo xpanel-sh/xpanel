@@ -2,35 +2,12 @@
     $navSections = [
         'dashboard' => [
             'match' => ['admin.dashboard'],
-            'title' => 'Dashboard',
+            'title' => 'Inicio',
             'items' => [
                 ['label' => 'Resumen', 'route' => 'admin.dashboard', 'match' => ['admin.dashboard']],
-                [
-                    'label' => 'Clientes',
-                    'match' => ['admin.clients.*', 'admin.plans.*'],
-                    'children' => [
-                        ['label' => 'Todos los clientes', 'route' => 'admin.clients.index', 'match' => ['admin.clients.index']],
-                        ['label' => 'Nuevo cliente', 'route' => 'admin.clients.create', 'match' => ['admin.clients.create']],
-                        ['label' => 'Planes', 'route' => 'admin.plans.index', 'match' => ['admin.plans.*']],
-                    ],
-                ],
-                [
-                    'label' => 'Web',
-                    'match' => ['admin.sites.*', 'admin.domains.*', 'admin.dns.*'],
-                    'children' => [
-                        ['label' => 'Sitios', 'route' => 'admin.sites.index', 'match' => ['admin.sites.*']],
-                        ['label' => 'Dominios', 'route' => 'admin.domains.index', 'match' => ['admin.domains.*']],
-                        ['label' => 'Nameservers', 'route' => 'admin.dns.nameservers', 'match' => ['admin.dns.*']],
-                    ],
-                ],
-                [
-                    'label' => 'Infraestructura',
-                    'match' => ['admin.servers.*', 'admin.daemon.*'],
-                    'children' => [
-                        ['label' => 'Servidores', 'route' => 'admin.servers.index', 'match' => ['admin.servers.*']],
-                        ['label' => 'Operaciones daemon', 'route' => 'admin.daemon.operations', 'match' => ['admin.daemon.*']],
-                    ],
-                ],
+                ['label' => 'Clientes', 'route' => 'admin.clients.index', 'match' => ['admin.clients.*']],
+                ['label' => 'Sitios', 'route' => 'admin.sites.index', 'match' => ['admin.sites.*']],
+                ['label' => 'Operaciones', 'route' => 'admin.daemon.operations', 'match' => ['admin.daemon.*']],
             ],
             'actions' => [
                 ['label' => 'Nuevo cliente', 'route' => 'admin.clients.create', 'icon' => 'ki-plus'],
@@ -40,17 +17,18 @@
             'match' => ['admin.clients.*'],
             'title' => 'Clientes',
             'items' => [
-                ['label' => 'Todos', 'route' => 'admin.clients.index', 'match' => ['admin.clients.index']],
+                ['label' => 'Portafolio', 'route' => 'admin.clients.index', 'match' => ['admin.clients.index']],
                 [
                     'label' => 'Gestion',
                     'match' => ['admin.clients.create', 'admin.clients.edit', 'admin.clients.show'],
                     'children' => [
                         ['label' => 'Nuevo cliente', 'route' => 'admin.clients.create', 'match' => ['admin.clients.create']],
                         ['label' => 'Listado', 'route' => 'admin.clients.index', 'match' => ['admin.clients.index']],
+                        ['label' => 'Roles y permisos', 'disabled' => true, 'match' => []],
                     ],
                 ],
                 [
-                    'label' => 'Relacionados',
+                    'label' => 'Hosting',
                     'match' => ['admin.plans.*', 'admin.sites.*'],
                     'children' => [
                         ['label' => 'Planes', 'route' => 'admin.plans.index', 'match' => ['admin.plans.*']],
@@ -66,7 +44,7 @@
             'match' => ['admin.plans.*'],
             'title' => 'Planes',
             'items' => [
-                ['label' => 'Todos', 'route' => 'admin.plans.index', 'match' => ['admin.plans.index']],
+                ['label' => 'Paquetes', 'route' => 'admin.plans.index', 'match' => ['admin.plans.index']],
                 [
                     'label' => 'Gestion',
                     'match' => ['admin.plans.create', 'admin.plans.edit'],
@@ -76,10 +54,11 @@
                     ],
                 ],
                 [
-                    'label' => 'Relacionados',
+                    'label' => 'Uso',
                     'match' => ['admin.clients.*'],
                     'children' => [
                         ['label' => 'Clientes', 'route' => 'admin.clients.index', 'match' => ['admin.clients.*']],
+                        ['label' => 'Ingresos por plan', 'disabled' => true, 'match' => []],
                     ],
                 ],
             ],
@@ -105,6 +84,15 @@
                     'match' => ['admin.daemon.*'],
                     'children' => [
                         ['label' => 'Operaciones', 'route' => 'admin.daemon.operations', 'match' => ['admin.daemon.*']],
+                        ['label' => 'Health checks', 'disabled' => true, 'match' => []],
+                    ],
+                ],
+                [
+                    'label' => 'Alta disponibilidad',
+                    'match' => [],
+                    'children' => [
+                        ['label' => 'Replicas', 'disabled' => true, 'match' => []],
+                        ['label' => 'Failover IP', 'disabled' => true, 'match' => []],
                     ],
                 ],
             ],
@@ -113,26 +101,44 @@
             ],
         ],
         'sites' => [
-            'match' => ['admin.sites.*', 'admin.domains.*'],
-            'title' => 'Web',
+            'match' => ['admin.sites.*', 'admin.files.*'],
+            'title' => 'Sitios',
             'items' => [
-                ['label' => 'Sitios', 'route' => 'admin.sites.index', 'match' => ['admin.sites.*']],
+                ['label' => 'Todos los sitios', 'route' => 'admin.sites.index', 'match' => ['admin.sites.*']],
                 [
-                    'label' => 'DNS',
-                    'match' => ['admin.domains.*', 'admin.dns.*'],
+                    'label' => 'Herramientas',
+                    'match' => ['admin.files.*'],
                     'children' => [
-                        ['label' => 'Dominios', 'route' => 'admin.domains.index', 'match' => ['admin.domains.*']],
-                        ['label' => 'Nameservers', 'route' => 'admin.dns.nameservers', 'match' => ['admin.dns.*']],
+                        ['label' => 'Administrador de archivos', 'route' => 'admin.files.index', 'match' => ['admin.files.*']],
+                        ['label' => 'Backups', 'disabled' => true, 'match' => []],
+                        ['label' => 'Migraciones', 'disabled' => true, 'match' => []],
+                    ],
+                ],
+                [
+                    'label' => 'Sitio',
+                    'match' => [],
+                    'children' => [
+                        ['label' => 'SSL', 'disabled' => true, 'match' => []],
+                        ['label' => 'Logs', 'disabled' => true, 'match' => []],
+                        ['label' => 'Recursos', 'disabled' => true, 'match' => []],
                     ],
                 ],
             ],
         ],
         'dns' => [
-            'match' => ['admin.dns.*'],
-            'title' => 'DNS',
+            'match' => ['admin.domains.*', 'admin.dns.*'],
+            'title' => 'Dominios',
             'items' => [
-                ['label' => 'Nameservers', 'route' => 'admin.dns.nameservers', 'match' => ['admin.dns.*']],
-                ['label' => 'Dominios', 'route' => 'admin.domains.index', 'match' => ['admin.domains.*']],
+                ['label' => 'Portafolio', 'route' => 'admin.domains.index', 'match' => ['admin.domains.*']],
+                [
+                    'label' => 'DNS',
+                    'match' => ['admin.dns.*'],
+                    'children' => [
+                        ['label' => 'Nameservers', 'route' => 'admin.dns.nameservers', 'match' => ['admin.dns.*']],
+                        ['label' => 'Zonas DNS', 'disabled' => true, 'match' => []],
+                    ],
+                ],
+                ['label' => 'Transferencias', 'disabled' => true, 'match' => []],
             ],
         ],
         'daemon' => [
@@ -141,6 +147,7 @@
             'items' => [
                 ['label' => 'Operaciones', 'route' => 'admin.daemon.operations', 'match' => ['admin.daemon.*']],
                 ['label' => 'Servidores', 'route' => 'admin.servers.index', 'match' => ['admin.servers.*']],
+                ['label' => 'Runtime', 'route' => 'admin.dashboard', 'match' => ['admin.dashboard']],
             ],
         ],
         'settings' => [
@@ -149,6 +156,7 @@
             'items' => [
                 ['label' => 'General', 'route' => 'admin.settings.index', 'match' => ['admin.settings.*']],
                 ['label' => 'DNS', 'route' => 'admin.dns.nameservers', 'match' => ['admin.dns.*']],
+                ['label' => 'Branding', 'disabled' => true, 'match' => []],
             ],
         ],
     ];
@@ -171,9 +179,14 @@
                 <div class="kt-scrollable-x-auto flex items-stretch">
                     <div class="kt-menu gap-5 lg:gap-7.5" data-kt-menu="true">
                          
+                        <div class="flex items-center pe-2">
+                            <span class="text-sm font-semibold text-mono text-nowrap">{{ $section['title'] }}</span>
+                        </div>
+
                         @foreach($section['items'] as $item)
                             @php
-                                $active = $isNavActive($item['match']);
+                                $active = $isNavActive($item['match'] ?? []);
+                                $disabled = $item['disabled'] ?? false;
                             @endphp
 
                             @if(isset($item['children']))
@@ -194,33 +207,50 @@
                                     <div class="kt-menu-dropdown kt-menu-default py-2 min-w-[210px]">
                                         @foreach($item['children'] as $child)
                                             @php
-                                                $childActive = $isNavActive($child['match']);
+                                                $childActive = $isNavActive($child['match'] ?? []);
+                                                $childDisabled = $child['disabled'] ?? false;
                                             @endphp
 
                                             <div class="kt-menu-item {{ $childActive ? 'active' : '' }}">
-                                                <a class="kt-menu-link" href="{{ route($child['route']) }}" tabindex="0">
-                                                    <span class="kt-menu-title">
-                                                        {{ $child['label'] }}
-                                                    </span>
-                                                    @if($childActive)
-                                                        <span class="kt-menu-icon ms-auto">
-                                                            <i class="ki-filled ki-check text-primary"></i>
+                                                @if($childDisabled)
+                                                    <button class="kt-menu-link opacity-50 cursor-not-allowed" type="button" aria-disabled="true">
+                                                        <span class="kt-menu-title">
+                                                            {{ $child['label'] }}
                                                         </span>
-                                                    @endif
-                                                </a>
+                                                    </button>
+                                                @else
+                                                    <a class="kt-menu-link" href="{{ route($child['route']) }}" tabindex="0">
+                                                        <span class="kt-menu-title">
+                                                            {{ $child['label'] }}
+                                                        </span>
+                                                        @if($childActive)
+                                                            <span class="kt-menu-icon ms-auto">
+                                                                <i class="ki-filled ki-check text-primary"></i>
+                                                            </span>
+                                                        @endif
+                                                    </a>
+                                                @endif
                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
                             @else
                                 <div class="kt-menu-item border-b-2 border-b-transparent {{ $active ? 'here' : '' }}">
-                                    <a class="{{ $itemClass }} {{ $active ? $itemActiveClass : $itemIdleClass }}"
-                                       href="{{ route($item['route']) }}"
-                                       tabindex="0">
-                                        <span class="kt-menu-title text-nowrap text-sm">
-                                            {{ $item['label'] }}
-                                        </span>
-                                    </a>
+                                    @if($disabled)
+                                        <button class="{{ $itemClass }} opacity-50 cursor-not-allowed text-foreground" type="button" aria-disabled="true">
+                                            <span class="kt-menu-title text-nowrap text-sm">
+                                                {{ $item['label'] }}
+                                            </span>
+                                        </button>
+                                    @else
+                                        <a class="{{ $itemClass }} {{ $active ? $itemActiveClass : $itemIdleClass }}"
+                                           href="{{ route($item['route']) }}"
+                                           tabindex="0">
+                                            <span class="kt-menu-title text-nowrap text-sm">
+                                                {{ $item['label'] }}
+                                            </span>
+                                        </a>
+                                    @endif
                                 </div>
                             @endif
                         @endforeach

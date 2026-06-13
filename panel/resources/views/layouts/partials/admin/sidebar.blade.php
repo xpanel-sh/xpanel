@@ -2,17 +2,18 @@
     $sideItems = [
         ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'match' => ['admin.dashboard'], 'icon' => 'ki-element-11'],
         ['label' => 'Clientes', 'route' => 'admin.clients.index', 'match' => ['admin.clients.*'], 'icon' => 'ki-people'],
+        ['label' => 'Sitios', 'route' => 'admin.sites.index', 'match' => ['admin.sites.*', 'admin.files.*'], 'icon' => 'ki-screen'],
+        ['label' => 'Dominios', 'route' => 'admin.domains.index', 'match' => ['admin.domains.*', 'admin.dns.*'], 'icon' => 'ki-click'],
         ['label' => 'Planes', 'route' => 'admin.plans.index', 'match' => ['admin.plans.*'], 'icon' => 'ki-dollar'],
-        ['label' => 'Sitios', 'route' => 'admin.sites.index', 'match' => ['admin.sites.*', 'admin.files.*'], 'icon' => 'ki-click'],
-        ['label' => 'Dominios', 'route' => 'admin.domains.index', 'match' => ['admin.domains.*'], 'icon' => 'ki-click'],
         ['label' => 'Servidores', 'route' => 'admin.servers.index', 'match' => ['admin.servers.*'], 'icon' => 'ki-setting-3'],
-        ['label' => 'DNS', 'route' => 'admin.dns.nameservers', 'match' => ['admin.dns.*'], 'icon' => 'ki-cloud'],
+        ['label' => 'Backups / HA', 'disabled' => true, 'match' => [], 'icon' => 'ki-shield-tick'],
         ['label' => 'Daemon', 'route' => 'admin.daemon.operations', 'match' => ['admin.daemon.*'], 'icon' => 'ki-pulse'],
         ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => ['admin.settings.*'], 'icon' => 'ki-setting-2'],
     ];
 
     $sideBaseClass = 'kt-btn kt-btn-ghost kt-btn-icon rounded-full size-10 border border-transparent text-secondary-foreground hover:bg-background hover:[&_i]:text-primary hover:border-input';
     $sideActiveClass = 'bg-background [&_i]:text-primary border-input active';
+    $sideDisabledClass = 'opacity-45 cursor-not-allowed hover:bg-transparent hover:border-transparent hover:[&_i]:text-secondary-foreground';
 @endphp
 
 <!-- Sidebar -->
@@ -27,17 +28,32 @@
                     $active = collect($item['match'])->contains(fn ($pattern) => request()->routeIs($pattern));
                 @endphp
 
-                <a class="{{ $sideBaseClass }} {{ $active ? $sideActiveClass : '' }}"
-                   data-kt-tooltip=""
-                   data-kt-tooltip-placement="right"
-                   href="{{ route($item['route']) }}">
+                @if($item['disabled'] ?? false)
+                    <button class="{{ $sideBaseClass }} {{ $sideDisabledClass }}"
+                            data-kt-tooltip=""
+                            data-kt-tooltip-placement="right"
+                            type="button"
+                            aria-disabled="true">
+                        <span class="kt-menu-icon">
+                            <i class="ki-filled {{ $item['icon'] }} text-lg"></i>
+                        </span>
+                        <span class="kt-tooltip" data-kt-tooltip-content="true">
+                            {{ $item['label'] }}
+                        </span>
+                    </button>
+                @else
+                    <a class="{{ $sideBaseClass }} {{ $active ? $sideActiveClass : '' }}"
+                       data-kt-tooltip=""
+                       data-kt-tooltip-placement="right"
+                       href="{{ route($item['route']) }}">
                     <span class="kt-menu-icon">
                         <i class="ki-filled {{ $item['icon'] }} text-lg"></i>
                     </span>
-                    <span class="kt-tooltip" data-kt-tooltip-content="true">
-                        {{ $item['label'] }}
-                    </span>
-                </a>
+                        <span class="kt-tooltip" data-kt-tooltip-content="true">
+                            {{ $item['label'] }}
+                        </span>
+                    </a>
+                @endif
             @endforeach
         </div>
     </div>
