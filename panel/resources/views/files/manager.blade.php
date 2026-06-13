@@ -31,9 +31,21 @@
             min-height: 0;
         }
         .xpanel-file-shell .ikode_editor_right { flex: 0 0 310px; min-width: 260px; width: auto; }
-        .xpanel-file-shell .ikode_editor_center { flex: 1 1 auto; min-width: 360px; }
-        .xpanel-file-shell .ikode_editor_split { height: 100%; min-height: 0; }
-        .xpanel-file-shell .ikode_editor_codepane { flex: 1 1 auto; min-height: 240px; }
+        .xpanel-file-shell .ikode_editor_center {
+            flex: 1 1 auto;
+            min-width: 360px;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .xpanel-file-shell .ikode_editor_split {
+            flex: 1 1 auto;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .xpanel-file-shell .ikode_editor_codepane { flex: 1 1 auto; min-height: 0; }
         .xpanel-file-shell .ikode_editor_bottom { flex: 0 0 220px; min-height: 120px; }
         .xpanel-file-shell .ikode_editor_right.is-start-hidden { display: none; }
         .xpanel-file-shell .ikode_tabs_actions {
@@ -847,10 +859,10 @@
                                 <div class="ikode_tabs xpanel-editor-group-tabs">
                                     <div class="flex min-w-0" id="xpanel_file_tabs_clone" style="width: 100%; overflow-x: auto;"></div>
                                     <div class="ikode_tabs_actions">
-                                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="save" title="Guardar">
+                                        <button class="ikode_tabs_action_btn" type="button" data-clone-action="save" title="Guardar">
                                             <i class="ki-filled ki-check"></i>
                                         </button>
-                                        <button class="ikode_tabs_action_btn" type="button" data-fm-action="download" title="Descargar">
+                                        <button class="ikode_tabs_action_btn" type="button" data-clone-action="download" title="Descargar">
                                             <i class="ki-filled ki-exit-down"></i>
                                         </button>
                                         <button class="xpanel-editor-group-close" type="button" data-duplicate-close title="Cerrar duplicado">x</button>
@@ -1069,6 +1081,8 @@
                 cloneEditor: null,
                 tabs: [],
                 activeTab: null,
+                cloneTabs: [],
+                activeCloneTab: null,
                 openPath: null,
                 openName: null,
                 isDirty: false,
@@ -1460,6 +1474,8 @@
                 destroyEditorSplit();
                 $('#xpanel_file_shell').classList.remove('xpanel-editor-duplicated');
                 $('#xpanel_editor_group_clone').classList.add('ikode_hidden');
+                state.cloneTabs = [];
+                state.activeCloneTab = null;
                 state.cloneEditor?.setModel(null);
                 $$('[data-fm-action="duplicate-tab"]').forEach((button) => button.classList.remove('is-active'));
                 layoutEditor();
@@ -1470,9 +1486,19 @@
                     button.classList.toggle('ikode_hidden', !tab || tab.kind !== 'code');
                 });
             };
-            const renderTabsInto = (tabs, activePath = state.activeTab) => {
+            const cloneTab = () => state.tabs.find((tab) => tab.path === state.activeCloneTab) || null;
+            const cloneTabList = () => {
+                state.cloneTabs = state.cloneTabs.filter((path) => state.tabs.some((tab) => tab.path === path && tab.kind === 'code'));
+                if (state.activeCloneTab && !state.cloneTabs.includes(state.activeCloneTab)) {
+                    state.activeCloneTab = state.cloneTabs[0] || null;
+                }
+                return state.cloneTabs
+                    .map((path) => state.tabs.find((tab) => tab.path === path))
+                    .filter(Boolean);
+            };
+            const renderTabsInto = (tabs, tabList = state.tabs, activePath = state.activeTab, group = 'main') => {
                 if (!tabs) return;
-                tabs.innerHTML = state.tabs.map((tab) => `
+                tabs.innerHTML = tabList.map((tab) => `
                     <button class="ikode_tab ${tab.path === activePath ? 'ikode_tab_active' : ''}" type="button" data-tab-path="${escapeHtml(tab.path)}">
                         <i class="ki-filled ${icon({ name: tab.name, is_dir: false })}"></i>
                         <span>${escapeHtml(tab.name)}</span>
@@ -1483,19 +1509,27 @@
                 tabs.querySelectorAll('[data-tab-path]').forEach((tabButton) => {
                     tabButton.addEventListener('click', (event) => {
                         if (event.target.closest('[data-tab-close]')) return;
+                        if (group === 'clone') {
+                            activateCloneTab(tabButton.dataset.tabPath);
+                            return;
+                        }
                         activateTab(tabButton.dataset.tabPath);
                     });
                 });
                 tabs.querySelectorAll('[data-tab-close]').forEach((closeButton) => {
                     closeButton.addEventListener('click', (event) => {
                         event.stopPropagation();
+                        if (group === 'clone') {
+                            closeCloneTab(closeButton.dataset.tabClose);
+                            return;
+                        }
                         closeTab(closeButton.dataset.tabClose);
                     });
                 });
             };
             const renderTabs = () => {
-                renderTabsInto($('#xpanel_file_tabs'));
-                renderTabsInto($('#xpanel_file_tabs_clone'));
+                renderTabsInto($('#xpanel_file_tabs'), state.tabs, state.activeTab, 'main');
+                renderTabsInto($('#xpanel_file_tabs_clone'), cloneTabList(), state.activeCloneTab, 'clone');
                 syncEditorActions();
             };
             const showEmptyEditor = () => {
@@ -1560,7 +1594,7 @@
                     $('#xpanel_editor_groups').classList.remove('ikode_hidden');
                     state.editor.setModel(tab.model);
                     if ($('#xpanel_file_shell').classList.contains('xpanel-editor-duplicated')) {
-                        state.cloneEditor?.setModel(tab.model);
+                        state.cloneEditor?.setModel(cloneTab()?.model || null);
                         $('#xpanel_editor_group_clone').classList.remove('ikode_hidden');
                         buildEditorSplit();
                     }
@@ -1579,15 +1613,45 @@
                 renderTabs();
                 showActiveTab();
             };
+            const activateCloneTab = (path) => {
+                if (!state.cloneTabs.includes(path)) return;
+                const tab = state.tabs.find((item) => item.path === path);
+                if (!tab || tab.kind !== 'code' || !tab.model) {
+                    closeCloneTab(path);
+                    return;
+                }
+                state.activeCloneTab = path;
+                state.cloneEditor?.setModel(tab.model);
+                renderTabs();
+                layoutEditor();
+            };
+            const closeCloneTab = (path) => {
+                const index = state.cloneTabs.indexOf(path);
+                if (index < 0) return;
+                const wasActive = state.activeCloneTab === path;
+                state.cloneTabs.splice(index, 1);
+                if (!state.cloneTabs.length) {
+                    closeDuplicatePane();
+                    renderTabs();
+                    return;
+                }
+                if (wasActive) {
+                    const next = state.cloneTabs[index] || state.cloneTabs[index - 1] || state.cloneTabs[0];
+                    state.activeCloneTab = next || null;
+                    state.cloneEditor?.setModel(cloneTab()?.model || null);
+                }
+                renderTabs();
+                layoutEditor();
+            };
             const closeTab = (path) => {
                 const index = state.tabs.findIndex((tab) => tab.path === path);
                 if (index < 0) return;
                 const tab = state.tabs[index];
                 if (tab.isDirty && !confirm(`Cerrar "${tab.name}" sin guardar?`)) return;
                 const wasActive = state.activeTab === path;
+                closeCloneTab(path);
                 if (wasActive) {
                     state.editor?.setModel(null);
-                    state.cloneEditor?.setModel(null);
                 }
                 tab.model?.dispose?.();
                 state.tabs.splice(index, 1);
@@ -1959,8 +2023,7 @@
                 activateTab(entry.path);
                 log(`Archivo abierto: ${entry.path}`);
             };
-            const save = async () => {
-                const tab = activeTab();
+            const save = async (tab = activeTab()) => {
                 if (!tab || tab.kind !== 'code' || !tab.model) return;
                 try {
                     await api('POST', '/write', { domain: config.domain, path: tab.path, content: tab.model.getValue() });
@@ -1973,11 +2036,15 @@
                     toast(error.message, 'error');
                 }
             };
-            const download = () => {
-                const tab = activeTab();
+            const download = (tab = activeTab()) => {
                 const path = tab?.path || (state.selected?.is_dir ? null : state.selected?.path);
                 if (!path) return;
                 window.open(downloadUrl(path));
+            };
+            const cloneAction = async (name) => {
+                const tab = cloneTab();
+                if (name === 'save') await save(tab);
+                if (name === 'download') download(tab);
             };
 
             const promptInput = (title, value, callback) => {
@@ -2152,9 +2219,25 @@
                 if (state.activeTab === oldPath || state.activeTab?.startsWith(`${oldPath}/`)) {
                     state.activeTab = newPath + state.activeTab.slice(oldPath.length);
                 }
+                state.cloneTabs = state.cloneTabs.map((path) => {
+                    if (path === oldPath || path.startsWith(`${oldPath}/`)) return newPath + path.slice(oldPath.length);
+                    return path;
+                });
+                if (state.activeCloneTab === oldPath || state.activeCloneTab?.startsWith(`${oldPath}/`)) {
+                    state.activeCloneTab = newPath + state.activeCloneTab.slice(oldPath.length);
+                    state.cloneEditor?.setModel(cloneTab()?.model || null);
+                }
                 renderTabs();
             };
             const closeTabsUnder = (path) => {
+                state.cloneTabs = state.cloneTabs.filter((tabPath) => !(tabPath === path || tabPath.startsWith(`${path}/`)));
+                if (state.activeCloneTab === path || state.activeCloneTab?.startsWith(`${path}/`)) {
+                    state.activeCloneTab = state.cloneTabs[0] || null;
+                    state.cloneEditor?.setModel(cloneTab()?.model || null);
+                }
+                if (!state.cloneTabs.length && $('#xpanel_file_shell').classList.contains('xpanel-editor-duplicated')) {
+                    closeDuplicatePane();
+                }
                 state.tabs = state.tabs.filter((tab) => {
                     const match = tab.path === path || tab.path.startsWith(`${path}/`);
                     if (match) tab.model?.dispose?.();
@@ -2219,28 +2302,24 @@
                 const shell = $('#xpanel_file_shell');
                 const cloneHost = $('#xpanel_monaco_clone');
                 const cloneGroup = $('#xpanel_editor_group_clone');
-                const enabled = !shell.classList.contains('xpanel-editor-duplicated');
-                shell.classList.toggle('xpanel-editor-duplicated', enabled);
-                cloneGroup.classList.toggle('ikode_hidden', !enabled);
-                $$('[data-fm-action="duplicate-tab"]').forEach((button) => button.classList.toggle('is-active', enabled));
+                shell.classList.add('xpanel-editor-duplicated');
+                cloneGroup.classList.remove('ikode_hidden');
+                $$('[data-fm-action="duplicate-tab"]').forEach((button) => button.classList.add('is-active'));
 
-                if (enabled) {
-                    if (!state.cloneEditor) {
-                        state.cloneEditor = monaco.editor.create(cloneHost, {
-                            value: '',
-                            language: 'plaintext',
-                            theme: resolveMonacoTheme(),
-                            ...editorOptions(),
-                        });
-                    }
-                    state.cloneEditor.setModel(tab.model);
-                    renderTabs();
-                    buildEditorSplit();
-                    log(`Pestana duplicada: ${tab.path}`);
-                } else {
-                    destroyEditorSplit();
-                    state.cloneEditor?.setModel(null);
+                if (!state.cloneEditor) {
+                    state.cloneEditor = monaco.editor.create(cloneHost, {
+                        value: '',
+                        language: 'plaintext',
+                        theme: resolveMonacoTheme(),
+                        ...editorOptions(),
+                    });
                 }
+                if (!state.cloneTabs.includes(tab.path)) state.cloneTabs.push(tab.path);
+                state.activeCloneTab = tab.path;
+                state.cloneEditor.setModel(tab.model);
+                renderTabs();
+                buildEditorSplit();
+                log(`Pestana duplicada: ${tab.path}`);
 
                 layoutEditor();
                 window.setTimeout(layoutEditor, 60);
@@ -2382,6 +2461,7 @@
 
                 if (!window.Split || !splitVisible('#xpanel_bottom_pane')) {
                     $('#xpanel_code_pane').style.flexBasis = '';
+                    $('#xpanel_bottom_pane').style.flexBasis = '';
                     return;
                 }
 
@@ -2793,6 +2873,7 @@
             $$('[data-console-tab]').forEach((button) => button.addEventListener('click', () => switchConsoleTab(button.dataset.consoleTab)));
             $$('[data-right-tab]').forEach((button) => button.addEventListener('click', () => switchRightTab(button.dataset.rightTab)));
             $$('[data-terminal-action]').forEach((button) => button.addEventListener('click', () => terminalAction(button.dataset.terminalAction)));
+            $$('[data-clone-action]').forEach((button) => button.addEventListener('click', () => cloneAction(button.dataset.cloneAction)));
             $$('[data-duplicate-close]').forEach((button) => button.addEventListener('click', closeDuplicatePane));
             $('#xpanel_terminal_list')?.addEventListener('click', (event) => {
                 const button = event.target.closest('[data-terminal-id]');
