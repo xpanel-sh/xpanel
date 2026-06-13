@@ -1,9 +1,9 @@
 @php
     $sideItems = [
         ['label' => 'Dashboard', 'route' => 'client.dashboard', 'match' => ['client.dashboard'], 'icon' => 'ki-element-11'],
-        ['label' => 'Sitios', 'route' => 'client.sites.index', 'match' => ['client.sites.*', 'client.files.*'], 'icon' => 'ki-website'],
+        ['label' => 'Sitios', 'route' => 'client.sites.index', 'match' => ['client.sites.*', 'client.files.*'], 'icon' => 'ki-click'],
         ['label' => 'Bases de datos', 'route' => 'client.databases.index', 'match' => ['client.databases.*'], 'icon' => 'ki-data'],
-        ['label' => 'Dominios', 'route' => 'client.domains.index', 'match' => ['client.domains.*'], 'icon' => 'ki-globe'],
+        ['label' => 'Dominios', 'route' => 'client.domains.index', 'match' => ['client.domains.*'], 'icon' => 'ki-click'],
         ['label' => 'DNS', 'route' => 'client.dns.index', 'match' => ['client.dns.*'], 'icon' => 'ki-cloud'],
         ['label' => 'Correos', 'route' => 'client.emails.index', 'match' => ['client.emails.*'], 'icon' => 'ki-sms'],
         ['label' => 'Cuenta', 'route' => 'client.account.show', 'match' => ['client.account.*'], 'icon' => 'ki-user'],

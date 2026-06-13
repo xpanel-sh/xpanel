@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -57,6 +58,7 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 	if err != nil {
 		return "", err
 	}
+	domain := normalizedSiteDomain(req.Domain)
 
 	// 1. Configurar imagen usando el Selector
 	imageName, cmd := SelectImage(req.Type, req.WebServer, req.PhpVersion)
@@ -74,6 +76,33 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 		return "", err
 	}
 
+	if existing, err := m.cli.ContainerInspect(ctx, containerName); err == nil {
+		labels := containerLabels(existing)
+		if !isManagedSite(labels) {
+			return "", fmt.Errorf("container %s already exists and is not a managed XPanel site", containerName)
+		}
+
+		if existingDomain := strings.TrimSpace(labels["xpanel.domain"]); existingDomain != "" && existingDomain != domain {
+			return "", fmt.Errorf("container %s is managed by XPanel but belongs to another domain", containerName)
+		}
+
+		if siteHasExpectedMount(existing, preparedSite) {
+			if existing.State != nil && !existing.State.Running {
+				if err := m.cli.ContainerStart(ctx, existing.ID, types.ContainerStartOptions{}); err != nil {
+					return "", err
+				}
+			}
+
+			return existing.ID, nil
+		}
+
+		if err := m.removeContainer(ctx, existing.ID); err != nil {
+			return "", fmt.Errorf("could not repair site container %s: %w", containerName, err)
+		}
+	} else if !client.IsErrNotFound(err) {
+		return "", err
+	}
+
 	// 2. Configurar Contenedor
 	config := &container.Config{
 		Image:      imageName,
@@ -81,12 +110,12 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 		WorkingDir: preparedSite.WorkingDir,
 		Labels: map[string]string{
 			"traefik.enable": "true",
-			fmt.Sprintf("traefik.http.routers.%s.rule", routerName):             fmt.Sprintf("Host(`%s`)", strings.ToLower(req.Domain)),
+			fmt.Sprintf("traefik.http.routers.%s.rule", routerName):             fmt.Sprintf("Host(`%s`)", domain),
 			fmt.Sprintf("traefik.http.routers.%s.entrypoints", routerName):      "websecure",
 			fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", routerName): "myresolver",
 			"xpanel.managed":      "true",
 			"xpanel.kind":         "site",
-			"xpanel.domain":       strings.ToLower(req.Domain),
+			"xpanel.domain":       domain,
 			"xpanel.project_type": req.Type,
 		},
 	}
@@ -118,7 +147,21 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 		return "", err
 	}
 
+	inspected, err := m.cli.ContainerInspect(ctx, resp.ID)
+	if err != nil {
+		return "", err
+	}
+	if !siteHasExpectedMount(inspected, preparedSite) {
+		return "", fmt.Errorf("site container %s was created without the expected mount %s:%s", containerName, preparedSite.HostDir, preparedSite.TargetDir)
+	}
+
 	return resp.ID, nil
+}
+
+func (m *Manager) removeContainer(ctx context.Context, id string) error {
+	timeout := 10
+	_ = m.cli.ContainerStop(ctx, id, container.StopOptions{Timeout: &timeout})
+	return m.cli.ContainerRemove(ctx, id, container.RemoveOptions{Force: true})
 }
 
 func (m *Manager) managedSiteContainerID(ctx context.Context, name string) (string, error) {
@@ -132,8 +175,8 @@ func (m *Manager) managedSiteContainerID(ctx context.Context, name string) (stri
 		return "", err
 	}
 
-	labels := inspected.Config.Labels
-	if labels["xpanel.managed"] != "true" || labels["xpanel.kind"] != "site" {
+	labels := containerLabels(inspected)
+	if !isManagedSite(labels) {
 		return "", fmt.Errorf("container is not a managed XPanel site")
 	}
 
@@ -141,7 +184,7 @@ func (m *Manager) managedSiteContainerID(ctx context.Context, name string) (stri
 }
 
 func siteContainerName(req model.CreateSiteRequest) (string, error) {
-	domain := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(req.Domain)), ".")
+	domain := normalizedSiteDomain(req.Domain)
 	if !siteDomainPattern.MatchString(domain) {
 		return "", fmt.Errorf("domain is invalid")
 	}
@@ -167,4 +210,33 @@ func normalizeSiteContainerName(name string) (string, error) {
 	}
 
 	return containerName, nil
+}
+
+func normalizedSiteDomain(domain string) string {
+	return strings.TrimSuffix(strings.ToLower(strings.TrimSpace(domain)), ".")
+}
+
+func containerLabels(inspected types.ContainerJSON) map[string]string {
+	if inspected.Config == nil {
+		return map[string]string{}
+	}
+
+	return inspected.Config.Labels
+}
+
+func isManagedSite(labels map[string]string) bool {
+	return labels["xpanel.managed"] == "true" && labels["xpanel.kind"] == "site"
+}
+
+func siteHasExpectedMount(inspected types.ContainerJSON, preparedSite sites.PreparedSite) bool {
+	expectedSource := filepath.Clean(preparedSite.HostDir)
+	expectedDestination := filepath.Clean(preparedSite.TargetDir)
+
+	for _, mount := range inspected.Mounts {
+		if filepath.Clean(mount.Source) == expectedSource && filepath.Clean(mount.Destination) == expectedDestination {
+			return true
+		}
+	}
+
+	return false
 }

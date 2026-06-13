@@ -23,11 +23,25 @@ class FileManagerController extends Controller
 
     public function list(Request $request)
     {
-        $domain = $this->normalizeDomain($request->query('domain'));
-        $path = $request->query('path', '/');
+        [$domain, $path, $virtualPrefix] = $this->resolveOperationTarget(
+            $this->normalizeDomain($request->query('domain')),
+            $request->query('path', '/')
+        );
 
         try {
-            return response()->json($this->daemon->fileList($domain, $path));
+            $payload = $this->daemon->fileList($domain, $path);
+            if ($virtualPrefix) {
+                $payload['path'] = $virtualPrefix . (($path === '/' || $path === '') ? '' : $path);
+                $payload['entries'] = collect($payload['entries'] ?? [])
+                    ->map(function (array $entry) use ($virtualPrefix) {
+                        $entry['path'] = $virtualPrefix . ($entry['path'] ?? '/');
+                        return $entry;
+                    })
+                    ->values()
+                    ->all();
+            }
+
+            return response()->json($payload);
         } catch (\Throwable $e) {
             Log::warning('Admin FileManager list failed', ['domain' => $domain, 'path' => $path, 'error' => $e->getMessage()]);
             return response()->json(['error' => $e->getMessage()], 500);
@@ -36,8 +50,10 @@ class FileManagerController extends Controller
 
     public function read(Request $request)
     {
-        $domain = $this->normalizeDomain($request->query('domain'));
-        $path = $request->query('path', '');
+        [$domain, $path] = $this->resolveOperationTarget(
+            $this->normalizeDomain($request->query('domain')),
+            $request->query('path', '')
+        );
         if (empty($path)) {
             return response()->json(['error' => 'path required'], 400);
         }
@@ -56,7 +72,8 @@ class FileManagerController extends Controller
             'content' => ['present', 'nullable', 'string'],
         ]);
         try {
-            return response()->json($this->daemon->fileWrite($this->normalizeDomain($validated['domain'] ?? null), $validated['path'], $validated['content'] ?? ''));
+            [$domain, $path] = $this->resolveOperationTarget($this->normalizeDomain($validated['domain'] ?? null), $validated['path']);
+            return response()->json($this->daemon->fileWrite($domain, $path, $validated['content'] ?? ''));
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -69,7 +86,8 @@ class FileManagerController extends Controller
             'path' => ['required', 'string', 'max:2048'],
         ]);
         try {
-            return response()->json($this->daemon->fileMkdir($this->normalizeDomain($validated['domain'] ?? null), $validated['path']));
+            [$domain, $path] = $this->resolveOperationTarget($this->normalizeDomain($validated['domain'] ?? null), $validated['path']);
+            return response()->json($this->daemon->fileMkdir($domain, $path));
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -82,7 +100,8 @@ class FileManagerController extends Controller
             'path' => ['required', 'string', 'max:2048'],
         ]);
         try {
-            return response()->json($this->daemon->fileDelete($this->normalizeDomain($validated['domain'] ?? null), $validated['path']));
+            [$domain, $path] = $this->resolveOperationTarget($this->normalizeDomain($validated['domain'] ?? null), $validated['path']);
+            return response()->json($this->daemon->fileDelete($domain, $path));
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -96,10 +115,16 @@ class FileManagerController extends Controller
             'new_path' => ['required', 'string', 'max:2048'],
         ]);
         try {
+            [$domain, $oldPath] = $this->resolveOperationTarget($this->normalizeDomain($validated['domain'] ?? null), $validated['old_path']);
+            [$newDomain, $newPath] = $this->resolveOperationTarget($this->normalizeDomain($validated['domain'] ?? null), $validated['new_path']);
+            if ($domain !== $newDomain) {
+                return response()->json(['error' => 'cross-site moves are not supported'], 422);
+            }
+
             return response()->json($this->daemon->fileRename(
-                $this->normalizeDomain($validated['domain'] ?? null),
-                $validated['old_path'],
-                $validated['new_path']
+                $domain,
+                $oldPath,
+                $newPath
             ));
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -114,9 +139,14 @@ class FileManagerController extends Controller
             'path' => ['required', 'string'],
         ]);
         try {
-            return response()->json($this->daemon->fileUpload(
+            [$domain, $path] = $this->resolveOperationTarget(
                 $this->normalizeDomain($request->input('domain')),
-                $request->input('path', '/'),
+                $request->input('path', '/')
+            );
+
+            return response()->json($this->daemon->fileUpload(
+                $domain,
+                $path,
                 $request->file('file')
             ));
         } catch (\Throwable $e) {
@@ -131,9 +161,10 @@ class FileManagerController extends Controller
             'path' => ['required', 'string', 'max:2048'],
         ]);
         try {
+            [$domain, $path] = $this->resolveOperationTarget($this->normalizeDomain($validated['domain'] ?? null), $validated['path']);
             return response()->json($this->daemon->fileExtract(
-                $this->normalizeDomain($validated['domain'] ?? null),
-                $validated['path']
+                $domain,
+                $path
             ));
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -151,13 +182,29 @@ class FileManagerController extends Controller
         ]);
 
         try {
-            return response()->json($this->daemon->fileSearch(
+            [$domain, $path, $virtualPrefix] = $this->resolveOperationTarget(
                 $this->normalizeDomain($validated['domain'] ?? null),
-                $validated['path'] ?? '/',
+                $validated['path'] ?? '/'
+            );
+            $payload = $this->daemon->fileSearch(
+                $domain,
+                $path,
                 $validated['query'],
                 (bool) ($validated['include_content'] ?? true),
                 (bool) ($validated['case_sensitive'] ?? false)
-            ));
+            );
+            if ($virtualPrefix) {
+                $payload['path'] = $virtualPrefix . (($path === '/' || $path === '') ? '' : $path);
+                $payload['results'] = collect($payload['results'] ?? [])
+                    ->map(function (array $result) use ($virtualPrefix) {
+                        $result['path'] = $virtualPrefix . ($result['path'] ?? '/');
+                        return $result;
+                    })
+                    ->values()
+                    ->all();
+            }
+
+            return response()->json($payload);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -165,8 +212,10 @@ class FileManagerController extends Controller
 
     public function download(Request $request)
     {
-        $domain = $this->normalizeDomain($request->query('domain'));
-        $path = $request->query('path', '');
+        [$domain, $path] = $this->resolveOperationTarget(
+            $this->normalizeDomain($request->query('domain')),
+            $request->query('path', '')
+        );
         if (empty($path)) {
             abort(400, 'path required');
         }
@@ -208,5 +257,43 @@ class FileManagerController extends Controller
         $domain = trim((string) $domain);
 
         return $domain === '' ? null : strtolower($domain);
+    }
+
+    private function resolveOperationTarget(?string $domain, string $path): array
+    {
+        if ($domain) {
+            Site::where('domain', $domain)->firstOrFail();
+            return [$domain, $this->normalizeSitePath($path), null];
+        }
+
+        $parts = array_values(array_filter(explode('/', str_replace('\\', '/', trim($path, '/'))), fn ($part) => $part !== ''));
+        if (!$parts) {
+            return [null, '/', null];
+        }
+
+        $candidateDomain = $this->normalizeDomain(array_shift($parts));
+        if (!$candidateDomain || !Site::where('domain', $candidateDomain)->exists()) {
+            return [null, $this->normalizeSitePath($path), null];
+        }
+
+        return [$candidateDomain, $this->normalizeSitePath('/' . implode('/', $parts)), '/' . $candidateDomain];
+    }
+
+    private function normalizeSitePath(string $path): string
+    {
+        $parts = explode('/', str_replace('\\', '/', $path));
+        $clean = [];
+        foreach ($parts as $part) {
+            if ($part === '' || $part === '.') {
+                continue;
+            }
+            if ($part === '..') {
+                array_pop($clean);
+                continue;
+            }
+            $clean[] = $part;
+        }
+
+        return $clean ? '/' . implode('/', $clean) : '/';
     }
 }

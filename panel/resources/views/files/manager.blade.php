@@ -137,16 +137,16 @@
         .xpanel-file-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            min-height: 34px;
-            padding: 7px 10px;
+            gap: 8px;
+            min-height: 28px;
+            padding: 4px 8px;
             border-radius: 8px;
             color: var(--muted-foreground);
             cursor: pointer;
             user-select: none;
         }
         .xpanel-file-tree {
-            padding: 6px;
+            padding: 4px;
             min-height: 100%;
         }
         .xpanel-file-row:hover,
@@ -182,9 +182,9 @@
         .xpanel-file-inline {
             display: flex;
             align-items: center;
-            gap: 10px;
-            min-height: 34px;
-            padding: 7px 10px;
+            gap: 8px;
+            min-height: 28px;
+            padding: 4px 8px;
             border-radius: 8px;
             background: hsl(var(--muted));
         }
@@ -198,6 +198,22 @@
             padding: 0 7px;
             font-size: 12px;
             outline: none;
+        }
+        .xpanel-file-rename-input {
+            min-width: 0;
+            flex: 1;
+            height: 24px;
+            border: 1px solid hsl(var(--primary));
+            border-radius: 6px;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            padding: 0 7px;
+            font-size: 12px;
+            outline: none;
+        }
+        .xpanel-file-row.is-renaming {
+            background: hsl(var(--muted));
+            cursor: default;
         }
         .xpanel-file-row .xpanel-file-size {
             font-size: 10px;
@@ -1076,6 +1092,7 @@
                 selected: null,
                 ctxEntry: null,
                 ctxDirectory: '/',
+                ctxFromBlank: false,
                 draggedEntry: null,
                 editor: null,
                 cloneEditor: null,
@@ -1094,6 +1111,7 @@
                 searchTimer: null,
                 searchAbort: null,
                 searchResults: [],
+                pendingRename: null,
             };
 
             const $ = (selector) => document.querySelector(selector);
@@ -1375,6 +1393,21 @@
                     clean.push(part);
                 });
                 return clean.length ? `/${clean.join('/')}` : '/';
+            };
+            const isGlobalSitesRoot = () => !config.domain;
+            const virtualSiteRoot = (path = state.currentPath) => {
+                if (!isGlobalSitesRoot()) return '/';
+                const first = normalizePath(path).split('/').filter(Boolean)[0];
+                return first ? `/${first}` : '/';
+            };
+            const currentVirtualSiteRoot = () => {
+                const source = state.ctxEntry?.path || state.selected?.path || state.currentPath || '/';
+                return virtualSiteRoot(source);
+            };
+            const requireConcreteSiteTarget = (target = currentVirtualSiteRoot()) => {
+                if (!isGlobalSitesRoot() || target !== '/') return target;
+                toast('Selecciona o entra a un dominio antes de crear o mover archivos.', 'error');
+                throw new Error('Selecciona un dominio');
             };
             const downloadUrl = (path, inline = false) => `${config.baseUrl}/download?domain=${domainParam()}&path=${encodeURIComponent(path)}${inline ? '&inline=1' : ''}`;
 
@@ -1681,6 +1714,19 @@
                     <span class="xpanel-file-name">Cargando...</span>
                 </div>
             `;
+            const renderRenameRow = (entry, depth, expanded = false) => {
+                const toggle = entry.is_dir ? (expanded ? 'ki-down' : 'ki-right') : '';
+                return `
+                    <div class="xpanel-file-row is-renaming"
+                         style="padding-left:${8 + depth * 14}px"
+                         data-path="${escapeHtml(entry.path)}"
+                         data-dir="${entry.is_dir ? '1' : '0'}">
+                        <span class="xpanel-file-toggle">${entry.is_dir ? `<i class="ki-filled ${toggle}"></i>` : ''}</span>
+                        <i class="ki-filled ${icon(entry)}"></i>
+                        <input class="xpanel-file-rename-input" data-inline-rename="true" value="${escapeHtml(entry.name)}" autocomplete="off">
+                    </div>
+                `;
+            };
             const renderDirectoryRows = (parentPath = '/', depth = 0) => {
                 const filter = ($('#xpanel_file_filter').value || '').toLowerCase();
                 const entries = entriesFor(parentPath).filter((entry) => !filter || entry.name.toLowerCase().includes(filter) || entry.is_dir);
@@ -1692,6 +1738,9 @@
                     const childRows = entry.is_dir && expanded
                         ? (state.loadingDirs.has(entry.path) ? renderLoadingRow(depth + 1) : renderDirectoryRows(entry.path, depth + 1))
                         : '';
+                    if (state.pendingRename?.path === entry.path) {
+                        return `${renderRenameRow(entry, depth, expanded)}${childRows}`;
+                    }
                     return `
                         <div class="xpanel-file-row ${selected ? 'active' : ''}"
                              style="padding-left:${8 + depth * 14}px"
@@ -1709,7 +1758,7 @@
                 return html;
             };
             const focusPendingInput = () => {
-                const input = $('[data-inline-create]');
+                const input = $('[data-inline-create], [data-inline-rename]');
                 if (!input) return;
                 setTimeout(() => {
                     input.focus();
@@ -1746,7 +1795,8 @@
                 $$('.xpanel-file-row').forEach((row) => {
                     const entry = getEntry(row.dataset.path);
                     if (!entry) return;
-                    row.addEventListener('click', async () => {
+                    row.addEventListener('click', async (event) => {
+                        if (event.target.closest('[data-inline-rename]')) return;
                         if (entry.is_dir) {
                             select(entry);
                             await toggleDirectory(entry.path);
@@ -1773,6 +1823,7 @@
                         const hasFiles = Array.from(event.dataTransfer?.types || []).includes('Files');
                         if (!hasFiles && !canMoveEntryTo(state.draggedEntry, entry.path)) return;
                         event.preventDefault();
+                        event.stopPropagation();
                         event.dataTransfer.dropEffect = hasFiles ? 'copy' : 'move';
                         row.classList.add('drop-target');
                     });
@@ -1820,6 +1871,37 @@
                         }
                     });
                     inlineInput.addEventListener('blur', () => finish(false));
+                }
+                const renameInput = $('[data-inline-rename]');
+                if (renameInput) {
+                    let finished = false;
+                    const finish = async (cancel = false) => {
+                        if (finished) return;
+                        finished = true;
+                        if (cancel) {
+                            cancelInlineRename();
+                            return;
+                        }
+                        try {
+                            await commitInlineRename(renameInput.value);
+                        } catch (error) {
+                            state.pendingRename = null;
+                            renderTree();
+                            toast(error.message, 'error');
+                        }
+                    };
+                    renameInput.addEventListener('click', (event) => event.stopPropagation());
+                    renameInput.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            finish(false);
+                        }
+                        if (event.key === 'Escape') {
+                            event.preventDefault();
+                            finish(true);
+                        }
+                    });
+                    renameInput.addEventListener('blur', () => finish(false));
                 }
             };
             const renderList = renderTree;
@@ -2078,11 +2160,17 @@
             };
             const targetDirectory = () => {
                 if (state.ctxEntry?.is_dir) return state.ctxEntry.path;
+                if (state.ctxEntry) return dirname(state.ctxEntry.path);
+                if (state.ctxFromBlank) {
+                    return requireConcreteSiteTarget(isGlobalSitesRoot() ? currentVirtualSiteRoot() : '/');
+                }
                 if (state.selected?.is_dir) return state.selected.path;
-                return state.currentPath || '/';
+                const fallback = state.currentPath || '/';
+                return isGlobalSitesRoot() ? requireConcreteSiteTarget(fallback) : fallback;
             };
             const startInlineCreate = async (type) => {
                 const parentPath = targetDirectory();
+                state.pendingRename = null;
                 state.pendingCreate = { type, parentPath };
                 state.expanded.add(parentPath);
                 await ensureDirectory(parentPath);
@@ -2116,18 +2204,62 @@
             const newFile = () => startInlineCreate('file');
             const newFolder = () => startInlineCreate('folder');
 
-            const rename = () => {
+            const startInlineRename = () => {
                 const entry = state.selected || state.ctxEntry;
                 if (!entry) return;
-                promptInput('Renombrar', entry.name, async (name) => {
-                    const base = entry.path.substring(0, entry.path.lastIndexOf('/') + 1);
-                    const newPath = base + name;
-                    await api('POST', '/rename', { domain: config.domain, old_path: entry.path, new_path: newPath });
-                    updateOpenPaths(entry.path, newPath);
-                    clearCachedBranch(entry.path);
-                    await loadDirectory(dirname(entry.path));
-                    toast('Renombrado');
-                });
+                state.pendingCreate = null;
+                state.pendingRename = { path: entry.path, name: entry.name };
+                state.expanded.add(dirname(entry.path));
+                renderTree();
+            };
+            const commitInlineRename = async (value = '') => {
+                if (!state.pendingRename) return;
+                const pending = state.pendingRename;
+                const entry = getEntry(pending.path) || state.selected || state.ctxEntry;
+                if (!entry) {
+                    state.pendingRename = null;
+                    renderTree();
+                    return;
+                }
+                const parent = dirname(entry.path);
+                const name = String(value || '').trim() || entry.name;
+                if (name.includes('/') || name.includes('\\')) {
+                    throw new Error('El nombre no puede contener barras');
+                }
+                if (name === entry.name) {
+                    cancelInlineRename();
+                    return;
+                }
+                if (entriesFor(parent).some((item) => item.path !== entry.path && item.name.toLowerCase() === name.toLowerCase())) {
+                    throw new Error('Ya existe un elemento con ese nombre');
+                }
+
+                const oldPath = entry.path;
+                const newPath = pathJoin(parent, name);
+                state.pendingRename = null;
+                await api('POST', '/rename', { domain: config.domain, old_path: oldPath, new_path: newPath });
+                updateOpenPaths(oldPath, newPath);
+                clearCachedBranch(oldPath);
+                await loadDirectory(parent, { render: false, setCurrent: false });
+                if (entry.is_dir && state.expanded.has(oldPath)) {
+                    state.expanded.delete(oldPath);
+                    state.expanded.add(newPath);
+                }
+                if (state.selected?.path === oldPath || state.selected?.path?.startsWith(`${oldPath}/`)) {
+                    const selectedPath = newPath + state.selected.path.slice(oldPath.length);
+                    state.selected = { ...state.selected, path: selectedPath, name: basename(selectedPath) };
+                    renderInfo(state.selected);
+                }
+                if (state.currentPath === oldPath || state.currentPath.startsWith(`${oldPath}/`)) {
+                    setCurrentPath(newPath + state.currentPath.slice(oldPath.length));
+                }
+                renderTree();
+                toast('Renombrado');
+                log(`Renombrado: ${oldPath} -> ${newPath}`);
+            };
+            const cancelInlineRename = () => {
+                state.pendingRename = null;
+                renderTree();
             };
 
             const remove = async () => {
@@ -2332,7 +2464,8 @@
                     entry = row ? getEntry(row.dataset.path) : null;
                 }
                 state.ctxEntry = entry;
-                state.ctxDirectory = entry?.is_dir ? entry.path : (entry ? dirname(entry.path) : state.currentPath);
+                state.ctxDirectory = entry?.is_dir ? entry.path : (entry ? dirname(entry.path) : '/');
+                state.ctxFromBlank = !entry;
                 if (entry) select(entry);
                 $$('[data-archive-only]').forEach((item) => {
                     item.classList.toggle('hidden', !entry || entry.is_dir || !isExtractable(entry.name));
@@ -2353,7 +2486,7 @@
                     if (name === 'new-folder') newFolder();
                     if (name === 'extract') await extractArchive(state.selected || state.ctxEntry);
                     if (name === 'refresh') await loadDirectory(state.currentPath);
-                    if (name === 'rename') rename();
+                    if (name === 'rename') startInlineRename();
                     if (name === 'delete') await remove();
                 } catch (error) {
                     toast(error.message, 'error');
@@ -2361,6 +2494,8 @@
                 } finally {
                     $('#xpanel_ctx_menu').classList.add('hidden');
                     state.ctxEntry = null;
+                    state.ctxDirectory = '/';
+                    state.ctxFromBlank = false;
                 }
             };
 
@@ -2855,13 +2990,14 @@
                 async drop(event) {
                     event.preventDefault();
                     ($('#xpanel_drop_hint') || $('#xpanel_file_list')).classList.remove('dragover');
+                    const target = requireConcreteSiteTarget(isGlobalSitesRoot() ? currentVirtualSiteRoot() : '/');
                     const dragged = draggedEntryFromEvent(event);
                     if (dragged) {
-                        await moveEntry(dragged, state.currentPath);
+                        await moveEntry(dragged, target);
                         state.draggedEntry = null;
                         return;
                     }
-                    await upload(Array.from(event.dataTransfer.files || []), state.currentPath);
+                    await upload(Array.from(event.dataTransfer.files || []), target);
                 },
             };
 
