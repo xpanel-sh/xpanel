@@ -73,7 +73,7 @@ msg_help() {
   echo "  xpanel language <code> #Change language# "
   echo "  xpanel config <get|set|list> #Manage runtime config# "
   echo "  xpanel config set admin-login-path admin/login #Change admin login path# "
-  echo "  xpanel config set client-login-path login #Change client login path# "
+  echo "  xpanel config set client-login-path client/login #Change client login path# "
   echo "  xpanel port <number> #Change the port# "
   echo "  xpanel site list #List provisioned site containers# "
   echo "  xpanel site create <domain> <php|node|static|python> [apache|nginx] [php_version] #Create site from CLI# "

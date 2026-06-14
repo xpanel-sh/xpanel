@@ -1,10 +1,10 @@
 @extends('layouts.client')
 
 @php
-    $plan = $tenant->plan;
+    $plan = $tenant?->plan;
     $status = $tenant->status ?? 'active';
 
-    $limitLabel = fn ($value) => $value === null ? 'Sin asignar' : $value;
+    $limitLabel = fn($value) => $value === null ? 'Sin asignar' : $value;
     $percent = function ($used, $limit) {
         if (!$limit || !is_numeric($limit) || (float) $limit <= 0) {
             return null;
@@ -24,7 +24,7 @@
             'limit' => $plan?->max_sites,
             'percent' => $sitePercent,
             'icon' => 'ki-website',
-            'route' => 'client.sites.index',
+            'route' => 'client.websites.index',
         ],
         [
             'label' => 'Bases de datos',
@@ -40,15 +40,66 @@
             'limit' => $plan?->email_accounts,
             'percent' => $emailPercent,
             'icon' => 'ki-sms',
-            'route' => 'client.emails.index',
+            'route' => 'client.mail.index',
         ],
     ];
 @endphp
 
 @section('content')
-    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
-        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+    <div
+        class="flex grow rounded-xl bg-background border border-input lg:ms-(--sidebar-width) mt-0 lg:mt-(--header-height) m-5">
+        <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
             <main class="grow" role="content">
+                <!--Toolbar-->
+                <div class="pb-5">
+                    <!-- Container -->
+                    <div class="kt-container-fluid flex items-center justify-between flex-wrap gap-3">
+                        <div class="flex items-center flex-wrap gap-1 lg:gap-5">
+                            <h1 class="font-medium text-base text-mono">
+                                Dashboard
+                            </h1>
+                            <div class="flex items-center flex-wrap gap-1 text-sm">
+                                <a class="text-secondary-foreground hover:text-primary" href="/metronic/tailwind/demo4/">
+                                    Home
+                                </a>
+                                <span class="text-muted-foreground text-sm">
+                                    /
+                                </span> 
+                                <span class="text-mono">
+                                    Dashboard
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center flex-wrap gap-3">
+                            <!-- Search -->
+                            <button
+                                class="group kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:bg-primary/10 hover:[&amp;_i]:text-primary"
+                                data-kt-modal-toggle="#search_modal">
+                                <i class="ki-filled ki-magnifier text-lg group-hover:text-primary">
+                                </i>
+                            </button>
+                            <!-- End of Search -->
+                            <!-- Notifications -->
+                            <button
+                                class="kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:bg-primary/10 hover:[&amp;_i]:text-primary"
+                                data-kt-drawer-toggle="#notifications_drawer">
+                                <i class="ki-filled ki-notification-status text-lg">
+                                </i>
+                            </button>
+                            <!--Notifications Drawer-->
+
+                            <!--End of Notifications Drawer-->
+                            <!-- End of Notifications -->
+                            <a class="kt-btn kt-btn-outline" href="/metronic/tailwind/demo4/account/home/get-started">
+                                <i class="ki-filled ki-exit-down">
+                                </i>
+                                Export
+                            </a>
+                        </div>
+                    </div>
+                    <!-- End of Container -->
+                </div>
+
                 <div class="kt-container-fluid">
                     <div class="grid gap-5 lg:gap-7.5">
                         <div class="grid lg:grid-cols-3 gap-5 lg:gap-7.5 items-stretch">
@@ -56,13 +107,16 @@
                                 <div class="kt-card h-full">
                                     <div class="kt-card-content flex flex-col place-content-center gap-5">
                                         <div class="flex justify-center">
-                                            <img alt="image" class="dark:hidden max-h-[180px]" src="{{ asset('assets/media/illustrations/32.svg') }}" />
-                                            <img alt="image" class="light:hidden max-h-[180px]" src="{{ asset('assets/media/illustrations/32-dark.svg') }}" />
+                                            <img alt="image" class="dark:hidden max-h-[180px]"
+                                                src="{{ asset('assets/media/illustrations/32.svg') }}" />
+                                            <img alt="image" class="light:hidden max-h-[180px]"
+                                                src="{{ asset('assets/media/illustrations/32-dark.svg') }}" />
                                         </div>
                                         <div class="flex flex-col gap-4">
                                             <div class="flex flex-col gap-3 text-center">
                                                 <div class="flex justify-center">
-                                                    <span class="kt-badge kt-badge-sm {{ $status === 'active' ? 'kt-badge-success' : 'kt-badge-warning' }} kt-badge-outline">
+                                                    <span
+                                                        class="kt-badge kt-badge-sm {{ $status === 'active' ? 'kt-badge-success' : 'kt-badge-warning' }} kt-badge-outline">
                                                         Servicio {{ $status === 'active' ? 'activo' : $status }}
                                                     </span>
                                                 </div>
@@ -70,13 +124,14 @@
                                                     {{ $tenant->name ?? 'Mi cuenta' }}
                                                 </h2>
                                                 <p class="text-sm font-medium text-secondary-foreground">
-                                                    Administra tus sitios, dominios, bases de datos y correos desde tu panel de hosting.
+                                                    Administra tus sitios, dominios, bases de datos y correos desde tu panel
+                                                    de hosting.
                                                     <br />
                                                     Tu cuenta opera separada del Admin global de XPanel.
                                                 </p>
                                             </div>
                                             <div class="flex justify-center gap-2">
-                                                <a class="kt-btn kt-btn-mono" href="{{ route('client.sites.create') }}">
+                                                <a class="kt-btn kt-btn-mono" href="{{ route('client.websites.create') }}">
                                                     Crear sitio
                                                 </a>
                                                 <a class="kt-btn kt-btn-outline" href="{{ route('client.account.show') }}">
@@ -92,7 +147,8 @@
                                 <div class="kt-card h-full">
                                     <div class="kt-card-header">
                                         <h3 class="kt-card-title">Highlights</h3>
-                                        <a class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" href="{{ route('client.account.show') }}">
+                                        <a class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost"
+                                            href="{{ route('client.account.show') }}">
                                             <i class="ki-filled ki-dots-vertical text-lg"></i>
                                         </a>
                                     </div>
@@ -118,7 +174,8 @@
                                             </div>
                                             <div class="flex items-center justify-between flex-wrap gap-2">
                                                 <div class="flex items-center gap-1.5">
-                                                    <i class="ki-filled ki-arrow-right-left text-base text-muted-foreground"></i>
+                                                    <i
+                                                        class="ki-filled ki-arrow-right-left text-base text-muted-foreground"></i>
                                                     <span class="text-sm font-normal text-mono">Transferencia</span>
                                                 </div>
                                                 <span class="text-sm font-medium text-foreground">
@@ -139,15 +196,18 @@
                                         <div class="border-b border-input"></div>
 
                                         <div class="grid gap-3">
-                                            <a class="kt-btn kt-btn-outline justify-start" href="{{ route('client.domains.create') }}">
+                                            <a class="kt-btn kt-btn-outline justify-start"
+                                                href="{{ route('client.domains.create') }}">
                                                 <i class="ki-filled ki-globe"></i>
                                                 Agregar dominio
                                             </a>
-                                            <a class="kt-btn kt-btn-outline justify-start" href="{{ route('client.databases.create') }}">
+                                            <a class="kt-btn kt-btn-outline justify-start"
+                                                href="{{ route('client.databases.create') }}">
                                                 <i class="ki-filled ki-data"></i>
                                                 Crear base de datos
                                             </a>
-                                            <a class="kt-btn kt-btn-outline justify-start" href="{{ route('client.emails.create') }}">
+                                            <a class="kt-btn kt-btn-outline justify-start"
+                                                href="{{ route('client.emails.create') }}">
                                                 <i class="ki-filled ki-sms"></i>
                                                 Crear correo
                                             </a>
@@ -176,14 +236,16 @@
                                 <div class="kt-card-content p-5">
                                     <div class="text-sm text-secondary-foreground">Bases de datos</div>
                                     <div class="mt-2 text-3xl font-semibold text-mono">{{ $databaseCount }}</div>
-                                    <div class="mt-1 text-xs text-secondary-foreground">Límite: {{ $limitLabel($plan?->max_databases) }}</div>
+                                    <div class="mt-1 text-xs text-secondary-foreground">Límite:
+                                        {{ $limitLabel($plan?->max_databases) }}</div>
                                 </div>
                             </div>
                             <div class="kt-card">
                                 <div class="kt-card-content p-5">
                                     <div class="text-sm text-secondary-foreground">Correos</div>
                                     <div class="mt-2 text-3xl font-semibold text-mono">{{ $emailCount }}</div>
-                                    <div class="mt-1 text-xs text-secondary-foreground">Límite: {{ $limitLabel($plan?->email_accounts) }}</div>
+                                    <div class="mt-1 text-xs text-secondary-foreground">Límite:
+                                        {{ $limitLabel($plan?->email_accounts) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -194,19 +256,22 @@
                                     <h3 class="kt-card-title">Uso de recursos</h3>
                                 </div>
                                 <div class="kt-card-content grid gap-5 p-5">
-                                    @foreach($quotaCards as $quota)
-                                        <a class="grid gap-2 rounded-md border border-input px-4 py-3 hover:border-primary/40" href="{{ route($quota['route']) }}">
+                                    @foreach ($quotaCards as $quota)
+                                        <a class="grid gap-2 rounded-md border border-input px-4 py-3 hover:border-primary/40"
+                                            href="{{ route($quota['route']) }}">
                                             <div class="flex items-center justify-between gap-3">
                                                 <div class="flex items-center gap-2">
                                                     <i class="ki-filled {{ $quota['icon'] }} text-muted-foreground"></i>
-                                                    <span class="text-sm font-medium text-mono">{{ $quota['label'] }}</span>
+                                                    <span
+                                                        class="text-sm font-medium text-mono">{{ $quota['label'] }}</span>
                                                 </div>
                                                 <span class="text-sm font-semibold text-mono">
                                                     {{ $quota['used'] }} / {{ $limitLabel($quota['limit']) }}
                                                 </span>
                                             </div>
                                             <div class="h-2 rounded-xs bg-muted">
-                                                <div class="h-2 rounded-xs bg-primary" style="width: {{ $quota['percent'] ?? 0 }}%"></div>
+                                                <div class="h-2 rounded-xs bg-primary"
+                                                    style="width: {{ $quota['percent'] ?? 0 }}%"></div>
                                             </div>
                                         </a>
                                     @endforeach
@@ -218,19 +283,23 @@
                                     <h3 class="kt-card-title">Accesos rápidos</h3>
                                 </div>
                                 <div class="kt-card-content grid gap-3 p-5">
-                                    <a class="kt-btn kt-btn-outline justify-start" href="{{ route('client.sites.create') }}">
+                                    <a class="kt-btn kt-btn-outline justify-start"
+                                        href="{{ route('client.websites.create') }}">
                                         <i class="ki-filled ki-plus"></i>
                                         Crear sitio
                                     </a>
-                                    <a class="kt-btn kt-btn-outline justify-start" href="{{ route('client.dns.index') }}">
+                                    <a class="kt-btn kt-btn-outline justify-start"
+                                        href="{{ route('client.dns.index') }}">
                                         <i class="ki-filled ki-cloud"></i>
                                         Gestionar DNS
                                     </a>
-                                    <a class="kt-btn kt-btn-outline justify-start" href="{{ route('client.domains.index') }}">
+                                    <a class="kt-btn kt-btn-outline justify-start"
+                                        href="{{ route('client.domains.index') }}">
                                         <i class="ki-filled ki-globe"></i>
                                         Dominios
                                     </a>
-                                    <a class="kt-btn kt-btn-outline justify-start" href="{{ route('client.emails.index') }}">
+                                    <a class="kt-btn kt-btn-outline justify-start"
+                                        href="{{ route('client.emails.index') }}">
                                         <i class="ki-filled ki-sms"></i>
                                         Correos
                                     </a>
@@ -244,9 +313,11 @@
                                     <div class="kt-card-header">
                                         <div>
                                             <h3 class="kt-card-title">Sitios recientes</h3>
-                                            <p class="mt-1 text-sm text-secondary-foreground">Tus dominios y aplicaciones creadas en XPanel.</p>
+                                            <p class="mt-1 text-sm text-secondary-foreground">Tus dominios y aplicaciones
+                                                creadas en XPanel.</p>
                                         </div>
-                                        <a class="kt-btn kt-btn-sm kt-btn-primary" href="{{ route('client.sites.create') }}">Crear sitio</a>
+                                        <a class="kt-btn kt-btn-sm kt-btn-primary"
+                                            href="{{ route('client.websites.create') }}">Crear sitio</a>
                                     </div>
                                     <div class="kt-card-table">
                                         <div class="kt-scrollable-x-auto">
@@ -265,26 +336,33 @@
                                                         <tr>
                                                             <td>
                                                                 <div class="flex flex-col gap-1">
-                                                                    <span class="font-medium text-sm text-mono">{{ $site->domain }}</span>
-                                                                    <span class="text-xs text-secondary-foreground">{{ $site->created_at?->diffForHumans() }}</span>
+                                                                    <span
+                                                                        class="font-medium text-sm text-mono">{{ $site->domain }}</span>
+                                                                    <span
+                                                                        class="text-xs text-secondary-foreground">{{ $site->created_at?->diffForHumans() }}</span>
                                                                 </div>
                                                             </td>
-                                                            <td class="text-sm text-foreground">{{ strtoupper($site->project_type ?? '-') }}</td>
-                                                            <td class="text-sm text-foreground">{{ $site->web_server ?? '-' }}</td>
+                                                            <td class="text-sm text-foreground">
+                                                                {{ strtoupper($site->project_type ?? '-') }}</td>
+                                                            <td class="text-sm text-foreground">
+                                                                {{ $site->web_server ?? '-' }}</td>
                                                             <td>
-                                                                <span class="kt-badge kt-badge-sm kt-badge-outline {{ ($site->status ?? 'active') === 'active' ? 'kt-badge-success' : 'kt-badge-warning' }}">
+                                                                <span
+                                                                    class="kt-badge kt-badge-sm kt-badge-outline {{ ($site->status ?? 'active') === 'active' ? 'kt-badge-success' : 'kt-badge-warning' }}">
                                                                     {{ strtoupper($site->status ?? 'active') }}
                                                                 </span>
                                                             </td>
                                                             <td class="text-end">
-                                                                <a class="kt-btn kt-btn-sm kt-btn-outline" href="{{ route('client.sites.index') }}">
+                                                                <a class="kt-btn kt-btn-sm kt-btn-outline"
+                                                                    href="{{ route('client.websites.index') }}">
                                                                     Gestionar
                                                                 </a>
                                                             </td>
                                                         </tr>
                                                     @empty
                                                         <tr>
-                                                            <td colspan="5" class="py-8 text-center text-sm text-secondary-foreground">
+                                                            <td colspan="5"
+                                                                class="py-8 text-center text-sm text-secondary-foreground">
                                                                 Todavía no tienes sitios web. Crea el primero para empezar.
                                                             </td>
                                                         </tr>
@@ -303,22 +381,27 @@
                                 <div class="kt-card-content grid gap-4 p-5">
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm text-secondary-foreground">Plan</span>
-                                        <span class="text-sm font-semibold text-mono">{{ $plan?->name ?? 'Sin plan' }}</span>
+                                        <span
+                                            class="text-sm font-semibold text-mono">{{ $plan?->name ?? 'Sin plan' }}</span>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm text-secondary-foreground">Sitios</span>
-                                        <span class="text-sm font-semibold text-mono">{{ $siteCount }} / {{ $limitLabel($plan?->max_sites) }}</span>
+                                        <span class="text-sm font-semibold text-mono">{{ $siteCount }} /
+                                            {{ $limitLabel($plan?->max_sites) }}</span>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm text-secondary-foreground">Bases</span>
-                                        <span class="text-sm font-semibold text-mono">{{ $databaseCount }} / {{ $limitLabel($plan?->max_databases) }}</span>
+                                        <span class="text-sm font-semibold text-mono">{{ $databaseCount }} /
+                                            {{ $limitLabel($plan?->max_databases) }}</span>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm text-secondary-foreground">Correos</span>
-                                        <span class="text-sm font-semibold text-mono">{{ $emailCount }} / {{ $limitLabel($plan?->email_accounts) }}</span>
+                                        <span class="text-sm font-semibold text-mono">{{ $emailCount }} /
+                                            {{ $limitLabel($plan?->email_accounts) }}</span>
                                     </div>
                                     <div class="border-b border-input"></div>
-                                    <a class="kt-btn kt-btn-outline justify-center" href="{{ route('client.account.show') }}">
+                                    <a class="kt-btn kt-btn-outline justify-center"
+                                        href="{{ route('client.account.show') }}">
                                         Ver detalles de cuenta
                                     </a>
                                 </div>

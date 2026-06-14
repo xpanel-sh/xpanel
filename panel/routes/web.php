@@ -149,6 +149,7 @@ Route::group(['middleware' => ['web']], function () {
         Route::prefix('sites')->name('client.sites.')->group(function () {
             Route::get('/',             [\App\Http\Controllers\Client\Web\SiteController::class, 'index'])->name('index');
             Route::get('/create',       [\App\Http\Controllers\Client\Web\SiteController::class, 'create'])->name('create');
+            Route::get('/{site}/panel', [\App\Http\Controllers\Client\Web\SiteController::class, 'panel'])->name('panel');
             Route::post('/',            [\App\Http\Controllers\Client\Web\SiteController::class, 'store'])->name('store');
             Route::post('/{site}/restart', [\App\Http\Controllers\Client\Web\SiteController::class, 'restart'])->name('restart');
             Route::delete('/{site}',    [\App\Http\Controllers\Client\Web\SiteController::class, 'destroy'])->name('destroy');
@@ -171,6 +172,8 @@ Route::group(['middleware' => ['web']], function () {
         });
 
         // Correos
+        Route::get('/mail', [\App\Http\Controllers\Client\MailController::class, 'index'])->name('client.mail.index');
+
         Route::prefix('emails')->name('client.emails.')->group(function () {
             Route::get('/',             [\App\Http\Controllers\Client\EmailAccountController::class, 'index'])->name('index');
             Route::get('/create',       [\App\Http\Controllers\Client\EmailAccountController::class, 'create'])->name('create');
@@ -203,6 +206,21 @@ Route::group(['middleware' => ['web']], function () {
             Route::get('/{domain?}',    [\App\Http\Controllers\Client\FileManagerController::class, 'index'])
                 ->where('domain', '.*')
                 ->name('index');
+        });
+    });
+
+    Route::prefix('client')->middleware(['auth', \App\Http\Middleware\ResolveTenant::class])->group(function () {
+        Route::prefix('websites')->name('client.websites.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Client\Web\SiteController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Client\Web\SiteController::class, 'create'])->name('create');
+            Route::get('/{domain}', [\App\Http\Controllers\Client\Web\SiteController::class, 'panelByDomain'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('show');
+            Route::get('/{domain}/{section}/{page?}', [\App\Http\Controllers\Client\Web\SiteController::class, 'module'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->where('section', 'order|performance|analytics|hosting-security|domains|website|files|databases|advanced')
+                ->where('page', '.*')
+                ->name('module');
         });
     });
 });

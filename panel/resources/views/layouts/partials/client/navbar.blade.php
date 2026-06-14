@@ -1,5 +1,7 @@
 @php
     $selectedSiteDomain = $selectedSiteDomain ?? null;
+    $selectedSiteId = $selectedSiteId ?? null;
+    $sitePanelRouteParams = $selectedSiteDomain ? ['domain' => $selectedSiteDomain] : [];
     $filesRouteParams = $selectedSiteDomain ? ['domain' => $selectedSiteDomain] : [];
 
     $navSections = [
@@ -8,23 +10,24 @@
             'title' => 'Inicio',
             'items' => [
                 ['label' => 'Resumen', 'route' => 'client.dashboard', 'match' => ['client.dashboard']],
-                ['label' => 'Sitios', 'route' => 'client.sites.index', 'match' => ['client.sites.*']],
+                ['label' => 'Sitios', 'route' => 'client.websites.index', 'match' => ['client.websites.*', 'client.sites.*']],
                 ['label' => 'Dominios', 'route' => 'client.domains.index', 'match' => ['client.domains.*', 'client.dns.*']],
-                ['label' => 'Correos', 'route' => 'client.emails.index', 'match' => ['client.emails.*']],
+                ['label' => 'Correos', 'route' => 'client.mail.index', 'match' => ['client.mail.*', 'client.emails.*']],
             ],
         ],
         'sites' => [
-            'match' => ['client.sites.*', 'client.files.*'],
+            'match' => ['client.websites.*', 'client.sites.*', 'client.files.*'],
             'title' => 'Sitios',
             'items' => [
-                ['label' => 'Todos los sitios', 'route' => 'client.sites.index', 'match' => ['client.sites.index']],
+                ['label' => 'Todos los sitios', 'route' => 'client.websites.index', 'match' => ['client.websites.index', 'client.sites.index']],
                 [
                     'label' => 'Gestion',
-                    'match' => ['client.sites.create', 'client.files.*'],
+                    'match' => ['client.websites.show', 'client.websites.module', 'client.sites.panel', 'client.sites.create', 'client.files.*'],
                     'children' => [
-                        ['label' => 'Crear sitio', 'route' => 'client.sites.create', 'match' => ['client.sites.create']],
+                        ['label' => 'Panel del sitio', 'route' => 'client.websites.show', 'params' => $sitePanelRouteParams, 'disabled' => !$selectedSiteDomain, 'match' => ['client.websites.show', 'client.websites.module']],
+                        ['label' => 'Crear sitio', 'route' => 'client.websites.create', 'match' => ['client.websites.create', 'client.sites.create']],
                         ['label' => 'Administrador de archivos', 'route' => 'client.files.index', 'params' => $filesRouteParams, 'match' => ['client.files.*']],
-                        ['label' => 'Listado', 'route' => 'client.sites.index', 'match' => ['client.sites.index']],
+                        ['label' => 'Listado', 'route' => 'client.websites.index', 'match' => ['client.websites.index', 'client.sites.index']],
                     ],
                 ],
                 [
@@ -49,7 +52,7 @@
                 ],
             ],
             'actions' => [
-                ['label' => 'Crear sitio', 'route' => 'client.sites.create', 'icon' => 'ki-plus'],
+                ['label' => 'Crear sitio', 'route' => 'client.websites.create', 'icon' => 'ki-plus'],
             ],
         ],
         'databases' => [
@@ -65,7 +68,7 @@
                         ['label' => 'Listado', 'route' => 'client.databases.index', 'match' => ['client.databases.index']],
                     ],
                 ],
-                ['label' => 'Sitios', 'route' => 'client.sites.index', 'match' => ['client.sites.*']],
+                ['label' => 'Sitios', 'route' => 'client.websites.index', 'match' => ['client.websites.*', 'client.sites.*']],
                 ['label' => 'phpMyAdmin', 'disabled' => true, 'match' => []],
             ],
             'actions' => [
@@ -93,9 +96,10 @@
             ],
         ],
         'emails' => [
-            'match' => ['client.emails.*'],
+            'match' => ['client.mail.*', 'client.emails.*'],
             'title' => 'Correos',
             'items' => [
+                ['label' => 'Bandeja', 'route' => 'client.mail.index', 'match' => ['client.mail.*']],
                 ['label' => 'Cuentas', 'route' => 'client.emails.index', 'match' => ['client.emails.index']],
                 [
                     'label' => 'Gestion',
@@ -106,10 +110,9 @@
                     ],
                 ],
                 ['label' => 'Dominios', 'route' => 'client.domains.index', 'match' => ['client.domains.*']],
-                ['label' => 'Webmail', 'disabled' => true, 'match' => []],
             ],
             'actions' => [
-                ['label' => 'Crear', 'route' => 'client.emails.create', 'icon' => 'ki-plus'],
+                ['label' => 'Crear cuenta', 'route' => 'client.emails.create', 'icon' => 'ki-plus'],
             ],
         ],
         'account' => [

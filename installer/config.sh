@@ -21,7 +21,7 @@ get_key() {
     port) cat "$CONF_DIR/port" 2>/dev/null || echo "8888" ;;
     lang|language|idioma) cat "$CONF_DIR/lang" 2>/dev/null || echo "en" ;;
     admin-login-path) grep -E '^XPANEL_ADMIN_LOGIN_PATH=' "$BASE/panel/.env" 2>/dev/null | cut -d= -f2- || echo "admin/login" ;;
-    client-login-path) grep -E '^XPANEL_CLIENT_LOGIN_PATH=' "$BASE/panel/.env" 2>/dev/null | cut -d= -f2- || echo "login" ;;
+    client-login-path) grep -E '^XPANEL_CLIENT_LOGIN_PATH=' "$BASE/panel/.env" 2>/dev/null | cut -d= -f2- || echo "client/login" ;;
     *) return 1 ;;
   esac
 }

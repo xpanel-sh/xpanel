@@ -93,6 +93,26 @@ ensure_acme_email() {
   upsert_env_line "$env_file" "XPANEL_ACME_EMAIL" "$email"
 }
 
+ensure_login_paths() {
+  local panel_env="$BASE/panel/.env"
+  local client_path
+
+  [ -f "$panel_env" ] || return 0
+
+  if ! grep -q '^XPANEL_ADMIN_LOGIN_PATH=' "$panel_env"; then
+    upsert_env_line "$panel_env" "XPANEL_ADMIN_LOGIN_PATH" "admin/login"
+  fi
+
+  client_path="$(grep '^XPANEL_CLIENT_LOGIN_PATH=' "$panel_env" 2>/dev/null | cut -d= -f2- || true)"
+  if [ -z "$client_path" ] || [ "$client_path" = "login" ]; then
+    upsert_env_line "$panel_env" "XPANEL_CLIENT_LOGIN_PATH" "client/login"
+  fi
+
+  if ! grep -q '^XPANEL_ADMIN_BASE_PATH=' "$panel_env"; then
+    upsert_env_line "$panel_env" "XPANEL_ADMIN_BASE_PATH" "admin"
+  fi
+}
+
 do_rollback() {
   [ -n "$ROLLBACK_FILE" ] || ROLLBACK_FILE="$(ls -1t "$SNAPSHOT_DIR"/xpanel-update-snapshot-*.tar.gz 2>/dev/null | head -n1)"
   [ -n "$ROLLBACK_FILE" ] || { msg_rollback_not_found; exit 1; }
@@ -228,6 +248,7 @@ fi
 bash "$BASE/installer/migrate.sh" "$XPANEL_LANG" || true
 ensure_daemon_token
 ensure_acme_email
+ensure_login_paths
 
 cd "$BASE"
 docker compose up -d --build

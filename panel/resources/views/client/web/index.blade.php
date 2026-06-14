@@ -13,7 +13,7 @@
                 <h1 class="mt-2 text-3xl font-black tracking-tight">Mis Sitios Web</h1>
                 <p class="text-gray-400 dark:text-gray-400">Administra tus dominios y aplicaciones web.</p>
             </div>
-            <a href="{{ route('client.sites.create') }}"
+            <a href="{{ route('client.websites.create') }}"
                 class="flex items-center gap-2 rounded-xl bg-gray-900 dark:bg-white px-6 py-3 font-bold text-white dark:text-black transition hover:bg-gray-700 dark:hover:bg-gray-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -60,6 +60,12 @@
                     </div>
 
                     <div class="mt-4 flex flex-wrap gap-2">
+                        <a href="{{ route('client.websites.show', ['domain' => $site->domain]) }}"
+                            class="flex items-center gap-1.5 px-3 py-2 bg-white text-black rounded-lg transition text-sm font-bold">
+                            <i class="ki-filled ki-entrance-left"></i>
+                            Acceder al panel
+                        </a>
+
                         {{-- Gestionar archivos --}}
                         @if(isset($fileManagerEnabled) ? $fileManagerEnabled : true)
                         <a href="{{ route('client.files.index', $site->domain) }}"
@@ -108,7 +114,7 @@
                               d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"></path>
                     </svg>
                     <p class="text-gray-500 mb-4">No tienes sitios web registrados.</p>
-                    <a href="{{ route('client.sites.create') }}"
+                    <a href="{{ route('client.websites.create') }}"
                         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition">
                         Crear primer sitio
                     </a>

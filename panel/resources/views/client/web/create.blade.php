@@ -11,12 +11,12 @@
             <div>
                 <h1 class="font-medium text-lg text-mono">Nuevo sitio web</h1>
                 <div class="flex items-center gap-1 text-sm">
-                    <a class="text-secondary-foreground hover:text-primary" href="{{ route('client.sites.index') }}">Sitios</a>
+                    <a class="text-secondary-foreground hover:text-primary" href="{{ route('client.websites.index') }}">Sitios</a>
                     <span class="text-muted-foreground">/</span>
                     <span class="text-mono">Nuevo</span>
                 </div>
             </div>
-            <a href="{{ route('client.sites.index') }}" class="kt-btn kt-btn-outline kt-btn-sm">Volver</a>
+            <a href="{{ route('client.websites.index') }}" class="kt-btn kt-btn-outline kt-btn-sm">Volver</a>
         </div>
 
         <div class="kt-card">
@@ -111,7 +111,7 @@
                 </script>
 
                 <div class="kt-card-footer justify-end gap-2.5">
-                    <a href="{{ route('client.sites.index') }}" class="kt-btn kt-btn-outline">Cancelar</a>
+                    <a href="{{ route('client.websites.index') }}" class="kt-btn kt-btn-outline">Cancelar</a>
                     <button type="submit" class="kt-btn kt-btn-primary">Crear sitio web</button>
                 </div>
             </form>

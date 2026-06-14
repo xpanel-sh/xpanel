@@ -78,7 +78,7 @@ msg_help() {
   echo "  xpanel idioma <codigo> #Cambia el idioma# "
   echo "  xpanel config <get|set|list> #Gestiona configuracion en tiempo real# "
   echo "  xpanel config set admin-login-path admin/login #Cambia ruta de login admin# "
-  echo "  xpanel config set client-login-path login #Cambia ruta de login cliente# "
+  echo "  xpanel config set client-login-path client/login #Cambia ruta de login cliente# "
   echo "  xpanel puerto <numero> #Cambia el puerto# "
   echo "  xpanel site list #Lista contenedores de sitios# "
   echo "  xpanel site create <dominio> <php|node|static|python> [apache|nginx] [php_version] #Crea sitio desde CLI# "

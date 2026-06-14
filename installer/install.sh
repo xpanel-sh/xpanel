@@ -355,7 +355,7 @@ else
   upsert_env "SESSION_SECURE_COOKIE" "false" "$PANEL_DIR/.env"
 fi
 upsert_env "XPANEL_ADMIN_LOGIN_PATH" "admin/login" "$PANEL_DIR/.env"
-upsert_env "XPANEL_CLIENT_LOGIN_PATH" "login" "$PANEL_DIR/.env"
+upsert_env "XPANEL_CLIENT_LOGIN_PATH" "client/login" "$PANEL_DIR/.env"
 upsert_env "XPANEL_ADMIN_BASE_PATH" "admin" "$PANEL_DIR/.env"
 upsert_env "XPANEL_DAEMON_URL" "http://host.docker.internal:7070" "$PANEL_DIR/.env"
 upsert_env "XPANEL_DAEMON_TOKEN" "$DAEMON_TOKEN" "$PANEL_DIR/.env"

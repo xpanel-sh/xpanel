@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Client\Web;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Site;
+use App\Models\Domain;
+use App\Models\EmailAccount;
+use App\Models\ManagedDatabase;
 use App\Services\SiteProvisioner;
 use App\Services\DaemonClient;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +33,47 @@ class SiteController extends Controller
         return view('client.web.create');
     }
 
+    public function panel(Request $request, Site $site)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        if ($site->tenant_id !== $tenant->id) {
+            abort(403);
+        }
+
+        return redirect()->route('client.websites.show', ['domain' => $site->domain]);
+    }
+
+    public function panelByDomain(Request $request, string $domain)
+    {
+        $site = $this->siteForDomain($request, $domain);
+
+        return $this->renderSitePanel($site);
+    }
+
+    public function module(Request $request, string $domain, string $section, ?string $page = null)
+    {
+        $site = $this->siteForDomain($request, $domain);
+
+        return $this->renderSitePanel($site, trim($section . '/' . trim((string) $page, '/'), '/'));
+    }
+
+    private function renderSitePanel(Site $site, ?string $activePath = null)
+    {
+        $stats = [
+            'domains' => Domain::where('tenant_id', $site->tenant_id)->where('site_id', $site->id)->count(),
+            'databases' => ManagedDatabase::where('tenant_id', $site->tenant_id)->where('site_id', $site->id)->count(),
+            'emails' => EmailAccount::where('tenant_id', $site->tenant_id)
+                ->whereHas('domain', fn ($query) => $query->where('site_id', $site->id))
+                ->count(),
+        ];
+
+        $siteMenu = $this->websiteMenu($site);
+        $activeModule = $this->moduleForPath($siteMenu, $activePath);
+
+        return view('client.web.panel', compact('site', 'stats', 'siteMenu', 'activePath', 'activeModule'));
+    }
+
     /**
      * Store a newly created site in storage.
      */
@@ -51,7 +95,7 @@ class SiteController extends Controller
             return back()->withErrors(['domain' => 'No se pudo provisionar el sitio. Revisa operaciones del agente o contacta soporte.'])->withInput();
         }
 
-        return redirect()->route('client.sites.index')->with('success', 'Sitio enviado a provisión correctamente.');
+        return redirect()->route('client.websites.index')->with('success', 'Sitio enviado a provisión correctamente.');
     }
 
     public function restart(Request $request, Site $site, DaemonClient $daemon)
@@ -66,11 +110,11 @@ class SiteController extends Controller
             $daemon->restartSite($containerName);
         } catch (\Throwable $e) {
             Log::warning('Site restart failed', ['site_id' => $site->id, 'exception' => $e]);
-            return redirect()->route('client.sites.index')
+            return redirect()->route('client.websites.index')
                 ->withErrors(['site' => 'El agente no pudo reiniciar el sitio. Revisa operaciones del agente o contacta soporte.']);
         }
 
-        return redirect()->route('client.sites.index')->with('success', 'Sitio reiniciado correctamente.');
+        return redirect()->route('client.websites.index')->with('success', 'Sitio reiniciado correctamente.');
     }
 
     public function destroy(Request $request, Site $site, DaemonClient $daemon)
@@ -86,12 +130,156 @@ class SiteController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Site deletion failed', ['site_id' => $site->id, 'exception' => $e]);
             $site->update(['status' => 'delete_error']);
-            return redirect()->route('client.sites.index')
+            return redirect()->route('client.websites.index')
                 ->withErrors(['site' => 'El agente no pudo eliminar el sitio. Revisa operaciones del agente o contacta soporte.']);
         }
 
         $site->delete();
 
-        return redirect()->route('client.sites.index')->with('success', 'Sitio eliminado correctamente.');
+        return redirect()->route('client.websites.index')->with('success', 'Sitio eliminado correctamente.');
+    }
+
+    private function siteForDomain(Request $request, string $domain): Site
+    {
+        $tenant = $request->attributes->get('tenant');
+        $domain = strtolower(trim($domain));
+
+        return Site::where('tenant_id', $tenant->id)->where('domain', $domain)->firstOrFail();
+    }
+
+    private function websiteMenu(Site $site): array
+    {
+        $moduleUrl = fn (string $path) => route('client.websites.module', [
+            'domain' => $site->domain,
+            'section' => strtok($path, '/'),
+            'page' => str_contains($path, '/') ? substr($path, strpos($path, '/') + 1) : null,
+        ]);
+
+        return [
+            [
+                'label' => 'Panel',
+                'icon' => 'ki-element-11',
+                'path' => null,
+                'url' => route('client.websites.show', ['domain' => $site->domain]),
+                'description' => 'Resumen general del sitio, estado y accesos rapidos.',
+            ],
+            [
+                'label' => 'Plan de hosting',
+                'icon' => 'ki-dollar',
+                'children' => [
+                    ['label' => 'Detalles del pedido', 'path' => 'order/details', 'url' => $moduleUrl('order/details')],
+                    ['label' => 'Uso del pedido', 'path' => 'order/order-usage', 'url' => $moduleUrl('order/order-usage')],
+                    ['label' => 'Mejorar plan', 'path' => 'order/upgrade', 'url' => $moduleUrl('order/upgrade')],
+                ],
+            ],
+            [
+                'label' => 'Rendimiento',
+                'icon' => 'ki-chart-line-up',
+                'children' => [
+                    ['label' => 'AI troubleshooter', 'path' => 'performance/ai-troubleshooter', 'url' => $moduleUrl('performance/ai-troubleshooter')],
+                    ['label' => 'Page speed', 'path' => 'performance/page-speed', 'url' => $moduleUrl('performance/page-speed')],
+                    ['label' => 'CDN', 'path' => 'performance/cdn', 'url' => $moduleUrl('performance/cdn')],
+                ],
+            ],
+            [
+                'label' => 'Analisis',
+                'icon' => 'ki-chart-simple',
+                'path' => 'analytics',
+                'url' => $moduleUrl('analytics'),
+                'description' => 'Trafico, consumo y tendencias del sitio.',
+            ],
+            [
+                'label' => 'Seguridad',
+                'icon' => 'ki-shield-tick',
+                'children' => [
+                    ['label' => 'Malware scanner', 'path' => 'hosting-security/malware-scanner', 'url' => $moduleUrl('hosting-security/malware-scanner')],
+                    ['label' => 'SSL', 'path' => 'hosting-security/ssl', 'url' => $moduleUrl('hosting-security/ssl')],
+                ],
+            ],
+            [
+                'label' => 'Dominios',
+                'icon' => 'ki-click',
+                'children' => [
+                    ['label' => 'Subdominios', 'path' => 'domains/subdomains', 'url' => $moduleUrl('domains/subdomains')],
+                    ['label' => 'Dominios aparcados', 'path' => 'domains/parked-domains', 'url' => $moduleUrl('domains/parked-domains')],
+                    ['label' => 'Redirecciones', 'path' => 'domains/redirects', 'url' => $moduleUrl('domains/redirects')],
+                ],
+            ],
+            [
+                'label' => 'Sitio web',
+                'icon' => 'ki-screen',
+                'children' => [
+                    ['label' => 'Instalar WordPress', 'path' => 'website/wordpress', 'url' => $moduleUrl('website/wordpress')],
+                    ['label' => 'Instalador automatico', 'path' => 'website/auto-installer', 'url' => $moduleUrl('website/auto-installer')],
+                    ['label' => 'Migrar sitio web', 'path' => 'website/migration', 'url' => $moduleUrl('website/migration')],
+                    ['label' => 'Paginas de error', 'path' => 'website/error-pages', 'url' => $moduleUrl('website/error-pages')],
+                    ['label' => 'Creador de sitios', 'path' => 'website/builder', 'url' => $moduleUrl('website/builder')],
+                ],
+            ],
+            [
+                'label' => 'Archivos',
+                'icon' => 'ki-folder',
+                'children' => [
+                    ['label' => 'Administrador de archivos', 'path' => 'files/file-manager', 'url' => $moduleUrl('files/file-manager'), 'primary_url' => route('client.files.index', ['domain' => $site->domain])],
+                    ['label' => 'Backups', 'path' => 'files/backups', 'url' => $moduleUrl('files/backups')],
+                    ['label' => 'Cuentas FTP', 'path' => 'files/ftp-accounts', 'url' => $moduleUrl('files/ftp-accounts')],
+                ],
+            ],
+            [
+                'label' => 'Bases de datos',
+                'icon' => 'ki-data',
+                'children' => [
+                    ['label' => 'MySQL databases', 'path' => 'databases/my-sql-databases', 'url' => $moduleUrl('databases/my-sql-databases')],
+                    ['label' => 'phpMyAdmin', 'path' => 'databases/php-my-admin', 'url' => $moduleUrl('databases/php-my-admin')],
+                    ['label' => 'Remote MySQL', 'path' => 'databases/remote-my-sql', 'url' => $moduleUrl('databases/remote-my-sql')],
+                ],
+            ],
+            [
+                'label' => 'Avanzado',
+                'icon' => 'ki-setting-2',
+                'children' => [
+                    ['label' => 'Acceso SSH', 'path' => 'advanced/ssh-access', 'url' => $moduleUrl('advanced/ssh-access')],
+                    ['label' => 'Configuracion PHP', 'path' => 'advanced/php-configuration', 'url' => $moduleUrl('advanced/php-configuration')],
+                    ['label' => 'Cron jobs', 'path' => 'advanced/cron-jobs', 'url' => $moduleUrl('advanced/cron-jobs')],
+                    ['label' => 'PHP info', 'path' => 'advanced/php-info', 'url' => $moduleUrl('advanced/php-info')],
+                    ['label' => 'Cache manager', 'path' => 'advanced/cache-manager', 'url' => $moduleUrl('advanced/cache-manager')],
+                    ['label' => 'Git', 'path' => 'advanced/git', 'url' => $moduleUrl('advanced/git')],
+                    ['label' => 'Proteger directorios', 'path' => 'advanced/password-protect-directories', 'url' => $moduleUrl('advanced/password-protect-directories')],
+                    ['label' => 'IP manager', 'path' => 'advanced/ip-manager', 'url' => $moduleUrl('advanced/ip-manager')],
+                    ['label' => 'Hotlink protection', 'path' => 'advanced/hotlink-protection', 'url' => $moduleUrl('advanced/hotlink-protection')],
+                    ['label' => 'Folder index manager', 'path' => 'advanced/folder-index-manager', 'url' => $moduleUrl('advanced/folder-index-manager')],
+                    ['label' => 'Fix file ownership', 'path' => 'advanced/fix-file-ownership', 'url' => $moduleUrl('advanced/fix-file-ownership')],
+                    ['label' => 'Activity log', 'path' => 'advanced/activity-log', 'url' => $moduleUrl('advanced/activity-log')],
+                ],
+            ],
+        ];
+    }
+
+    private function moduleForPath(array $menu, ?string $activePath): array
+    {
+        if (!$activePath) {
+            return $menu[0];
+        }
+
+        foreach ($menu as $item) {
+            if (($item['path'] ?? null) === $activePath) {
+                return $item;
+            }
+
+            foreach ($item['children'] ?? [] as $child) {
+                if (($child['path'] ?? null) === $activePath) {
+                    return $child + [
+                        'parent_label' => $item['label'],
+                        'parent_icon' => $item['icon'],
+                    ];
+                }
+            }
+        }
+
+        return [
+            'label' => str($activePath)->after('/')->replace('-', ' ')->title()->toString(),
+            'path' => $activePath,
+            'description' => 'Modulo preparado para esta ruta del sitio.',
+        ];
     }
 }
