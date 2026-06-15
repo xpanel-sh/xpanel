@@ -257,15 +257,29 @@ class SiteController extends Controller
         }
 
         $containerName = 'xpanel-site-' . str_replace('.', '-', strtolower($site->domain));
+
         try {
             $daemon->restartSite($containerName);
+            return redirect()->route('client.websites.index')->with('success', 'Sitio reiniciado correctamente.');
         } catch (\Throwable $e) {
-            Log::warning('Site restart failed', ['site_id' => $site->id, 'exception' => $e]);
-            return redirect()->route('client.websites.index')
-                ->withErrors(['site' => 'El agente no pudo reiniciar el sitio. Revisa operaciones del agente o contacta soporte.']);
+            Log::warning('Site restart failed — trying recreate', ['site_id' => $site->id, 'exception' => $e->getMessage()]);
         }
 
-        return redirect()->route('client.websites.index')->with('success', 'Sitio reiniciado correctamente.');
+        // Container doesn't exist or restart failed — try to recreate it
+        try {
+            $daemon->createSite(
+                $site->domain,
+                $site->project_type,
+                $site->web_server ?? 'apache',
+                $site->php_version ?? '8.2'
+            );
+            $site->update(['status' => 'provisioning']);
+            return redirect()->route('client.websites.index')->with('success', 'Contenedor recreado correctamente. El sitio estará listo en unos segundos.');
+        } catch (\Throwable $e) {
+            Log::error('Site recreate failed', ['site_id' => $site->id, 'exception' => $e]);
+            return redirect()->route('client.websites.index')
+                ->withErrors(['site' => 'No se pudo reiniciar ni recrear el sitio. Revisa operaciones del agente.']);
+        }
     }
 
     public function destroy(Request $request, Site $site, DaemonClient $daemon)
