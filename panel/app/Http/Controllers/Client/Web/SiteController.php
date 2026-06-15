@@ -125,7 +125,7 @@ class SiteController extends Controller
             'domain' => 'required|regex:/^(?!:\/\/)(?=.{1,255}$)((.{1,63}\.){1,127}(?![0-9]*$)[a-z0-9-]+\.?)$/i|unique:sites,domain',
             'project_type' => 'required|in:php,node,static,python',
             'web_server' => 'required_if:project_type,php|in:apache,nginx',
-            'php_version' => 'required_if:project_type,php|in:8.0,8.1,8.2,8.3',
+            'php_version' => 'required_if:project_type,php|in:8.1,8.2,8.3,8.4',
         ]);
 
         try {
@@ -136,6 +136,117 @@ class SiteController extends Controller
         }
 
         return redirect()->route('client.websites.index')->with('success', 'Sitio enviado a provisión correctamente.');
+    }
+
+    public function updatePhpVersion(Request $request, string $domain, DaemonClient $daemon)
+    {
+        $site = $this->siteForDomain($request, $domain);
+
+        if ($site->project_type !== 'php') {
+            return back()->withErrors(['php_version' => 'Este sitio no usa PHP.']);
+        }
+
+        $validated = $request->validate([
+            'php_version' => 'required|in:8.1,8.2,8.3,8.4',
+        ]);
+
+        $containerName = 'xpanel-site-' . str_replace('.', '-', strtolower($site->domain));
+
+        try {
+            $daemon->deleteSite($containerName);
+        } catch (\Throwable $e) {
+            Log::warning('PHP version change: delete failed', ['site' => $domain, 'exception' => $e]);
+        }
+
+        $site->update(['php_version' => $validated['php_version']]);
+
+        try {
+            $daemon->createSite($site->domain, $site->project_type, $site->web_server, $validated['php_version']);
+        } catch (\Throwable $e) {
+            Log::error('PHP version change: recreate failed', ['site' => $domain, 'exception' => $e]);
+            return redirect()->route('client.websites.module', ['domain' => $domain, 'section' => 'advanced', 'page' => 'php-configuration'])
+                ->withErrors(['php_version' => 'PHP actualizado pero el sitio no pudo reiniciarse. Revisa el agente.'])
+                ->with('php_tab', 'version');
+        }
+
+        return redirect()->route('client.websites.module', ['domain' => $domain, 'section' => 'advanced', 'page' => 'php-configuration'])
+            ->with('success', 'PHP ' . $validated['php_version'] . ' activado. El sitio fue reiniciado.')
+            ->with('php_tab', 'version');
+    }
+
+    public function updatePhpOptions(Request $request, string $domain, DaemonClient $daemon)
+    {
+        $site = $this->siteForDomain($request, $domain);
+
+        if ($site->project_type !== 'php') {
+            return back()->withErrors(['options' => 'Este sitio no usa PHP.']);
+        }
+
+        $validated = $request->validate([
+            'memory_limit'       => 'required|in:64M,128M,256M,512M,1024M',
+            'upload_max_filesize'=> 'required|in:8M,32M,64M,128M,256M',
+            'post_max_size'      => 'required|in:8M,32M,64M,128M,256M',
+            'max_execution_time' => 'required|in:30,60,120,300',
+            'max_input_time'     => 'required|in:30,60,120,300',
+        ]);
+
+        $site->update(['php_options' => $validated]);
+
+        $containerName = 'xpanel-site-' . str_replace('.', '-', strtolower($site->domain));
+
+        try {
+            $daemon->writePhpIni($site->domain, $validated);
+            $daemon->deleteSite($containerName);
+            $daemon->createSite($site->domain, $site->project_type, $site->web_server, $site->php_version);
+        } catch (\Throwable $e) {
+            Log::error('PHP options update failed', ['site' => $domain, 'exception' => $e]);
+            return redirect()->route('client.websites.module', ['domain' => $domain, 'section' => 'advanced', 'page' => 'php-configuration'])
+                ->withErrors(['options' => 'Opciones guardadas pero el sitio no pudo reiniciarse. Revisa el agente.'])
+                ->with('php_tab', 'options');
+        }
+
+        return redirect()->route('client.websites.module', ['domain' => $domain, 'section' => 'advanced', 'page' => 'php-configuration'])
+            ->with('success', 'Opciones PHP guardadas. El sitio fue reiniciado.')
+            ->with('php_tab', 'options');
+    }
+
+    public function status(Request $request, Site $site, DaemonClient $daemon): \Illuminate\Http\JsonResponse
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($site->tenant_id !== $tenant->id) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        $containerName = 'xpanel-site-' . str_replace('.', '-', strtolower($site->domain));
+
+        try {
+            $daemonStatus = $daemon->siteStatus($containerName);
+        } catch (\Throwable $e) {
+            Log::warning('Site status check failed', ['site_id' => $site->id, 'exception' => $e]);
+            return response()->json([
+                'site_status' => $site->status,
+                'container_status' => 'unknown',
+            ]);
+        }
+
+        $containerState = $daemonStatus['status'] ?? 'unknown';
+
+        $newSiteStatus = match ($containerState) {
+            'running'    => 'active',
+            'restarting' => 'provisioning',
+            'exited'     => 'provision_error',
+            'not_found'  => $site->status === 'provisioning' ? 'provisioning' : 'provision_error',
+            default      => $site->status,
+        };
+
+        if ($newSiteStatus !== $site->status) {
+            $site->update(['status' => $newSiteStatus]);
+        }
+
+        return response()->json([
+            'site_status'      => $newSiteStatus,
+            'container_status' => $containerState,
+        ]);
     }
 
     public function restart(Request $request, Site $site, DaemonClient $daemon)

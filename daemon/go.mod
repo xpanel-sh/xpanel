@@ -5,6 +5,9 @@ go 1.24.0
 require (
 	github.com/docker/docker v25.0.3+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/emersion/go-imap v1.2.1
+	github.com/emersion/go-message v0.18.2
+	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43
 )
 
 require (

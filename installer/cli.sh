@@ -82,6 +82,10 @@ case "$CMD" in
     bash "$DIR/modules/ssl.sh" "$@"
     ;;
 
+  components|componentes)
+    bash "$DIR/modules/components.sh" "$@"
+    ;;
+
   i18n-audit|i18n_audit|i18n-lint|auditar-idioma|auditar_idioma)
     bash "$DIR/modules/i18n_audit.sh"
     ;;

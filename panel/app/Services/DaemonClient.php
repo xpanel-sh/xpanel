@@ -52,6 +52,24 @@ class DaemonClient
         return $response;
     }
 
+    public function siteStatus(string $containerName): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/site/status", [
+            'name' => $containerName,
+        ]);
+
+        if (!$response->successful()) {
+            Log::warning('Daemon siteStatus failed', [
+                'name' => $containerName,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \RuntimeException('Daemon siteStatus failed.');
+        }
+
+        return $response->json() ?? [];
+    }
+
     public function restartSite(string $containerName): array
     {
         return $this->post('/api/site/restart', [
@@ -64,6 +82,14 @@ class DaemonClient
         return $this->post('/api/site/delete', [
             'name' => $containerName,
         ], 'Daemon deleteSite failed');
+    }
+
+    public function writePhpIni(string $domain, array $options): array
+    {
+        return $this->post('/api/site/php-ini', [
+            'domain'  => $domain,
+            'options' => $options,
+        ], 'Daemon writePhpIni failed');
     }
 
     public function createDatabase(string $name, string $username, string $password, string $engine): array
@@ -83,6 +109,81 @@ class DaemonClient
             'username' => $username,
             'engine' => $engine,
         ], 'Daemon deleteDatabase failed');
+    }
+
+    // ===========================
+    // Mail Proxy Methods (IMAP/SMTP via daemon)
+    // ===========================
+
+    public function mailFolders(string $account): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/mail/folders", ['account' => $account]);
+        if (!$response->successful()) {
+            throw new \RuntimeException('Daemon mailFolders failed: ' . $response->body());
+        }
+        return $response->json() ?? [];
+    }
+
+    public function mailMessages(string $account, string $folder, int $page = 1, int $perPage = 25): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/mail/messages", [
+            'account'  => $account,
+            'folder'   => $folder,
+            'page'     => $page,
+            'per_page' => $perPage,
+        ]);
+        if (!$response->successful()) {
+            throw new \RuntimeException('Daemon mailMessages failed: ' . $response->body());
+        }
+        return $response->json() ?? [];
+    }
+
+    public function mailMessage(string $account, string $folder, int $uid): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/mail/message", [
+            'account' => $account,
+            'folder'  => $folder,
+            'uid'     => $uid,
+        ]);
+        if (!$response->successful()) {
+            throw new \RuntimeException('Daemon mailMessage failed: ' . $response->body());
+        }
+        return $response->json() ?? [];
+    }
+
+    public function mailFlag(string $account, string $folder, int $uid, string $flag, bool $set): array
+    {
+        return $this->post('/api/mail/flag', compact('account', 'folder', 'uid', 'flag', 'set'), 'Daemon mailFlag failed');
+    }
+
+    public function mailMove(string $account, string $folder, int $uid, string $targetFolder): array
+    {
+        return $this->post('/api/mail/move', [
+            'account'       => $account,
+            'folder'        => $folder,
+            'uid'           => $uid,
+            'target_folder' => $targetFolder,
+        ], 'Daemon mailMove failed');
+    }
+
+    public function mailDelete(string $account, string $folder, int $uid): array
+    {
+        return $this->post('/api/mail/delete', compact('account', 'folder', 'uid'), 'Daemon mailDelete failed');
+    }
+
+    public function mailSend(array $payload): array
+    {
+        return $this->post('/api/mail/send', $payload, 'Daemon mailSend failed');
+    }
+
+    public function mailFolderCreate(string $account, string $name): array
+    {
+        return $this->post('/api/mail/folder/create', compact('account', 'name'), 'Daemon mailFolderCreate failed');
+    }
+
+    public function mailFolderDelete(string $account, string $name): array
+    {
+        return $this->post('/api/mail/folder/delete', compact('account', 'name'), 'Daemon mailFolderDelete failed');
     }
 
     public function createEmailAccount(string $email, string $domain, int $quotaMb, string $password): array
@@ -125,6 +226,69 @@ class DaemonClient
         return $this->post('/api/dns/nameservers/apply', [
             'nameservers' => $nameservers,
         ], 'Daemon applyNameservers failed');
+    }
+
+    public function nsLookup(string $domain): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/dns/ns-lookup", [
+            'domain' => $domain,
+        ]);
+        if (!$response->successful()) {
+            return ['domain' => $domain, 'nameservers' => [], 'a_records' => []];
+        }
+        return $response->json() ?? ['domain' => $domain, 'nameservers' => [], 'a_records' => []];
+    }
+
+    public function cloudflareDNSUpsert(string $apiToken, string $domain, string $type, string $name, string $value, int $ttl = 1, bool $proxied = false): array
+    {
+        return $this->post('/api/dns/cloudflare/upsert', [
+            'api_token' => $apiToken,
+            'domain'    => $domain,
+            'type'      => $type,
+            'name'      => $name,
+            'value'     => $value,
+            'ttl'       => $ttl,
+            'proxied'   => $proxied,
+        ], 'Daemon cloudflareDNSUpsert failed');
+    }
+
+    public function cloudflareDNSDelete(string $apiToken, string $domain, string $type, string $name): array
+    {
+        return $this->post('/api/dns/cloudflare/delete', [
+            'api_token' => $apiToken,
+            'domain'    => $domain,
+            'type'      => $type,
+            'name'      => $name,
+        ], 'Daemon cloudflareDNSDelete failed');
+    }
+
+    public function cloudflareZoneID(string $apiToken, string $domain): array
+    {
+        return $this->post('/api/dns/cloudflare/zone-id', [
+            'api_token' => $apiToken,
+            'domain'    => $domain,
+        ], 'Daemon cloudflareZoneID failed');
+    }
+
+    public function sslIssue(string $domain, string $mode, string $cfToken = '', string $webroot = ''): array
+    {
+        return $this->post('/api/ssl/issue', [
+            'domain'   => $domain,
+            'mode'     => $mode,
+            'cf_token' => $cfToken,
+            'webroot'  => $webroot,
+        ], 'Daemon sslIssue failed');
+    }
+
+    public function sslStatus(string $domain): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/ssl/status", [
+            'domain' => $domain,
+        ]);
+        if (!$response->successful()) {
+            return ['domain' => $domain, 'issued' => false];
+        }
+        return $response->json() ?? ['domain' => $domain, 'issued' => false];
     }
 
     public function operations(): array

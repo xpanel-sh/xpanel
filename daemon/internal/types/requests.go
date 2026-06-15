@@ -125,3 +125,54 @@ type FileSearchResponse struct {
 	Truncated bool               `json:"truncated"`
 	Scanned   int                `json:"scanned"`
 }
+
+// --- DNS extended types ---
+
+type NSLookupRequest struct {
+	Domain string `json:"domain"`
+}
+
+type NSLookupResponse struct {
+	Domain      string   `json:"domain"`
+	Nameservers []string `json:"nameservers"`
+	ARecords    []string `json:"a_records"`
+}
+
+type CloudflareRecordRequest struct {
+	APIToken string `json:"api_token"`
+	Domain   string `json:"domain"`
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	TTL      int    `json:"ttl"`
+	Priority *int   `json:"priority,omitempty"`
+	Proxied  bool   `json:"proxied"`
+}
+
+type CloudflareDeleteRequest struct {
+	APIToken string `json:"api_token"`
+	Domain   string `json:"domain"`
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+}
+
+type CloudflareZoneIDRequest struct {
+	APIToken string `json:"api_token"`
+	Domain   string `json:"domain"`
+}
+
+// --- PHP types ---
+
+type PhpIniRequest struct {
+	Domain  string            `json:"domain"`
+	Options map[string]string `json:"options"`
+}
+
+// --- SSL types ---
+
+type SSLIssueRequest struct {
+	Domain  string `json:"domain"`
+	Mode    string `json:"mode"`    // cloudflare | http
+	CFToken string `json:"cf_token,omitempty"`
+	Webroot string `json:"webroot,omitempty"`
+}

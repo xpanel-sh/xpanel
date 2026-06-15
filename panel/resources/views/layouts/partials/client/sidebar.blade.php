@@ -112,6 +112,11 @@
                             'children' => [
                                 ['label' => 'Acceso SSH', 'path' => 'advanced/ssh-access'],
                                 ['label' => 'Configuracion PHP', 'path' => 'advanced/php-configuration'],
+                                [
+                                    'label' => 'Editor DNS',
+                                    'url'    => $secondaryDomain ? route('client.websites.dns-zone-editor', $secondaryDomain) : null,
+                                    'active' => request()->routeIs('client.websites.dns-zone-editor*'),
+                                ],
                                 ['label' => 'Cron Jobs', 'path' => 'advanced/cron-jobs'],
                                 ['label' => 'PHP info', 'path' => 'advanced/php-info'],
                                 ['label' => 'Administrador de cache', 'path' => 'advanced/cache-manager'],
@@ -122,6 +127,7 @@
                                 ['label' => 'Indice de carpetas', 'path' => 'advanced/folder-index-manager'],
                                 ['label' => 'Corregir propietarios', 'path' => 'advanced/fix-file-ownership'],
                                 ['label' => 'Registro de actividad', 'path' => 'advanced/activity-log'],
+                                
                             ],
                         ],
                     ];

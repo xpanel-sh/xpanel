@@ -120,11 +120,17 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 		},
 	}
 
+	binds := []string{
+		fmt.Sprintf("%s:%s", preparedSite.HostDir, preparedSite.TargetDir),
+	}
+	if req.Type == "php" {
+		iniPath := filepath.Join(preparedSite.HostDir, "php.ini")
+		binds = append(binds, iniPath+":/usr/local/etc/php/conf.d/90-xpanel.ini")
+	}
+
 	hostConfig := &container.HostConfig{
 		NetworkMode: "xpanel-net", // Debe coincidir con docker-compose
-		Binds: []string{
-			fmt.Sprintf("%s:%s", preparedSite.HostDir, preparedSite.TargetDir),
-		},
+		Binds:       binds,
 		PortBindings: nat.PortMap{
 			"80/tcp": []nat.PortBinding{}, // Traefik maneja el puerto, no exponemos al host
 		},
@@ -154,8 +160,63 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 	if !siteHasExpectedMount(inspected, preparedSite) {
 		return "", fmt.Errorf("site container %s was created without the expected mount %s:%s", containerName, preparedSite.HostDir, preparedSite.TargetDir)
 	}
+	if inspected.State == nil || (!inspected.State.Running && !inspected.State.Restarting) {
+		exitCode := 0
+		exitMsg := "unknown"
+		if inspected.State != nil {
+			exitCode = inspected.State.ExitCode
+			exitMsg = inspected.State.Error
+			if exitMsg == "" {
+				exitMsg = inspected.State.Status
+			}
+		}
+		_ = m.cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
+		return "", fmt.Errorf("site container %s exited immediately after start (exit code %d: %s)", containerName, exitCode, exitMsg)
+	}
 
 	return resp.ID, nil
+}
+
+// SiteContainerStatus returns the real-time state of a site container.
+// Returns: running | restarting | provisioning | exited | not_found
+func (m *Manager) SiteContainerStatus(ctx context.Context, name string) (map[string]any, error) {
+	containerName, err := normalizeSiteContainerName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	inspected, err := m.cli.ContainerInspect(ctx, containerName)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			return map[string]any{"status": "not_found"}, nil
+		}
+		return nil, err
+	}
+
+	labels := containerLabels(inspected)
+	if !isManagedSite(labels) {
+		return map[string]any{"status": "not_found"}, nil
+	}
+
+	state := "unknown"
+	exitCode := 0
+	if inspected.State != nil {
+		switch {
+		case inspected.State.Running:
+			state = "running"
+		case inspected.State.Restarting:
+			state = "restarting"
+		default:
+			state = "exited"
+			exitCode = inspected.State.ExitCode
+		}
+	}
+
+	return map[string]any{
+		"status":    state,
+		"exit_code": exitCode,
+		"domain":    labels["xpanel.domain"],
+	}, nil
 }
 
 func (m *Manager) removeContainer(ctx context.Context, id string) error {

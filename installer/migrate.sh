@@ -9,8 +9,17 @@ load_xpanel_lang "$DIR/lang" "$XPANEL_LANG"
 
 msg_migrate
 
-# Ejecutar migraciones y seeds de Laravel vía Docker
+# Ensure storage permissions before migrating
+docker exec xpanel-web sh -lc "
+  mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache
+  chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+  chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
+" || true
+
+# Run all migration paths (same as install.sh)
 docker exec xpanel-web php artisan migrate --force
-docker exec xpanel-web php artisan db:seed --force
+docker exec xpanel-web php artisan migrate --force --path=database/migrations/admin
+docker exec xpanel-web php artisan migrate --force --path=database/migrations/client
+docker exec xpanel-web php artisan optimize:clear || true
 
 sleep 1

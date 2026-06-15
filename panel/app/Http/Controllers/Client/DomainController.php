@@ -13,11 +13,16 @@ class DomainController extends Controller
     {
         $tenant = $request->attributes->get('tenant');
 
-        $domains = Domain::query()
+        $query = Domain::query()
             ->with('site')
-            ->where('tenant_id', $tenant->id)
-            ->latest()
-            ->paginate(15);
+            ->where('tenant_id', $tenant->id);
+
+        if ($request->filled('search')) {
+            $s = $request->input('search');
+            $query->where('domain', 'like', "%{$s}%");
+        }
+
+        $domains = $query->latest()->paginate(15)->withQueryString();
 
         return view('client.domains.index', compact('domains'));
     }
@@ -64,6 +69,23 @@ class DomainController extends Controller
         ]);
 
         return redirect()->route('client.domains.index')->with('success', 'Dominio agregado correctamente.');
+    }
+
+    public function search(Request $request)
+    {
+        $tenant = $request->attributes->get('tenant');
+        $query  = trim($request->input('q', ''));
+        $domains = Domain::where('tenant_id', $tenant->id)->pluck('domain')->all();
+
+        return view('client.domains.search', compact('query', 'domains'));
+    }
+
+    public function transfers(Request $request)
+    {
+        $tenant = $request->attributes->get('tenant');
+        $domains = Domain::where('tenant_id', $tenant->id)->orderBy('domain')->get(['id', 'domain', 'type', 'dns_status']);
+
+        return view('client.domains.transfers', compact('domains'));
     }
 
     public function destroy(Request $request, Domain $domain)

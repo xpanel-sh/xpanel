@@ -114,7 +114,7 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
-      PMA_ABSOLUTE_URI: ${PHPMYADMIN_ABSOLUTE_URI:-}
+      PMA_ABSOLUTE_URI: https://${XPANEL_DOMAIN}/phpmyadmin/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.phpmyadmin.rule=Host(`${XPANEL_DOMAIN:?XPANEL_DOMAIN is required}`) && PathPrefix(`/phpmyadmin`)"
@@ -142,6 +142,41 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
+
+  # Mail Server (Postfix + Dovecot via docker-mailserver).
+  # Start with: docker compose --profile mail up -d mailserver
+  # Requires ports 25 and 587 open in firewall. Set XPANEL_MAIL_HOSTNAME in .env.
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: xpanel-mail
+    hostname: ${XPANEL_MAIL_HOSTNAME:-mail.localhost}
+    profiles:
+      - mail
+    ports:
+      - "25:25"     # SMTP (MX)
+      - "587:587"   # SMTP Submission
+      - "993:993"   # IMAPS
+      - "143:143"   # IMAP (also used internally by daemon)
+    volumes:
+      - ./runtime/mail/data:/var/mail
+      - ./runtime/mail/state:/var/mail-state
+      - ./runtime/mail/logs:/var/log/mail
+      - ./runtime/mail/config:/tmp/docker-mailserver
+      - ./traefik/acme.json:/etc/letsencrypt/acme.json:ro
+    environment:
+      ENABLE_RSPAMD: 1
+      ENABLE_CLAMAV: 0
+      ENABLE_FAIL2BAN: 1
+      SSL_TYPE: letsencrypt
+      POSTMASTER_ADDRESS: ${XPANEL_MAIL_POSTMASTER:-postmaster@localhost}
+      PERMIT_DOCKER: network
+      LOG_LEVEL: warn
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - xpanel-net
+    restart: unless-stopped
+    stop_grace_period: 1m
 
   # Optional authoritative DNS service.
   # Start explicitly with: docker compose --profile dns up -d dns

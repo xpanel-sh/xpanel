@@ -4,11 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	dnswriter "xpanel/internal/dns"
+	dnslib "xpanel/internal/dns"
 	model "xpanel/internal/types"
 )
 
-var zoneWriter = dnswriter.NewZoneWriter()
+var zoneWriter = dnslib.NewZoneWriter()
+
+// ── XPanel NS (zone file) handlers ──────────────────────────────────────────
 
 func handleDNSRecordUpsert(w http.ResponseWriter, r *http.Request) {
 	var req model.DNSRecordRequest
@@ -68,7 +70,7 @@ func handleDNSRecordDelete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if dnswriter.HasRecords(req.Domain, records) {
+	if dnslib.HasRecords(req.Domain, records) {
 		if err := zoneWriter.WriteZone(req.Domain, records); err != nil {
 			payload := payloadFrom(req)
 			payload["status"] = "error"
@@ -99,4 +101,123 @@ func handleNameserversApply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	accepted(w, "dns", "apply-nameservers", "default", "nameserver configuration registered in daemon state", payload)
+}
+
+// ── NS Lookup ────────────────────────────────────────────────────────────────
+
+func handleNSLookup(w http.ResponseWriter, r *http.Request) {
+	domain := strings.TrimSpace(r.URL.Query().Get("domain"))
+	if domain == "" {
+		var req model.NSLookupRequest
+		if !decodeJSON(w, r, &req) {
+			return
+		}
+		domain = req.Domain
+	}
+	if domain == "" {
+		http.Error(w, "domain is required", http.StatusBadRequest)
+		return
+	}
+
+	ns, nsErr := dnslib.LookupNS(domain)
+	aRecords, _ := dnslib.LookupA(domain)
+
+	if nsErr != nil {
+		ns = []string{}
+	}
+	if aRecords == nil {
+		aRecords = []string{}
+	}
+
+	writeJSON(w, model.NSLookupResponse{
+		Domain:      domain,
+		Nameservers: ns,
+		ARecords:    aRecords,
+	})
+}
+
+// ── Cloudflare DNS handlers ──────────────────────────────────────────────────
+
+func handleCloudflareDNSUpsert(w http.ResponseWriter, r *http.Request) {
+	var req model.CloudflareRecordRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+
+	if req.APIToken == "" || req.Domain == "" || req.Type == "" || req.Name == "" {
+		http.Error(w, "api_token, domain, type, name are required", http.StatusBadRequest)
+		return
+	}
+
+	cf := dnslib.NewCloudflareClient(req.APIToken)
+	zoneID, err := cf.GetZoneID(req.Domain)
+	if err != nil {
+		http.Error(w, "cloudflare zone lookup failed: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	ttl := req.TTL
+	if ttl <= 0 {
+		ttl = 1 // auto in Cloudflare
+	}
+	recordID, err := cf.UpsertRecord(zoneID, req.Type, req.Name, req.Value, ttl, req.Proxied)
+	if err != nil {
+		http.Error(w, "cloudflare record upsert failed: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	accepted(w, "dns", "cf-upsert", req.Domain+"|"+req.Type+"|"+req.Name, "cloudflare record upserted", map[string]any{
+		"zone_id":   zoneID,
+		"record_id": recordID,
+		"domain":    req.Domain,
+		"type":      req.Type,
+		"name":      req.Name,
+		"value":     req.Value,
+	})
+}
+
+func handleCloudflareDNSDelete(w http.ResponseWriter, r *http.Request) {
+	var req model.CloudflareDeleteRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+
+	if req.APIToken == "" || req.Domain == "" || req.Type == "" || req.Name == "" {
+		http.Error(w, "api_token, domain, type, name are required", http.StatusBadRequest)
+		return
+	}
+
+	cf := dnslib.NewCloudflareClient(req.APIToken)
+	zoneID, err := cf.GetZoneID(req.Domain)
+	if err != nil {
+		http.Error(w, "cloudflare zone lookup failed: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	if err := cf.DeleteRecord(zoneID, req.Type, req.Name); err != nil {
+		http.Error(w, "cloudflare record delete failed: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	accepted(w, "dns", "cf-delete", req.Domain+"|"+req.Type+"|"+req.Name, "cloudflare record deleted", payloadFrom(req))
+}
+
+func handleCloudflareZoneID(w http.ResponseWriter, r *http.Request) {
+	var req model.CloudflareZoneIDRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if req.APIToken == "" || req.Domain == "" {
+		http.Error(w, "api_token and domain are required", http.StatusBadRequest)
+		return
+	}
+
+	cf := dnslib.NewCloudflareClient(req.APIToken)
+	zoneID, err := cf.GetZoneID(req.Domain)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	writeJSON(w, map[string]string{"zone_id": zoneID, "domain": req.Domain})
 }

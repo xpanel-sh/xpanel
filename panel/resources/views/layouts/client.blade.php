@@ -30,6 +30,7 @@ License: https://xpanel.com/license
     <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/xpanel.css') }}" rel="stylesheet" />
     @stack('styles')
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
 </head>
 @php
     $clientRouteDomainForSidebar = trim((string) request()->route('domain'), '/');

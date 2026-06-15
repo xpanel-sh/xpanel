@@ -127,7 +127,8 @@
                                                     Se esta eliminando el sitio web
                                                 </div>
                                             @elseif($isProvisioning)
-                                                <div class="ms-12 mt-3 inline-flex items-center gap-2 rounded-xl bg-warning/10 px-3 py-2 text-xs font-medium text-warning">
+                                                <div class="ms-12 mt-3 inline-flex items-center gap-2 rounded-xl bg-warning/10 px-3 py-2 text-xs font-medium text-warning"
+                                                     data-site-provisioning-badge="{{ $site->id }}">
                                                     <i class="ki-filled ki-loading text-base"></i>
                                                     Sitio en aprovisionamiento
                                                 </div>
@@ -196,3 +197,61 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+@php
+    $provisioningSites = $sites->filter(fn($s) => in_array($s->status ?? '', ['provisioning', 'creating']))->values();
+@endphp
+@if($provisioningSites->isNotEmpty())
+<script>
+(function () {
+    const pending = new Map([
+        @foreach($provisioningSites as $s)
+        [{{ $s->id }}, { url: '{{ route('client.sites.status', $s) }}', domain: '{{ $s->domain }}' }],
+        @endforeach
+    ]);
+
+    function badgeEl(siteId) {
+        return document.querySelector('[data-site-provisioning-badge="{{ $s->id }}"]'.replace('{{ $s->id }}', siteId));
+    }
+
+    function updateBadge(siteId, siteStatus) {
+        const el = badgeEl(siteId);
+        if (!el) return;
+        if (siteStatus === 'active') {
+            el.innerHTML = '<i class="ki-filled ki-check-circle text-base"></i> Activo';
+            el.className = el.className.replace('bg-warning/10', 'bg-success/10').replace('text-warning', 'text-success');
+        } else if (siteStatus === 'provision_error') {
+            el.innerHTML = '<i class="ki-filled ki-cross-circle text-base"></i> Error al provisionar';
+            el.className = el.className.replace('bg-warning/10', 'bg-destructive/10').replace('text-warning', 'text-destructive');
+        }
+    }
+
+    async function poll() {
+        if (pending.size === 0) return;
+
+        for (const [siteId, info] of pending) {
+            try {
+                const res = await fetch(info.url, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) continue;
+                const data = await res.json();
+                const status = data.site_status ?? '';
+                if (status === 'active' || status === 'provision_error') {
+                    updateBadge(siteId, status);
+                    pending.delete(siteId);
+                }
+            } catch (_) {}
+        }
+
+        if (pending.size > 0) {
+            setTimeout(poll, 4000);
+        }
+    }
+
+    setTimeout(poll, 4000);
+})();
+</script>
+@endif
+@endpush

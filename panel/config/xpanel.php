@@ -7,4 +7,5 @@ return [
         'admin_base_path' => trim(env('XPANEL_ADMIN_BASE_PATH', 'admin'), '/'),
     ],
     'home_enabled' => (bool) env('XPANEL_HOME_ENABLED', false),
+    'server_ip'   => env('XPANEL_SERVER_IP', ''),
 ];

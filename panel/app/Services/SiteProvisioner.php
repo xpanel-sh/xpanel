@@ -44,7 +44,10 @@ class SiteProvisioner
                 $site->php_version
             );
 
-            $site->update(['status' => 'active']);
+            // Status stays 'provisioning' — the panel polls /client/sites/{site}/status
+            // to confirm the container is actually running before marking it active.
+            // This supports future multi-server/multi-node scenarios where the daemon
+            // may be on a remote node and container health is confirmed asynchronously.
             return $site->refresh();
         } catch (\Throwable $e) {
             $site->delete();

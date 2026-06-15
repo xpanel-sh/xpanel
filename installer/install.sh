@@ -361,6 +361,7 @@ upsert_env "XPANEL_CLIENT_LOGIN_PATH" "client/login" "$PANEL_DIR/.env"
 upsert_env "XPANEL_ADMIN_BASE_PATH" "admin" "$PANEL_DIR/.env"
 upsert_env "XPANEL_DAEMON_URL" "http://host.docker.internal:7070" "$PANEL_DIR/.env"
 upsert_env "XPANEL_DAEMON_TOKEN" "$DAEMON_TOKEN" "$PANEL_DIR/.env"
+upsert_env "XPANEL_SERVER_IP" "$IP" "$PANEL_DIR/.env"
 upsert_env "PHPMYADMIN_URL" "/phpmyadmin" "$PANEL_DIR/.env"
 
 # Laravel runtime directories must be writable by the web process.
@@ -459,6 +460,20 @@ docker network inspect xpanel-net >/dev/null 2>&1 || docker network create xpane
 
 docker compose up -d
 msg_services_ok
+
+# ===============================
+# CONSTRUIR IMAGENES PHP
+# ===============================
+echo "Construyendo imágenes PHP con soporte MySQL..."
+PHP_DOCKERFILE="$BASE/docker/php/Dockerfile"
+if [ -f "$PHP_DOCKERFILE" ]; then
+  for PHP_VERSION in 8.1 8.2 8.3 8.4; do
+    docker build --build-arg PHP_VERSION="$PHP_VERSION" \
+      -t "xpanel-php:$PHP_VERSION-apache" \
+      -f "$PHP_DOCKERFILE" "$(dirname "$PHP_DOCKERFILE")" \
+      >/dev/null 2>&1 && echo "  ✓ xpanel-php:$PHP_VERSION-apache" || echo "  ⚠ xpanel-php:$PHP_VERSION-apache falló"
+  done
+fi
 
 # ===============================
 # INICIALIZAR BASE DE DATOS Y ADMIN

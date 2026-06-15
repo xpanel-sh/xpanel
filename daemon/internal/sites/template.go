@@ -91,6 +91,7 @@ func starterFiles(req model.CreateSiteRequest, domain string) map[string]string 
 			"public/.htaccess":   directoryIndexRule(),
 			"public/default.php": page,
 			"public/index.php":   phpEntrypoint(),
+			"php.ini":            "",
 		}
 	case "static":
 		fallthrough

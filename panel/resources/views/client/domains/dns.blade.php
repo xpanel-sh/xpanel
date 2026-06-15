@@ -1,124 +1,87 @@
 @extends('layouts.client')
 
 @section('content')
-    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
-        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
-            <main class="grow" role="content">
-                <div class="kt-container-fluid">
-                    <div class="grid gap-5 lg:gap-7.5">
-<section class="space-y-6">
-        <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Panel Cliente</p>
-            <h1 class="mt-2 text-3xl font-black tracking-tight">DNS</h1>
-            <p class="mt-2 text-gray-400">Gestiona registros DNS si decides apuntar tu dominio a los nameservers de XPanel.</p>
-        </div>
+<div class="flex grow rounded-xl bg-background border border-input lg:ms-(--sidebar-width) mt-0 lg:mt-(--header-height) m-5">
+    <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
+        <main class="grow" role="content">
 
-        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <h2 class="text-lg font-bold mb-3">Nameservers recomendados</h2>
-            @if($nameservers && count($nameservers->records()))
-                <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                    @foreach($nameservers->records() as $record)
-                        <div class="rounded-xl bg-black/40 dark:bg-black px-4 py-3 font-mono text-sm text-white border border-white/5">{{ $record }}</div>
-                    @endforeach
+            @include('client.domains.partials.tabs')
+
+            <div class="kt-container-fluid">
+                <div class="grid gap-5 lg:gap-7.5">
+
+                    <div>
+                        <h1 class="text-2xl font-semibold text-mono">Editor de zonas DNS</h1>
+                        <p class="mt-1 text-sm text-secondary-foreground">Elige un dominio de tu cuenta para gestionar sus registros DNS.</p>
+                    </div>
+
+                    @if($domains->isEmpty())
+                        <div class="kt-card">
+                            <div class="flex flex-col items-center justify-center gap-5 py-20 text-center">
+                                <span class="flex size-20 items-center justify-center rounded-full bg-muted">
+                                    <i class="ki-filled ki-setting-2 text-4xl text-secondary-foreground opacity-50"></i>
+                                </span>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-mono">Sin dominios registrados</h2>
+                                    <p class="mt-1 text-sm text-secondary-foreground">Agrega un dominio primero para poder gestionar sus registros DNS.</p>
+                                </div>
+                                <a href="{{ route('client.domains.create') }}" class="kt-btn kt-btn-primary">
+                                    <i class="ki-filled ki-plus"></i>
+                                    Agregar dominio
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        {{-- ── Domain picker card ───────────────────────────────────── --}}
+                        <div class="kt-card" x-data="{ open: false }" @click.outside="open = false">
+                            <div class="kt-card-content p-6">
+                                <p class="text-sm font-semibold text-mono mb-5">Elige un dominio para gestionar</p>
+                                <p class="text-xs text-secondary-foreground mb-5 -mt-3">Te llevaremos directamente a sus registros DNS.</p>
+
+                                {{-- Dropdown --}}
+                                <div class="relative max-w-sm">
+                                    <button type="button"
+                                            class="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm hover:border-primary/50 transition"
+                                            @click="open = !open">
+                                        <span class="flex items-center gap-2 text-secondary-foreground">
+                                            <i class="ki-filled ki-globe"></i>
+                                            Selecciona un dominio
+                                        </span>
+                                        <i class="ki-filled ki-down text-secondary-foreground text-xs transition-transform" :class="{ 'rotate-180': open }"></i>
+                                    </button>
+
+                                    <div x-show="open" x-cloak x-transition
+                                         class="absolute left-0 top-full z-20 mt-1 w-full rounded-xl border border-border bg-background shadow-xl overflow-hidden">
+                                        @foreach($domains as $dom)
+                                            <a href="{{ route('client.websites.dns-zone-editor', $dom->domain) }}"
+                                               class="flex items-center gap-3 px-4 py-3.5 text-sm text-mono hover:bg-muted transition border-b border-border last:border-b-0">
+                                                <i class="ki-filled ki-globe text-secondary-foreground shrink-0"></i>
+                                                <span class="grow">{{ $dom->domain }}</span>
+                                                <i class="ki-filled ki-right text-secondary-foreground text-xs"></i>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                {{-- Recent domains chips --}}
+                                <div class="mt-5 flex flex-wrap items-center gap-2">
+                                    <span class="text-xs text-secondary-foreground">O salta a uno reciente:</span>
+                                    @foreach($domains->take(6) as $dom)
+                                        <a href="{{ route('client.websites.dns-zone-editor', $dom->domain) }}"
+                                           class="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-mono hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition">
+                                            {{ $dom->domain }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                 </div>
-            @else
-                <p class="text-sm text-gray-500">El administrador aún no configuró nameservers propios.</p>
-            @endif
-        </div>
-
-        <form action="{{ route('client.dns.store') }}" method="POST" class="kt-card">
-            @csrf
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">Agregar registro</h3>
             </div>
-            <div class="kt-card-content grid gap-5">
-                <div class="grid grid-cols-1 gap-4 lg:grid-cols-6">
-                    <div class="lg:col-span-2">
-                        <label class="kt-form-label mb-2">Dominio</label>
-                        <select name="domain_id" class="kt-select">
-                            @foreach($domains as $domain)
-                                <option value="{{ $domain->id }}">{{ $domain->domain }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="kt-form-label mb-2">Tipo</label>
-                        <select name="type" class="kt-select">
-                            @foreach(['A','AAAA','CNAME','MX','TXT','NS','SRV','CAA'] as $type)
-                                <option value="{{ $type }}">{{ $type }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="kt-form-label mb-2">Nombre</label>
-                        <input class="kt-input" name="name" value="{{ old('name', '@') }}">
-                    </div>
-                    <div class="lg:col-span-2">
-                        <label class="kt-form-label mb-2">Valor</label>
-                        <input class="kt-input" name="value" value="{{ old('value') }}">
-                    </div>
-                    <div>
-                        <label class="kt-form-label mb-2">TTL</label>
-                        <input class="kt-input" type="number" name="ttl" value="{{ old('ttl', 3600) }}">
-                    </div>
-                    <div>
-                        <label class="kt-form-label mb-2">Prioridad</label>
-                        <input class="kt-input" type="number" name="priority" value="{{ old('priority') }}">
-                    </div>
-                </div>
-                <div class="flex justify-end">
-                    <button class="kt-btn kt-btn-primary">Agregar registro</button>
-                </div>
-            </div>
-        </form>
+        </main>
 
-        <div class="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[900px] text-left">
-                    <thead class="text-xs uppercase tracking-widest text-gray-500 border-b border-white/10">
-                        <tr>
-                            <th class="px-6 py-4">Dominio</th>
-                            <th class="px-6 py-4">Tipo</th>
-                            <th class="px-6 py-4">Nombre</th>
-                            <th class="px-6 py-4">Valor</th>
-                            <th class="px-6 py-4">TTL</th>
-                            <th class="px-6 py-4 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/10">
-                        @forelse($records as $record)
-                            <tr class="hover:bg-white/[0.02] transition">
-                                <td class="px-6 py-4 text-gray-300">{{ $record->domain?->domain }}</td>
-                                <td class="px-6 py-4 font-bold text-white">{{ $record->type }}</td>
-                                <td class="px-6 py-4 text-gray-300 font-mono text-sm">{{ $record->name }}</td>
-                                <td class="px-6 py-4 text-gray-400 font-mono text-xs max-w-xs truncate">{{ $record->value }}</td>
-                                <td class="px-6 py-4 text-gray-400 text-sm">{{ $record->ttl }}s</td>
-                                <td class="px-6 py-4 text-right">
-                                    <x-confirm-modal
-                                        action="{{ route('client.dns.destroy', $record) }}"
-                                        title="Eliminar registro DNS"
-                                        message="Se eliminará el registro {{ $record->type }} '{{ $record->name }}' del dominio {{ $record->domain?->domain }}."
-                                        btnText="Eliminar registro"
-                                    />
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">No tienes registros DNS aún.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{ $records->links() }}
-    </section>
-                    </div>
-                </div>
-            </main>
-
-            @include('layouts.partials.client.footer')
-        </div>
+        @include('layouts.partials.client.footer')
     </div>
+</div>
 @endsection

@@ -6,7 +6,7 @@
             <main class="grow" role="content">
                 <div class="kt-container-fluid">
                     <div class="grid gap-5 lg:gap-7.5">
-<div class="space-y-6" x-data="{ search: '{{ request('search') }}' }">
+<div class="space-y-6" x-data="{ search: '{{ request('search') }}', showConn: false }">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Panel Cliente</p>
@@ -20,6 +20,44 @@
                 </svg>
                 Nueva Base de Datos
             </a>
+        </div>
+
+        {{-- Info de conexión --}}
+        <div class="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4">
+            <button @click="showConn = !showConn" class="flex w-full items-center justify-between text-left">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-sm font-semibold text-blue-300">Datos de conexión para tu código PHP</span>
+                </div>
+                <svg class="w-4 h-4 text-blue-400 transition-transform" :class="showConn ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div x-show="showConn" x-collapse class="mt-4 space-y-3">
+                <div class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                    <div class="rounded-xl bg-white/5 p-3">
+                        <p class="text-xs text-gray-500 mb-1">Host</p>
+                        <code class="font-mono text-white font-bold">localhost</code>
+                    </div>
+                    <div class="rounded-xl bg-white/5 p-3">
+                        <p class="text-xs text-gray-500 mb-1">Puerto</p>
+                        <code class="font-mono text-white font-bold">3306</code>
+                    </div>
+                    <div class="rounded-xl bg-white/5 p-3">
+                        <p class="text-xs text-gray-500 mb-1">Base de datos</p>
+                        <code class="font-mono text-gray-300">nombre de tu BD</code>
+                    </div>
+                    <div class="rounded-xl bg-white/5 p-3">
+                        <p class="text-xs text-gray-500 mb-1">Usuario</p>
+                        <code class="font-mono text-gray-300">usuario de tu BD</code>
+                    </div>
+                </div>
+                <div class="rounded-xl bg-gray-900 p-3">
+                    <p class="text-xs text-gray-500 mb-2">Ejemplo PDO:</p>
+                    <code class="text-xs text-green-400 font-mono whitespace-pre">$pdo = new PDO('mysql:host=localhost;port=3306;dbname=TUBD', 'TUUSER', 'TUPASS');</code>
+                </div>
+                <p class="text-xs text-gray-500">
+                    XPanel enruta automáticamente <code class="text-gray-400">localhost:3306</code> a la base de datos — usa siempre <code class="text-gray-400">localhost</code> en tu código PHP.
+                </p>
+            </div>
         </div>
 
         {{-- Buscador --}}

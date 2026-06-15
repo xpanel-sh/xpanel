@@ -21,12 +21,34 @@ func NewRouter() http.Handler {
 
 	mux.HandleFunc("/status", handleHealth)
 	mux.HandleFunc("/health", handleHealth)
+	// Mail account management
 	mux.HandleFunc("/api/mail/account/create", requireAuth(handleMailAccountCreate))
 	mux.HandleFunc("/api/mail/account/delete", requireAuth(handleMailAccountDelete))
 	mux.HandleFunc("/api/mail/account/reset-password", requireAuth(handleMailPasswordReset))
+
+	// Mail IMAP proxy
+	mux.HandleFunc("/api/mail/folders", requireAuth(handleMailFolders))
+	mux.HandleFunc("/api/mail/messages", requireAuth(handleMailMessages))
+	mux.HandleFunc("/api/mail/message", requireAuth(handleMailMessage))
+	mux.HandleFunc("/api/mail/flag", requireAuth(handleMailFlag))
+	mux.HandleFunc("/api/mail/move", requireAuth(handleMailMove))
+	mux.HandleFunc("/api/mail/delete", requireAuth(handleMailDelete))
+
+	// Mail SMTP proxy
+	mux.HandleFunc("/api/mail/send", requireAuth(handleMailSend))
+
+	// Mail folder management
+	mux.HandleFunc("/api/mail/folder/create", requireAuth(handleMailFolderCreate))
+	mux.HandleFunc("/api/mail/folder/delete", requireAuth(handleMailFolderDelete))
 	mux.HandleFunc("/api/dns/record/upsert", requireAuth(handleDNSRecordUpsert))
 	mux.HandleFunc("/api/dns/record/delete", requireAuth(handleDNSRecordDelete))
 	mux.HandleFunc("/api/dns/nameservers/apply", requireAuth(handleNameserversApply))
+	mux.HandleFunc("/api/dns/ns-lookup", requireAuth(handleNSLookup))
+	mux.HandleFunc("/api/dns/cloudflare/upsert", requireAuth(handleCloudflareDNSUpsert))
+	mux.HandleFunc("/api/dns/cloudflare/delete", requireAuth(handleCloudflareDNSDelete))
+	mux.HandleFunc("/api/dns/cloudflare/zone-id", requireAuth(handleCloudflareZoneID))
+	mux.HandleFunc("/api/ssl/issue", requireAuth(handleSSLIssue))
+	mux.HandleFunc("/api/ssl/status", requireAuth(handleSSLStatus))
 	mux.HandleFunc("/api/database/create", requireAuth(handleDatabaseCreate))
 	mux.HandleFunc("/api/database/delete", requireAuth(handleDatabaseDelete))
 	mux.HandleFunc("/api/operations", requireAuth(handleOperationsList))
@@ -43,6 +65,28 @@ func NewRouter() http.Handler {
 	mux.HandleFunc("/api/files/search", requireAuth(handleFileSearch))
 	mux.HandleFunc("/api/files/upload", requireAuth(handleFileUpload))
 	mux.HandleFunc("/api/files/download", requireAuth(handleFileDownload))
+
+	mux.HandleFunc("/api/site/status", requireAuth(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		name := strings.TrimSpace(r.URL.Query().Get("name"))
+		if name == "" {
+			http.Error(w, "name is required", http.StatusBadRequest)
+			return
+		}
+		if dockerErr != nil {
+			http.Error(w, "Docker manager unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		result, err := dockerManager.SiteContainerStatus(r.Context(), name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, result)
+	}))
 
 	mux.HandleFunc("/api/site/create", requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -102,6 +146,8 @@ func NewRouter() http.Handler {
 		}
 		writeJSON(w, model.ActionResponse{Status: "restarted", OperationID: op.ID})
 	}))
+
+	mux.HandleFunc("/api/site/php-ini", requireAuth(handlePhpIniWrite))
 
 	mux.HandleFunc("/api/site/delete", requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		var req model.SiteActionRequest

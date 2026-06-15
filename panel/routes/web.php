@@ -147,12 +147,13 @@ Route::group(['middleware' => ['web']], function () {
 
         // Sitios Web
         Route::prefix('sites')->name('client.sites.')->group(function () {
-            Route::get('/',             [\App\Http\Controllers\Client\Web\SiteController::class, 'index'])->name('index');
-            Route::get('/create',       [\App\Http\Controllers\Client\Web\SiteController::class, 'create'])->name('create');
-            Route::get('/{site}/panel', [\App\Http\Controllers\Client\Web\SiteController::class, 'panel'])->name('panel');
-            Route::post('/',            [\App\Http\Controllers\Client\Web\SiteController::class, 'store'])->name('store');
-            Route::post('/{site}/restart', [\App\Http\Controllers\Client\Web\SiteController::class, 'restart'])->name('restart');
-            Route::delete('/{site}',    [\App\Http\Controllers\Client\Web\SiteController::class, 'destroy'])->name('destroy');
+            Route::get('/',                 [\App\Http\Controllers\Client\Web\SiteController::class, 'index'])->name('index');
+            Route::get('/create',           [\App\Http\Controllers\Client\Web\SiteController::class, 'create'])->name('create');
+            Route::get('/{site}/panel',     [\App\Http\Controllers\Client\Web\SiteController::class, 'panel'])->name('panel');
+            Route::get('/{site}/status',    [\App\Http\Controllers\Client\Web\SiteController::class, 'status'])->name('status');
+            Route::post('/',                [\App\Http\Controllers\Client\Web\SiteController::class, 'store'])->name('store');
+            Route::post('/{site}/restart',  [\App\Http\Controllers\Client\Web\SiteController::class, 'restart'])->name('restart');
+            Route::delete('/{site}',        [\App\Http\Controllers\Client\Web\SiteController::class, 'destroy'])->name('destroy');
         });
 
         // Bases de Datos
@@ -167,6 +168,8 @@ Route::group(['middleware' => ['web']], function () {
         // Dominios
         Route::prefix('domains')->name('client.domains.')->group(function () {
             Route::get('/',             [\App\Http\Controllers\Client\DomainController::class, 'index'])->name('index');
+            Route::get('/search',       [\App\Http\Controllers\Client\DomainController::class, 'search'])->name('search');
+            Route::get('/transfers',    [\App\Http\Controllers\Client\DomainController::class, 'transfers'])->name('transfers');
             Route::get('/create',       [\App\Http\Controllers\Client\DomainController::class, 'create'])->name('create');
             Route::post('/',            [\App\Http\Controllers\Client\DomainController::class, 'store'])->name('store');
             Route::delete('/{domain}',  [\App\Http\Controllers\Client\DomainController::class, 'destroy'])->name('destroy');
@@ -180,6 +183,19 @@ Route::group(['middleware' => ['web']], function () {
             Route::post('/',            [\App\Http\Controllers\Client\EmailAccountController::class, 'store'])->name('store');
             Route::post('/{emailAccount}/reset-password', [\App\Http\Controllers\Client\EmailAccountController::class, 'resetPassword'])->name('reset-password');
             Route::delete('/{emailAccount}', [\App\Http\Controllers\Client\EmailAccountController::class, 'destroy'])->name('destroy');
+
+            // XMail AJAX API
+            Route::prefix('api')->name('api.')->group(function () {
+                Route::get('/folders',        [\App\Http\Controllers\Client\MailController::class, 'apiFolders'])->name('folders');
+                Route::get('/messages',       [\App\Http\Controllers\Client\MailController::class, 'apiMessages'])->name('messages');
+                Route::get('/message',        [\App\Http\Controllers\Client\MailController::class, 'apiMessage'])->name('message');
+                Route::post('/flag',          [\App\Http\Controllers\Client\MailController::class, 'apiFlag'])->name('flag');
+                Route::post('/move',          [\App\Http\Controllers\Client\MailController::class, 'apiMove'])->name('move');
+                Route::post('/delete',        [\App\Http\Controllers\Client\MailController::class, 'apiDelete'])->name('delete');
+                Route::post('/send',          [\App\Http\Controllers\Client\MailController::class, 'apiSend'])->name('send');
+                Route::post('/folder/create', [\App\Http\Controllers\Client\MailController::class, 'apiFolderCreate'])->name('folder.create');
+                Route::post('/folder/delete', [\App\Http\Controllers\Client\MailController::class, 'apiFolderDelete'])->name('folder.delete');
+            });
         });
 
         Route::view('/builder', 'client.builder.index')->name('client.builder.index');
@@ -190,6 +206,7 @@ Route::group(['middleware' => ['web']], function () {
             Route::get('/',             [\App\Http\Controllers\Client\DnsRecordController::class, 'index'])->name('index');
             Route::post('/',            [\App\Http\Controllers\Client\DnsRecordController::class, 'store'])->name('store');
             Route::delete('/{record}',  [\App\Http\Controllers\Client\DnsRecordController::class, 'destroy'])->name('destroy');
+            Route::post('/cf-token',    [\App\Http\Controllers\Client\DnsRecordController::class, 'saveCfToken'])->name('cf-token');
         });
 
         Route::get('/account', [\App\Http\Controllers\Client\AccountController::class, 'show'])->name('client.account.show');
@@ -226,6 +243,28 @@ Route::group(['middleware' => ['web']], function () {
         Route::prefix('websites')->name('client.websites.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Client\Web\SiteController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Client\Web\SiteController::class, 'create'])->name('create');
+            // DNS zone editor — must be before the generic module route
+            Route::get('/{domain}/advanced/dns-zone-editor', [\App\Http\Controllers\Client\DnsRecordController::class, 'zoneEditor'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('dns-zone-editor');
+            Route::post('/{domain}/advanced/dns-zone-editor', [\App\Http\Controllers\Client\DnsRecordController::class, 'zoneEditorStore'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('dns-zone-editor.store');
+            Route::delete('/{domain}/advanced/dns-zone-editor/{record}', [\App\Http\Controllers\Client\DnsRecordController::class, 'zoneEditorDestroy'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('dns-zone-editor.destroy');
+            Route::post('/{domain}/advanced/dns-zone-editor/mode', [\App\Http\Controllers\Client\DnsRecordController::class, 'setMode'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('dns-zone-editor.mode');
+            Route::post('/{domain}/advanced/ssl/issue', [\App\Http\Controllers\Client\DnsRecordController::class, 'sslIssue'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('ssl.issue');
+            Route::post('/{domain}/advanced/php-configuration/version', [\App\Http\Controllers\Client\Web\SiteController::class, 'updatePhpVersion'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('php-version');
+            Route::post('/{domain}/advanced/php-configuration/options', [\App\Http\Controllers\Client\Web\SiteController::class, 'updatePhpOptions'])
+                ->where('domain', '[A-Za-z0-9.-]+')
+                ->name('php-options');
             Route::get('/{domain}', [\App\Http\Controllers\Client\Web\SiteController::class, 'panelByDomain'])
                 ->where('domain', '[A-Za-z0-9.-]+')
                 ->name('show');

@@ -13,15 +13,11 @@ func SelectImage(projectType, webServer, phpVersion string) (string, []string) {
 	switch projectType {
 	case "php":
 		if webServer == "nginx" {
-			// Usamos una imagen que tenga FPM. En un escenario real,
-			// necesitaríamos un contenedor sidecar de Nginx o una imagen combinada.
-			// Para simplificar este MVP, usaremos una imagen all-in-one popular o standard.
-			// Ej: serversideup/php:8.2-fpm-nginx es excelente para esto.
 			imageName = fmt.Sprintf("serversideup/php:%s-fpm-nginx", phpVersion)
 		} else {
-			// Apache standard official image
-			imageName = fmt.Sprintf("php:%s-apache", phpVersion)
-			cmd = []string{"sh", "-lc", "printf 'DirectoryIndex default.php index.php index.html\\n' > /etc/apache2/conf-available/xpanel-directory-index.conf && a2enconf xpanel-directory-index >/dev/null && apache2-foreground"}
+			// Custom XPanel image: php:*-apache + pdo_mysql + mysqli pre-installed.
+			// Built by install.sh / update.sh via docker/php/Dockerfile.
+			imageName = fmt.Sprintf("xpanel-php:%s-apache", phpVersion)
 		}
 	case "node":
 		imageName = "node:18-alpine"

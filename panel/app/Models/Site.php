@@ -16,7 +16,12 @@ class Site extends Model
         'project_type',
         'web_server',
         'php_version',
+        'php_options',
         'status',
+    ];
+
+    protected $casts = [
+        'php_options' => 'array',
     ];
 
     public function tenant()

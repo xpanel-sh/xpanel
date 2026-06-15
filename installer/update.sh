@@ -255,4 +255,15 @@ docker compose up -d --build
 systemctl daemon-reload || true
 systemctl restart xpanel-daemon || true
 
+# Rebuild PHP site images so pdo_mysql and other extensions stay up to date
+PHP_DOCKERFILE="$BASE/docker/php/Dockerfile"
+if [ -f "$PHP_DOCKERFILE" ]; then
+  for PHP_VERSION in 8.1 8.2 8.3 8.4; do
+    docker build --build-arg PHP_VERSION="$PHP_VERSION" \
+      -t "xpanel-php:$PHP_VERSION-apache" \
+      -f "$PHP_DOCKERFILE" "$(dirname "$PHP_DOCKERFILE")" \
+      >/dev/null 2>&1 && echo "  ✓ xpanel-php:$PHP_VERSION-apache" || echo "  ⚠ xpanel-php:$PHP_VERSION-apache falló"
+  done
+fi
+
 msg_done

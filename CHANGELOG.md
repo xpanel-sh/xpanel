@@ -12,6 +12,53 @@ Future releases will include:
 
 ---
 
+## [2.8.0] - DNS Architecture, SSL Automation and Components CLI
+**Release date:** 2026-06-15
+
+### Added
+- Added full multi-mode DNS architecture for client domains: **XPanel NS** (CoreDNS zone files), **A record** (external DNS, instructions only) and **Cloudflare API** (records managed via Cloudflare REST API).
+- Added real-time NS lookup in the DNS zone editor: the page detects which nameservers the domain currently points to and shows a match/mismatch indicator against XPanel's configured NS.
+- Added Cloudflare API client in the Go daemon (`daemon/internal/dns/cloudflare.go`): zone ID lookup, record upsert and delete via the Cloudflare v4 REST API.
+- Added per-account Cloudflare API token stored on the tenant record (`tenants.cloudflare_api_token`); configurable from the DNS zone editor in Cloudflare mode.
+- Added `dns_mode` column to the `domains` table (`xpanel_ns` / `a_record` / `cloudflare`), selectable per domain from the zone editor.
+- Added DNS NS resolver in the Go daemon (`daemon/internal/dns/resolver.go`) using the Go standard library `net` package (`LookupNS`, `LookupA`).
+- Added new daemon API endpoints: `/api/dns/ns-lookup`, `/api/dns/cloudflare/upsert`, `/api/dns/cloudflare/delete`, `/api/dns/cloudflare/zone-id`.
+- Added SSL certificate automation via `acme.sh` in the Go daemon (`daemon/internal/api/ssl.go`): supports `cloudflare` mode (wildcard DNS-01 via Cloudflare API) and `http` mode (HTTP-01 webroot).
+- Added new daemon API endpoints: `/api/ssl/issue`, `/api/ssl/status`. Certificates are stored under `runtime/ssl/{domain}/`.
+- Added SSL issue card to the DNS zone editor for each mode; Cloudflare mode shows "Wildcard available" badge.
+- Added `xpanel components` CLI command (`installer/modules/components.sh`) with subcommands:
+  - `xpanel components` / `xpanel componentes` — lists all optional components with live status
+  - `xpanel components install dns` — starts the CoreDNS container (port 53 UDP/TCP)
+  - `xpanel components install mail` — starts the docker-mailserver container (ports 25, 587, 143, 993)
+  - `xpanel components install ssl` — installs acme.sh and sets ZeroSSL/Let's Encrypt as default CA
+  - `xpanel components update` — pulls and restarts all installed components
+- Added `XPANEL_SERVER_IP` environment variable (set automatically by the installer to the detected public IP); exposed via `config('xpanel.server_ip')` and shown in A-record mode instructions.
+- Added Alpine.js 3.14.3 to `layouts/client.blade.php` (was missing, breaking all `x-data` / `x-for` directives in client views including the DNS zone editor and domain picker dropdown).
+- Added CoreDNS upstream forwarding (`forward . 1.1.1.1 8.8.8.8`) so the DNS container resolves domains not managed by XPanel.
+- Added DaemonClient PHP methods: `nsLookup()`, `cloudflareDNSUpsert()`, `cloudflareDNSDelete()`, `cloudflareZoneID()`, `sslIssue()`, `sslStatus()`.
+
+### Changed
+- Changed `DnsRecordController::zoneEditor()` to perform a live NS lookup via the daemon on every page load and pass `$liveNs`, `$dnsMode`, `$cfToken` and `$serverIp` to the view.
+- Changed DNS zone editor form inputs from conditional single/array names (`type` vs `type[]`) to always-array (`type[]`, `name[]`, `value[]`, `ttl[]`), fixing a bug where only one record was saved when the user submitted multiple rows via "Añade más registros".
+- Changed `DnsRecordController::zoneEditorStore()` to iterate over array inputs so multiple DNS records can be created in a single form submission; each record is saved and synced to the daemon individually with partial-failure reporting.
+- Changed DNS zone editor into a three-mode layout with a card-based mode selector, mode-specific content sections and per-mode SSL options.
+- Changed Cloudflare form to include a "Proxied" checkbox column (Cloudflare-specific proxy toggle).
+- Changed `migrate.sh` to run all three migration paths (`database/migrations`, `database/migrations/admin`, `database/migrations/client`) and clear the Laravel cache — matching the installer flow. This means `xpanel update` now applies all schema changes automatically.
+- Changed `installer/cli.sh` to add `components|componentes` to the command switch.
+- Changed `installer/install.sh` to write `XPANEL_SERVER_IP` into `panel/.env` during installation.
+- Changed `config/xpanel.php` to expose `server_ip` from the `XPANEL_SERVER_IP` env var.
+
+### Fixed
+- Fixed Alpine.js not loading in the client layout, which caused the DNS zone editor form rows and the domain picker dropdown to not render (template `x-for` and `x-data` directives had no Alpine runtime to execute them).
+- Fixed `zone-editor.blade.php` being in the wrong directory (`client/domains/`) — moved to `client/web/advanced/dns-zone-editor.blade.php` to match the advanced section URL structure and sidebar link.
+- Fixed sidebar "Avanzado" section not having an "Editor DNS" link — added `Editor DNS` child item pointing to `route('client.websites.dns-zone-editor', $secondaryDomain)` with correct active state detection.
+
+### Migrations
+- `2026_06_15_000001_add_dns_mode_to_domains_table` — adds `dns_mode` enum and `current_ns` JSON to `domains`
+- `2026_06_15_000002_add_cloudflare_token_to_tenants_table` — adds `cloudflare_api_token` to `tenants`
+
+---
+
 ## [2.7.0] - Client Website Console, Real Databases and Default Site Page
 **Release date:** 2026-06-15
 
