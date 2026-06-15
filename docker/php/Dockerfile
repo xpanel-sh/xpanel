@@ -22,7 +22,9 @@ RUN apt-get update && apt-get install -y \
         bcmath \
     && printf 'DirectoryIndex default.php index.php index.html\n' \
        > /etc/apache2/conf-available/xpanel-directory-index.conf \
-    && a2enconf xpanel-directory-index
+    && a2enconf xpanel-directory-index \
+    && printf 'pdo_mysql.default_socket=/var/run/mysqld/mysqld.sock\nmysqli.default_socket=/var/run/mysqld/mysqld.sock\n' \
+       > /usr/local/etc/php/conf.d/10-mysql-socket.ini
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
