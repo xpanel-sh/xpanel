@@ -139,6 +139,14 @@
                                         <i class="ki-filled ki-sms"></i>
                                         Administrar email
                                     </a>
+                                    <form method="POST" action="{{ route('client.sites.restart', $site) }}">
+                                        @csrf
+                                        <button type="submit" class="kt-btn kt-btn-outline"
+                                                onclick="return confirm('¿Reiniciar el sitio {{ $site->domain }}?')">
+                                            <i class="ki-filled ki-arrows-circle"></i>
+                                            Reiniciar sitio
+                                        </button>
+                                    </form>
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2">

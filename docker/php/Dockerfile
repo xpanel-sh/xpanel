@@ -5,11 +5,11 @@ RUN apt-get update && apt-get install -y \
         socat \
         libpng-dev \
         libjpeg-dev \
-        libwebp-dev \
         libzip-dev \
         libicu-dev \
+        libonig-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install \
         pdo \
         pdo_mysql \

@@ -8,8 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('tenants', 'cloudflare_api_token')) {
+            return;
+        }
         Schema::table('tenants', function (Blueprint $table) {
-            $table->string('cloudflare_api_token', 512)->nullable()->after('email');
+            $table->string('cloudflare_api_token', 512)->nullable();
         });
     }
 
