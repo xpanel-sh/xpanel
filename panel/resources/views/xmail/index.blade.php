@@ -1,22 +1,6 @@
-<!DOCTYPE html>
-<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="en">
-
-<head>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Correos - XPanel</title>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
-    <meta name="robots" content="noindex, nofollow, noarchive" />
-    <link href="{{ asset('assets/media/app/apple-touch-icon.png') }}" rel="apple-touch-icon" sizes="180x180" />
-    <link href="{{ asset('assets/media/app/favicon-32x32.png') }}" rel="icon" sizes="32x32" type="image/png" />
-    <link href="{{ asset('assets/media/app/favicon-16x16.png') }}" rel="icon" sizes="16x16" type="image/png" />
-    <link href="{{ asset('assets/media/app/favicon.ico') }}" rel="shortcut icon" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
-    <link href="{{ asset('assets/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet" />
-    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" />
-    <link href="{{ asset('assets/css/xpanel.css') }}" rel="stylesheet" />
-<style>
-        .xmail-app {
+@push('styles')
+    <style>
+.xmail-app {
             display: grid;
             grid-template-columns: 180px minmax(270px, 350px) minmax(0, 1fr) 30px;
             gap: 6px;
@@ -653,29 +637,7 @@
             }
         }
     </style>
-</head>
-
-<body class="antialiased h-full text-base text-foreground bg-muted overflow-hidden">
-    <script>
-        const defaultThemeMode = 'light';
-        let themeMode;
-
-        if (document.documentElement) {
-            if (localStorage.getItem('kt-theme')) {
-                themeMode = localStorage.getItem('kt-theme');
-            } else if (document.documentElement.hasAttribute('data-kt-theme-mode')) {
-                themeMode = document.documentElement.getAttribute('data-kt-theme-mode');
-            } else {
-                themeMode = defaultThemeMode;
-            }
-
-            if (themeMode === 'system') {
-                themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
-
-            document.documentElement.classList.add(themeMode);
-        }
-    </script>
+@endpush
 
 @php
     use Illuminate\Support\Facades\Auth;
@@ -794,7 +756,7 @@
                     <i class="ki-filled ki-support text-lg"></i>
                     <span class="xmail-sidebar-text grow font-medium">Support</span>
                 </button>
-                <a class="xmail-folder flex w-full items-center gap-3 px-4" href="{{ route('client.emails.index') }}" title="Settings">
+                <a class="xmail-folder flex w-full items-center gap-3 px-4" href="{{ route('client.mail.index') }}" title="Settings">
                     <i class="ki-filled ki-setting-2 text-lg"></i>
                     <span class="xmail-sidebar-text grow font-medium">Settings</span>
                 </a>
@@ -1042,8 +1004,7 @@
         </aside>
     </div>
 
-    <script src="{{ asset('assets/js/core.bundle.js') }}"></script>
-    <script src="{{ asset('assets/vendors/ktui/ktui.min.js') }}"></script>
+@push('scripts')
 <script>
         (() => {
             const mailApp = document.getElementById('xmail_app');
@@ -1198,7 +1159,4 @@
             });
         })();
     </script>
-</body>
-
-</html>
-
+@endpush

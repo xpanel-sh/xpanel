@@ -23,7 +23,7 @@ class EmailAccountController extends Controller
             ->latest()
             ->paginate(15);
 
-        return view('client.emails.index', compact('accounts', 'tenant'));
+        return view('client.mail.index', compact('accounts', 'tenant'));
     }
 
     public function create(Request $request)
@@ -35,7 +35,7 @@ class EmailAccountController extends Controller
             ->orderBy('domain')
             ->get(['id', 'domain']);
 
-        return view('client.emails.create', compact('domains', 'tenant'));
+        return view('client.mail.create', compact('domains', 'tenant'));
     }
 
     public function store(Request $request, DaemonClient $daemon)
@@ -85,11 +85,11 @@ class EmailAccountController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Mail account provisioning failed', ['email_account_id' => $account->id, 'exception' => $e]);
             $account->update(['status' => 'provision_error']);
-            return redirect()->route('client.emails.index')
+            return redirect()->route('client.mail.index')
                 ->withErrors(['email' => 'Correo registrado, pero el agente no pudo provisionarlo. Revisa operaciones del agente o contacta soporte.']);
         }
 
-        return redirect()->route('client.emails.index')
+        return redirect()->route('client.mail.index')
             ->with('success', 'Correo creado correctamente. XPanel no muestra ni recupera la contraseña guardada.');
     }
 
@@ -108,7 +108,7 @@ class EmailAccountController extends Controller
             $daemon->resetEmailPassword($emailAccount->email, $validated['password']);
         } catch (\Throwable $e) {
             Log::warning('Mail password reset failed', ['email_account_id' => $emailAccount->id, 'exception' => $e]);
-            return redirect()->route('client.emails.index')
+            return redirect()->route('client.mail.index')
                 ->withErrors(['email' => 'El agente no pudo aplicar la nueva clave. Revisa operaciones del agente o contacta soporte.']);
         }
 
@@ -117,7 +117,7 @@ class EmailAccountController extends Controller
             'last_password_change_at' => now(),
         ]);
 
-        return redirect()->route('client.emails.index')
+        return redirect()->route('client.mail.index')
             ->with('success', "Contraseña actualizada para {$emailAccount->email}. XPanel no la mostrará nuevamente.");
     }
 
@@ -133,12 +133,12 @@ class EmailAccountController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Mail account deletion failed', ['email_account_id' => $emailAccount->id, 'exception' => $e]);
             $emailAccount->update(['status' => 'delete_error']);
-            return redirect()->route('client.emails.index')
+            return redirect()->route('client.mail.index')
                 ->withErrors(['email' => 'El agente no pudo eliminar el correo. Revisa operaciones del agente o contacta soporte.']);
         }
 
         $emailAccount->delete();
 
-        return redirect()->route('client.emails.index')->with('success', 'Correo eliminado correctamente.');
+        return redirect()->route('client.mail.index')->with('success', 'Correo eliminado correctamente.');
     }
 }

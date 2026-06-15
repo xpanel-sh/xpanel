@@ -88,10 +88,10 @@
                             'icon' => 'ki-folder',
                             'children' => [
                                 [
-                                    'label' => 'Administrador de archivos',
+                                    'label' => 'Gestor de archivos',
                                     'path' => 'files/file-manager',
-                                    'url' => $secondaryDomain ? route('client.files.index', ['domain' => $secondaryDomain]) : null,
-                                    'active' => request()->routeIs('client.files.*'),
+                                    'url' => $secondaryDomain ? route('client.website.file-manager.entry', ['domain' => $secondaryDomain]) : null,
+                                    'active' => request()->routeIs('client.files.*', 'client.website.file-manager.*'),
                                 ],
                                 ['label' => 'Backups', 'path' => 'files/backups'],
                                 ['label' => 'Cuentas FTP', 'path' => 'files/ftp-accounts'],
@@ -194,7 +194,7 @@
                                     </span>
                                 </a>
                             </div>
-                            <div class="kt-menu-item {{ request()->routeIs('client.mail.*', 'client.emails.*') ? 'active' : '' }}">
+                            <div class="kt-menu-item {{ request()->routeIs('client.mail.*') ? 'active' : '' }}">
                                 <a class="kt-menu-link rounded-[9px] border border-transparent kt-menu-item-active:border-border kt-menu-item-active:bg-background kt-menu-link-hover:bg-background kt-menu-link-hover:border-border w-[62px] h-[60px] flex flex-col justify-center items-center gap-1 p-2"
                                     href="{{ route('client.mail.index') }}">
                                     <span
@@ -208,9 +208,9 @@
                                     </span>
                                 </a>
                             </div>
-                            <div class="kt-menu-item opacity-50">
-                                <button class="kt-menu-link rounded-[9px] border border-transparent w-[62px] h-[60px] flex flex-col justify-center items-center gap-1 p-2 cursor-not-allowed"
-                                    type="button" aria-disabled="true">
+                            <div class="kt-menu-item {{ request()->routeIs('client.builder.*') ? 'active' : '' }}">
+                                <a class="kt-menu-link rounded-[9px] border border-transparent kt-menu-item-active:border-border kt-menu-item-active:bg-background kt-menu-link-hover:bg-background kt-menu-link-hover:border-border w-[62px] h-[60px] flex flex-col justify-center items-center gap-1 p-2"
+                                    href="{{ route('client.builder.index') }}">
                                     <span
                                         class="kt-menu-icon kt-menu-item-here:text-primary kt-menu-item-active:text-primary kt-menu-link-hover:text-primary text-secondary-foreground">
                                         <i class="ki-filled ki-color-swatch text-xl">
@@ -220,11 +220,11 @@
                                         class="kt-menu-title text-xs kt-menu-item-here:text-primary kt-menu-item-active:text-primary kt-menu-link-hover:text-primary text-secondary-foreground font-medium">
                                         Builder
                                     </span>
-                                </button>
+                                </a>
                             </div>
-                            <div class="kt-menu-item opacity-50">
-                                <button class="kt-menu-link rounded-[9px] border border-transparent w-[62px] h-[60px] flex flex-col justify-center items-center gap-1 p-2 cursor-not-allowed"
-                                    type="button" aria-disabled="true">
+                            <div class="kt-menu-item {{ request()->routeIs('client.vps.*') ? 'active' : '' }}">
+                                <a class="kt-menu-link rounded-[9px] border border-transparent kt-menu-item-active:border-border kt-menu-item-active:bg-background kt-menu-link-hover:bg-background kt-menu-link-hover:border-border w-[62px] h-[60px] flex flex-col justify-center items-center gap-1 p-2"
+                                    href="{{ route('client.vps.index') }}">
                                     <span
                                         class="kt-menu-icon kt-menu-item-here:text-primary kt-menu-item-active:text-primary kt-menu-link-hover:text-primary text-secondary-foreground">
                                         <i class="ki-filled ki-external-drive text-xl">
@@ -234,7 +234,7 @@
                                         class="kt-menu-title text-xs kt-menu-item-here:text-primary kt-menu-item-active:text-primary kt-menu-link-hover:text-primary text-secondary-foreground font-medium">
                                         VPS
                                     </span>
-                                </button>
+                                </a>
                             </div>
 
                         </div>

@@ -36,4 +36,8 @@ return [
         'token' => env('XPANEL_DAEMON_TOKEN'),
     ],
 
+    'phpmyadmin' => [
+        'url' => env('PHPMYADMIN_URL', '/phpmyadmin'),
+    ],
+
 ];

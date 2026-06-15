@@ -107,6 +107,29 @@ services:
       timeout: 5s
       retries: 15
 
+  # Database UI for tenant-created databases.
+  phpmyadmin:
+    image: phpmyadmin:5-apache
+    container_name: xpanel-phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ABSOLUTE_URI: ${PHPMYADMIN_ABSOLUTE_URI:-}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`${XPANEL_DOMAIN:?XPANEL_DOMAIN is required}`) && PathPrefix(`/phpmyadmin`)"
+      - "traefik.http.routers.phpmyadmin.entrypoints=websecure"
+      - "traefik.http.routers.phpmyadmin.tls.certresolver=myresolver"
+      - "traefik.http.routers.phpmyadmin.middlewares=phpmyadmin-strip,secHeaders@file"
+      - "traefik.http.middlewares.phpmyadmin-strip.stripprefix.prefixes=/phpmyadmin"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
+    networks:
+      - xpanel-net
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
   # Cache & Queues
   redis:
     image: redis:alpine

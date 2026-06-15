@@ -11,15 +11,15 @@
             <div>
                 <h1 class="font-medium text-lg text-mono">Crear correo</h1>
                 <div class="flex items-center gap-1 text-sm">
-                    <a class="text-secondary-foreground hover:text-primary" href="{{ route('client.emails.index') }}">Correos</a>
+                    <a class="text-secondary-foreground hover:text-primary" href="{{ route('client.mail.index') }}">Correos</a>
                     <span class="text-muted-foreground">/</span>
                     <span class="text-mono">Nuevo</span>
                 </div>
             </div>
-            <a href="{{ route('client.emails.index') }}" class="kt-btn kt-btn-outline kt-btn-sm">Volver</a>
+            <a href="{{ route('client.mail.index') }}" class="kt-btn kt-btn-outline kt-btn-sm">Volver</a>
         </div>
 
-        <form action="{{ route('client.emails.store') }}" method="POST" class="kt-card">
+        <form action="{{ route('client.mail.store') }}" method="POST" class="kt-card">
             @csrf
             <div class="kt-card-header">
                 <h3 class="kt-card-title">Cuenta de correo</h3>
@@ -53,7 +53,7 @@
                     La cuenta queda registrada en XPanel y el agente actualiza los artefactos reales del servicio de correo.
                 </div>
                 <div class="flex justify-end gap-2.5">
-                    <a href="{{ route('client.emails.index') }}" class="kt-btn kt-btn-outline">Cancelar</a>
+                    <a href="{{ route('client.mail.index') }}" class="kt-btn kt-btn-outline">Cancelar</a>
                     <button class="kt-btn kt-btn-primary">Crear correo</button>
                 </div>
             </div>

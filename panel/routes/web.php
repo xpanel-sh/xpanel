@@ -160,6 +160,7 @@ Route::group(['middleware' => ['web']], function () {
             Route::get('/',             [\App\Http\Controllers\Client\DatabaseController::class, 'index'])->name('index');
             Route::get('/create',       [\App\Http\Controllers\Client\DatabaseController::class, 'create'])->name('create');
             Route::post('/',            [\App\Http\Controllers\Client\DatabaseController::class, 'store'])->name('store');
+            Route::get('/{database}/phpmyadmin', [\App\Http\Controllers\Client\DatabaseController::class, 'phpMyAdmin'])->name('phpmyadmin');
             Route::delete('/{database}',[\App\Http\Controllers\Client\DatabaseController::class, 'destroy'])->name('destroy');
         });
 
@@ -172,15 +173,17 @@ Route::group(['middleware' => ['web']], function () {
         });
 
         // Correos
-        Route::get('/mail', [\App\Http\Controllers\Client\MailController::class, 'index'])->name('client.mail.index');
-
-        Route::prefix('emails')->name('client.emails.')->group(function () {
+        Route::prefix('mail')->name('client.mail.')->group(function () {
             Route::get('/',             [\App\Http\Controllers\Client\EmailAccountController::class, 'index'])->name('index');
+            Route::get('/xmail',        [\App\Http\Controllers\Client\MailController::class, 'index'])->name('xmail');
             Route::get('/create',       [\App\Http\Controllers\Client\EmailAccountController::class, 'create'])->name('create');
             Route::post('/',            [\App\Http\Controllers\Client\EmailAccountController::class, 'store'])->name('store');
             Route::post('/{emailAccount}/reset-password', [\App\Http\Controllers\Client\EmailAccountController::class, 'resetPassword'])->name('reset-password');
             Route::delete('/{emailAccount}', [\App\Http\Controllers\Client\EmailAccountController::class, 'destroy'])->name('destroy');
         });
+
+        Route::view('/builder', 'client.builder.index')->name('client.builder.index');
+        Route::view('/vps', 'client.vps.index')->name('client.vps.index');
 
         // DNS
         Route::prefix('dns')->name('client.dns.')->group(function () {
@@ -190,6 +193,16 @@ Route::group(['middleware' => ['web']], function () {
         });
 
         Route::get('/account', [\App\Http\Controllers\Client\AccountController::class, 'show'])->name('client.account.show');
+
+        // Gestor de Archivos por sitio
+        Route::get('/website/file-manager', [\App\Http\Controllers\Client\FileManagerController::class, 'index'])
+            ->name('client.website.file-manager.root');
+        Route::get('/website/{domain}/file-manager', [\App\Http\Controllers\Client\Web\SiteController::class, 'fileManager'])
+            ->where('domain', '[A-Za-z0-9.-]+')
+            ->name('client.website.file-manager.entry');
+        Route::get('/website/{domain}/file-manager/ikode', [\App\Http\Controllers\Client\FileManagerController::class, 'index'])
+            ->where('domain', '[A-Za-z0-9.-]+')
+            ->name('client.website.file-manager.ikode');
 
         // Gestor de Archivos (Cliente)
         Route::prefix('files')->name('client.files.')->group(function () {

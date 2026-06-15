@@ -1,127 +1,193 @@
 @extends('layouts.client')
 
+@php
+    $plan = $tenant?->plan;
+    $planName = $plan?->name ?? 'Cloud Startup';
+    $planExpiresAt = now()->addDays(7);
+    $planExpirationWarningDays = 20;
+    $isExpiringSoon = now()->diffInDays($planExpiresAt, false) <= $planExpirationWarningDays;
+    $deletingStatuses = ['deleting', 'delete_pending', 'delete_error'];
+@endphp
+
 @section('content')
-    <div class="flex grow rounded-b-xl bg-background border-x border-b border-input lg:mt-(--navbar-height) mx-5 lg:ms-(--sidebar-width) mb-5">
-        <div class="flex flex-col grow kt-scrollable-y lg:[scrollbar-width:auto] pt-7 lg:[&amp;_.kt-container-fluid]:pe-4" id="scrollable_content">
+    <div class="flex grow rounded-xl bg-background border border-input lg:ms-(--sidebar-width) mt-0 lg:mt-(--header-height) m-5">
+        <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
             <main class="grow" role="content">
                 <div class="kt-container-fluid">
                     <div class="grid gap-5 lg:gap-7.5">
-<div class="space-y-8">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <p class="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Panel Cliente</p>
-                <h1 class="mt-2 text-3xl font-black tracking-tight">Mis Sitios Web</h1>
-                <p class="text-gray-400 dark:text-gray-400">Administra tus dominios y aplicaciones web.</p>
-            </div>
-            <a href="{{ route('client.websites.create') }}"
-                class="flex items-center gap-2 rounded-xl bg-gray-900 dark:bg-white px-6 py-3 font-bold text-white dark:text-black transition hover:bg-gray-700 dark:hover:bg-gray-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Nuevo Sitio
-            </a>
-        </div>
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <h1 class="text-2xl font-semibold text-mono">Sitios web</h1>
+                                <p class="mt-1 text-sm text-secondary-foreground">Administra tus sitios, dominios y accesos principales.</p>
+                            </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($sites as $site)
-                @php
-                    $status = $site->status ?? 'active';
-                    $statusClass = str_contains($status, 'error')
-                        ? 'border-red-500/30 bg-red-500/10 text-red-200'
-                        : ($status === 'provisioning'
-                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-200'
-                            : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200');
-                @endphp
-                <div class="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-white/20 hover:bg-white/[0.06]">
-                    <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-white/5 blur-2xl transition group-hover:bg-white/10"></div>
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-black text-xl font-black uppercase text-white">
-                            {{ substr($site->domain, 0, 1) }}
+                            <a href="{{ route('client.websites.create') }}" class="kt-btn kt-btn-primary">
+                                <i class="ki-filled ki-plus"></i>
+                                Anadir sitio web
+                            </a>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-lg text-white">{{ $site->domain }}</h3>
-                            <span class="mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase {{ $statusClass }}">{{ $status }}</span>
+
+                        <div class="kt-card">
+                            <div class="kt-card-content p-5">
+                                <form method="GET" action="{{ route('client.websites.index') }}" class="flex flex-col gap-4 md:flex-row md:items-center">
+                                    <label class="kt-input flex-1">
+                                        <i class="ki-filled ki-magnifier"></i>
+                                        <input name="search" value="{{ $search }}" type="text" placeholder="Busca por dominio, email o nombre">
+                                    </label>
+
+                                    <div class="flex items-center gap-2">
+                                        <button class="kt-btn kt-btn-icon kt-btn-outline" type="submit" title="Buscar">
+                                            <i class="ki-filled ki-magnifier"></i>
+                                        </button>
+                                        <a class="kt-btn kt-btn-icon kt-btn-outline" href="{{ route('client.websites.index') }}" title="Limpiar">
+                                            <i class="ki-filled ki-arrows-circle"></i>
+                                        </a>
+                                        <button class="kt-btn kt-btn-icon kt-btn-outline" type="button" title="Etiquetas">
+                                            <i class="ki-filled ki-tag"></i>
+                                        </button>
+                                        <button class="kt-btn kt-btn-icon kt-btn-outline" type="button" title="Favoritos">
+                                            <i class="ki-filled ki-star"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="space-y-2 text-sm mb-4">
-                        <div class="flex justify-between py-1.5 border-b border-white/5">
-                            <span class="text-gray-500">Tipo</span>
-                            <span class="text-gray-300 uppercase font-medium">{{ $site->project_type }}</span>
+                        @if($isExpiringSoon)
+                                <div class="mx-5 flex flex-col gap-3 rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-warning/15 text-warning">
+                                            <i class="ki-filled ki-information-2"></i>
+                                        </span>
+                                        <span class="text-sm font-medium text-mono">
+                                            El plan de hosting caducara el {{ $planExpiresAt->format('Y-m-d') }}
+                                        </span>
+                                    </div>
+                                    <a href="#" class="kt-btn kt-btn-warning kt-btn-sm">Renovar</a>
+                                </div>
+                            @endif
+
+                        <div class="kt-card overflow-visible">
+                            <div class="kt-card-header min-h-16">
+                                <div>
+                                    <h2 class="kt-card-title">{{ $planName }}</h2>
+                                    <p class="text-xs text-secondary-foreground">Plan activo para tus sitios web</p>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('client.websites.create') }}" class="kt-btn kt-btn-outline">
+                                        <i class="ki-filled ki-exit-down"></i>
+                                        Migrar sitio web
+                                    </a>
+                                    <a href="{{ route('client.websites.create') }}" class="kt-btn kt-btn-primary">
+                                        <i class="ki-filled ki-plus"></i>
+                                        Anadir sitio web
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-border">
+                                @forelse($sites as $site)
+                                    @php
+                                        $status = $site->status ?? 'active';
+                                        $isDeleting = in_array($status, $deletingStatuses, true) || str_contains($status, 'delete');
+                                        $isProvisioning = $status === 'provisioning' || $status === 'creating';
+                                    @endphp
+
+                                    <div class="flex flex-col gap-4 border-b border-border px-5 py-5 last:border-b-0 lg:flex-row lg:items-center lg:justify-between">
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-3">
+                                                <span class="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
+                                                    <i class="ki-filled ki-code text-lg text-mono"></i>
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <div class="flex min-w-0 items-center gap-2">
+                                                        <a class="truncate text-sm font-semibold text-mono hover:text-primary" href="{{ route('client.websites.show', ['domain' => $site->domain]) }}">
+                                                            {{ $site->domain }}
+                                                        </a>
+                                                        <a class="shrink-0 text-secondary-foreground hover:text-primary" href="http://{{ $site->domain }}" target="_blank" rel="noopener" title="Abrir sitio">
+                                                            <i class="ki-filled ki-exit-right-corner text-sm"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-secondary-foreground">
+                                                        <span>{{ strtoupper($site->project_type ?? 'web') }}</span>
+                                                        <span class="text-muted-foreground">/</span>
+                                                        <span>{{ $site->web_server ?? 'apache' }}</span>
+                                                        @if($site->php_version)
+                                                            <span class="text-muted-foreground">/</span>
+                                                            <span>PHP {{ $site->php_version }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @if($isDeleting)
+                                                <div class="ms-12 mt-3 inline-flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-xs font-medium text-secondary-foreground">
+                                                    <i class="ki-filled ki-time text-base"></i>
+                                                    Se esta eliminando el sitio web
+                                                </div>
+                                            @elseif($isProvisioning)
+                                                <div class="ms-12 mt-3 inline-flex items-center gap-2 rounded-xl bg-warning/10 px-3 py-2 text-xs font-medium text-warning">
+                                                    <i class="ki-filled ki-loading text-base"></i>
+                                                    Sitio en aprovisionamiento
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="{{ route('client.websites.show', ['domain' => $site->domain]) }}"
+                                                class="kt-btn kt-btn-outline kt-btn-sm {{ $isDeleting ? 'disabled pointer-events-none opacity-50' : '' }}">
+                                                Panel
+                                            </a>
+
+                                            <details class="relative">
+                                                <summary class="kt-btn kt-btn-icon kt-btn-ghost kt-btn-sm list-none cursor-pointer" title="Opciones">
+                                                    <i class="ki-filled ki-dots-vertical"></i>
+                                                </summary>
+                                                <div class="absolute end-0 z-20 mt-2 w-56 rounded-xl border border-border bg-background p-1.5 shadow-lg">
+                                                    <a class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-mono hover:bg-muted" href="{{ route('client.websites.show', ['domain' => $site->domain]) }}">
+                                                        <i class="ki-filled ki-information-2 text-secondary-foreground"></i>
+                                                        Detalles del sitio
+                                                    </a>
+                                                    <a class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-mono hover:bg-muted" href="{{ route('client.website.file-manager.entry', ['domain' => $site->domain]) }}">
+                                                        <i class="ki-filled ki-folder text-secondary-foreground"></i>
+                                                        Archivos
+                                                    </a>
+                                                    <button class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-mono hover:bg-muted" type="button">
+                                                        <i class="ki-filled ki-star text-secondary-foreground"></i>
+                                                        Anadir a favoritos
+                                                    </button>
+                                                    <button class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-mono hover:bg-muted" type="button">
+                                                        <i class="ki-filled ki-tag text-secondary-foreground"></i>
+                                                        Etiquetas
+                                                    </button>
+                                                    <form action="{{ route('client.sites.destroy', $site) }}" method="POST" onsubmit="return confirm('Se eliminara {{ $site->domain }} y todos sus datos. Esta accion no se puede deshacer.');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10" type="submit">
+                                                            <i class="ki-filled ki-trash"></i>
+                                                            Eliminar
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="px-5 py-16 text-center">
+                                        <div class="mx-auto flex size-12 items-center justify-center rounded-xl bg-muted">
+                                            <i class="ki-filled ki-screen text-xl text-secondary-foreground"></i>
+                                        </div>
+                                        <h3 class="mt-4 text-base font-semibold text-mono">No tienes sitios web registrados</h3>
+                                        <p class="mt-1 text-sm text-secondary-foreground">Crea tu primer sitio para empezar a gestionar archivos, dominios y recursos.</p>
+                                        <a href="{{ route('client.websites.create') }}" class="kt-btn kt-btn-primary mt-5">
+                                            <i class="ki-filled ki-plus"></i>
+                                            Crear primer sitio
+                                        </a>
+                                    </div>
+                                @endforelse
+                            </div>
                         </div>
-                        <div class="flex justify-between py-1.5 border-b border-white/5">
-                            <span class="text-gray-500">Servidor</span>
-                            <span class="text-gray-300">{{ $site->web_server ?? 'N/A' }}</span>
-                        </div>
-                        <div class="flex justify-between py-1.5">
-                            <span class="text-gray-500">PHP</span>
-                            <span class="text-gray-300">{{ $site->php_version ?? 'N/A' }}</span>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <a href="{{ route('client.websites.show', ['domain' => $site->domain]) }}"
-                            class="flex items-center gap-1.5 px-3 py-2 bg-white text-black rounded-lg transition text-sm font-bold">
-                            <i class="ki-filled ki-entrance-left"></i>
-                            Acceder al panel
-                        </a>
-
-                        {{-- Gestionar archivos --}}
-                        @if(isset($fileManagerEnabled) ? $fileManagerEnabled : true)
-                        <a href="{{ route('client.files.index', $site->domain) }}"
-                            class="flex items-center gap-1.5 px-3 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-lg transition text-sm font-medium">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                            </svg>
-                            Archivos
-                        </a>
-                        @endif
-
-                        {{-- Reiniciar --}}
-                        <form action="{{ route('client.sites.restart', $site) }}" method="POST" class="flex-1 min-w-[80px]">
-                            @csrf
-                            <button type="submit"
-                                class="w-full py-2 text-center bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-lg text-sm font-medium transition">
-                                Reiniciar
-                            </button>
-                        </form>
-
-                        {{-- Abrir en navegador --}}
-                        <a href="http://{{ $site->domain }}" target="_blank"
-                            class="px-3 py-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                            </svg>
-                        </a>
-
-                        {{-- Eliminar --}}
-                        <x-confirm-modal
-                            action="{{ route('client.sites.destroy', $site) }}"
-                            title="Eliminar sitio"
-                            message="Se eliminará '{{ $site->domain }}' y todos sus datos. Esta acción no se puede deshacer."
-                            btnText="Eliminar sitio"
-                            triggerClass="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-lg transition text-sm font-medium"
-                            triggerText="Eliminar"
-                        />
-                    </div>
-                </div>
-            @empty
-                <div class="col-span-full py-16 text-center rounded-2xl border border-dashed border-white/10 bg-white/[0.02]">
-                    <svg class="mx-auto w-12 h-12 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"></path>
-                    </svg>
-                    <p class="text-gray-500 mb-4">No tienes sitios web registrados.</p>
-                    <a href="{{ route('client.websites.create') }}"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition">
-                        Crear primer sitio
-                    </a>
-                </div>
-            @endforelse
-        </div>
-    </div>
                     </div>
                 </div>
             </main>

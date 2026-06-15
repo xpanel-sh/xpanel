@@ -9,7 +9,41 @@ class Tenant extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'domain', 'user_id', 'plan_id', 'status'];
+    protected $fillable = ['name', 'domain', 'code', 'user_id', 'plan_id', 'status'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Tenant $tenant): void {
+            if (blank($tenant->code)) {
+                $tenant->code = static::generateCode();
+            }
+        });
+    }
+
+    public static function generateCode(): string
+    {
+        do {
+            $code = 'X' . random_int(100000, 999999);
+        } while (static::where('code', $code)->exists());
+
+        return $code;
+    }
+
+    public function ensureCode(): string
+    {
+        if (filled($this->code)) {
+            return $this->code;
+        }
+
+        $this->forceFill(['code' => static::generateCode()])->save();
+
+        return $this->code;
+    }
+
+    public function databasePrefix(): string
+    {
+        return $this->ensureCode() . '_';
+    }
 
     public function sites()
     {

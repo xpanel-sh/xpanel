@@ -1,13 +1,15 @@
 @php
     $isAdminFiles = ($scope ?? 'admin') === 'admin';
     $filesTitle = $isAdminFiles ? 'Archivos [Admin]' : 'Archivos';
-    $filesBackRoute = $isAdminFiles ? route('admin.sites.index') : route('client.sites.index');
     $filesBaseUrl = $isAdminFiles ? url('/admin/files/api') : url('/client/files/api');
     $filesDomain = $domain ?? null;
+    $filesBackRoute = $isAdminFiles
+        ? route('admin.sites.index')
+        : ($filesDomain ? route('client.website.file-manager.entry', ['domain' => $filesDomain]) : route('client.websites.index'));
     $filesSites = ($sites ?? collect())->map(fn ($site) => [
         'domain' => $site->domain,
         'tenant' => $site->tenant->name ?? null,
-        'url' => $isAdminFiles ? route('admin.files.index', $site->domain) : route('client.files.index', $site->domain),
+        'url' => $isAdminFiles ? route('admin.files.index', $site->domain) : route('client.website.file-manager.ikode', ['domain' => $site->domain]),
     ])->values();
 @endphp
 
@@ -678,7 +680,7 @@
                         <div class="xpanel-search-popover hidden" id="xpanel_search_popover">
                             <div class="xpanel-search-input-row">
                                 <select id="xpanel_site_jump" class="kt-select xpanel-search-scope-select text-primary" title="Raiz del gestor">
-                                    <option value="{{ $isAdminFiles ? route('admin.files.index') : route('client.files.index') }}">
+                                    <option value="{{ $isAdminFiles ? route('admin.files.index') : route('client.website.file-manager.root') }}">
                                         {{ $isAdminFiles ? 'www/ todos los sitios' : 'www/ mis sitios' }}
                                     </option>
                                     @foreach($filesSites as $fileSite)

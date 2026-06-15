@@ -45,6 +45,7 @@ cleanup_known_stack() {
   local containers=(
     xpanel-web
     xpanel-db
+    xpanel-phpmyadmin
     xpanel-redis
     xpanel-proxy
     xpanel-docker-socket-proxy
@@ -311,6 +312,7 @@ MYSQL_ROOT_PASSWORD=$DB_ROOT_PASS
 MYSQL_DATABASE=xpanel
 MYSQL_USER=xpanel
 MYSQL_PASSWORD=$DB_PASS
+PHPMYADMIN_ABSOLUTE_URI=${PANEL_URL}/phpmyadmin/
 EOF
 
 # Permisos para certificados TLS de Traefik
@@ -359,6 +361,7 @@ upsert_env "XPANEL_CLIENT_LOGIN_PATH" "client/login" "$PANEL_DIR/.env"
 upsert_env "XPANEL_ADMIN_BASE_PATH" "admin" "$PANEL_DIR/.env"
 upsert_env "XPANEL_DAEMON_URL" "http://host.docker.internal:7070" "$PANEL_DIR/.env"
 upsert_env "XPANEL_DAEMON_TOKEN" "$DAEMON_TOKEN" "$PANEL_DIR/.env"
+upsert_env "PHPMYADMIN_URL" "/phpmyadmin" "$PANEL_DIR/.env"
 
 # Laravel runtime directories must be writable by the web process.
 mkdir -p "$PANEL_DIR/storage" "$PANEL_DIR/bootstrap/cache"

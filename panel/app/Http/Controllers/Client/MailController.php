@@ -26,6 +26,6 @@ class MailController extends Controller
 
         $primaryAccount = $accounts->first();
 
-        return view('layouts.mail', compact('tenant', 'accounts', 'primaryAccount'));
+        return view('client.mail.xmail', compact('tenant', 'accounts', 'primaryAccount'));
     }
 }

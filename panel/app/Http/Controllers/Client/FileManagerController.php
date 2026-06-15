@@ -19,7 +19,7 @@ class FileManagerController extends Controller
         $site = $domain ? $this->siteForTenant($tenant->id, $domain) : null;
         $sites = Site::where('tenant_id', $tenant->id)->orderBy('domain')->get(['id', 'tenant_id', 'domain']);
 
-        return view('client.files.index', compact('site', 'sites', 'domain'));
+        return view('client.web.files.ikode', compact('site', 'sites', 'domain'));
     }
 
     public function list(Request $request)

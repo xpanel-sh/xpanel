@@ -23,7 +23,7 @@ class DnsRecordController extends Controller
             ->paginate(20);
         $nameservers = NameserverSetting::query()->where('is_active', true)->first();
 
-        return view('client.dns.index', compact('domains', 'records', 'nameservers'));
+        return view('client.domains.dns', compact('domains', 'records', 'nameservers'));
     }
 
     public function store(Request $request, DaemonClient $daemon)

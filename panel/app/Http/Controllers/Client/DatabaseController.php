@@ -22,7 +22,7 @@ class DatabaseController extends Controller
             ->latest()
             ->paginate(15);
 
-        return view('client.databases.index', compact('databases'));
+        return view('client.db.index', compact('databases'));
     }
 
     public function create(Request $request)
@@ -34,7 +34,7 @@ class DatabaseController extends Controller
             ->orderBy('domain')
             ->get(['id', 'domain']);
 
-        return view('client.databases.create', compact('sites'));
+        return view('client.db.create', compact('sites'));
     }
 
     public function store(Request $request, DaemonClient $daemon)
@@ -51,6 +51,26 @@ class DatabaseController extends Controller
             }
         }
 
+        $prefixSite = null;
+
+        if ($request->filled('site_id')) {
+            $prefixSite = Site::where('id', $request->input('site_id'))
+                ->where('tenant_id', $tenant->id)
+                ->first();
+        }
+
+        if ($prefixSite) {
+            $prefix = $tenant->databasePrefix();
+
+            if ($request->filled('name_suffix')) {
+                $request->merge(['name' => $prefix . trim((string) $request->input('name_suffix'))]);
+            }
+
+            if ($request->filled('username_suffix')) {
+                $request->merge(['username' => $prefix . trim((string) $request->input('username_suffix'))]);
+            }
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'regex:/^[A-Za-z0-9_]+$/', 'min:3', 'max:32', 'unique:managed_databases,name'],
             'username' => ['required', 'regex:/^[A-Za-z0-9_]+$/', 'min:3', 'max:32', 'unique:managed_databases,username'],
@@ -59,12 +79,14 @@ class DatabaseController extends Controller
             'engine' => ['required', 'in:mariadb,mysql'],
         ]);
 
-        if (!empty($validated['site_id'])) {
-            $siteBelongsToTenant = Site::where('id', $validated['site_id'])
-                ->where('tenant_id', $tenant->id)
-                ->exists();
+        $site = null;
 
-            if (!$siteBelongsToTenant) {
+        if (!empty($validated['site_id'])) {
+            $site = Site::where('id', $validated['site_id'])
+                ->where('tenant_id', $tenant->id)
+                ->first();
+
+            if (!$site) {
                 return back()->withErrors(['site_id' => 'Selected site does not belong to your tenant.'])->withInput();
             }
         }
@@ -85,12 +107,45 @@ class DatabaseController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Database provisioning failed', ['database_id' => $database->id, 'exception' => $e]);
             $database->update(['status' => 'provision_error']);
-            return redirect()->route('client.databases.index')
+            return redirect()->route($site ? 'client.websites.module' : 'client.databases.index', $site ? [
+                'domain' => $site->domain,
+                'section' => 'databases',
+                'page' => 'my-sql-databases',
+            ] : [])
                 ->withErrors(['database' => 'Base registrada, pero el agente no pudo provisionarla. Revisa operaciones del agente o contacta soporte.']);
         }
 
-        return redirect()->route('client.databases.index')
+        return redirect()->route($site ? 'client.websites.module' : 'client.databases.index', $site ? [
+            'domain' => $site->domain,
+            'section' => 'databases',
+            'page' => 'my-sql-databases',
+        ] : [])
             ->with('success', 'Database created. Guarda la contraseña que ingresaste; XPanel no la muestra ni la recupera.');
+    }
+
+    public function phpMyAdmin(Request $request, ManagedDatabase $database)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        if ($database->tenant_id !== $tenant->id) {
+            abort(403);
+        }
+
+        $baseUrl = rtrim((string) config('services.phpmyadmin.url', '/phpmyadmin'), '/');
+        if ($baseUrl === '') {
+            $baseUrl = '/phpmyadmin';
+        }
+
+        $query = http_build_query([
+            'server' => 1,
+            'db' => $database->name,
+        ]);
+
+        $url = $baseUrl . '/index.php?route=/database/structure&' . $query;
+
+        return str_starts_with($url, 'http://') || str_starts_with($url, 'https://')
+            ? redirect()->away($url)
+            : redirect($url);
     }
 
     public function destroy(Request $request, ManagedDatabase $database, DaemonClient $daemon)

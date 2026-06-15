@@ -21,6 +21,7 @@ func SelectImage(projectType, webServer, phpVersion string) (string, []string) {
 		} else {
 			// Apache standard official image
 			imageName = fmt.Sprintf("php:%s-apache", phpVersion)
+			cmd = []string{"sh", "-lc", "printf 'DirectoryIndex default.php index.php index.html\\n' > /etc/apache2/conf-available/xpanel-directory-index.conf && a2enconf xpanel-directory-index >/dev/null && apache2-foreground"}
 		}
 	case "node":
 		imageName = "node:18-alpine"

@@ -46,8 +46,7 @@
 @endphp
 
 @section('content')
-    <div
-        class="flex grow rounded-xl bg-background border border-input lg:ms-(--sidebar-width) mt-0 lg:mt-(--header-height) m-5">
+    <div class="flex grow rounded-xl bg-background border border-input lg:ms-(--sidebar-width) mt-0 lg:mt-(--header-height) m-5">
         <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
             <main class="grow" role="content">
                 <!--Toolbar-->
@@ -207,7 +206,7 @@
                                                 Crear base de datos
                                             </a>
                                             <a class="kt-btn kt-btn-outline justify-start"
-                                                href="{{ route('client.emails.create') }}">
+                                                href="{{ route('client.mail.create') }}">
                                                 <i class="ki-filled ki-sms"></i>
                                                 Crear correo
                                             </a>
@@ -299,7 +298,7 @@
                                         Dominios
                                     </a>
                                     <a class="kt-btn kt-btn-outline justify-start"
-                                        href="{{ route('client.emails.index') }}">
+                                        href="{{ route('client.mail.index') }}">
                                         <i class="ki-filled ki-sms"></i>
                                         Correos
                                     </a>

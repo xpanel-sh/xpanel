@@ -13,10 +13,16 @@
                 <h1 class="mt-2 text-3xl font-black tracking-tight">Correos</h1>
                 <p class="mt-2 text-gray-400">Crea y gestiona cuentas de correo para tus dominios.</p>
             </div>
-            <a href="{{ route('client.emails.create') }}"
-                class="flex items-center gap-2 rounded-xl bg-gray-900 dark:bg-white px-5 py-3 text-sm font-bold text-white dark:text-black transition hover:bg-gray-700 dark:hover:bg-gray-200">
-                Crear correo
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('client.mail.xmail') }}"
+                    class="flex items-center gap-2 rounded-xl border border-white/10 px-5 py-3 text-sm font-bold text-gray-300 transition hover:bg-white/5">
+                    XMail
+                </a>
+                <a href="{{ route('client.mail.create') }}"
+                    class="flex items-center gap-2 rounded-xl bg-gray-900 dark:bg-white px-5 py-3 text-sm font-bold text-white dark:text-black transition hover:bg-gray-700 dark:hover:bg-gray-200">
+                    Crear correo
+                </a>
+            </div>
         </div>
 
         <div class="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
@@ -59,7 +65,7 @@
                                              x-transition:enter-end="opacity-100 scale-100"
                                              class="absolute right-0 mt-2 w-80 rounded-2xl border border-white/10 bg-[#13141a] p-4 shadow-2xl z-10"
                                              style="display:none;">
-                                            <form action="{{ route('client.emails.reset-password', $account) }}" method="POST" class="space-y-3">
+                                            <form action="{{ route('client.mail.reset-password', $account) }}" method="POST" class="space-y-3">
                                                 @csrf
                                                 <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Cambiar contraseña</p>
                                                 <input type="password" name="password" required minlength="12"
@@ -72,7 +78,7 @@
                                             </form>
                                             <div class="mt-3 pt-3 border-t border-white/10">
                                                 <x-confirm-modal
-                                                    action="{{ route('client.emails.destroy', $account) }}"
+                                                    action="{{ route('client.mail.destroy', $account) }}"
                                                     title="Eliminar cuenta de correo"
                                                     message="Se eliminará '{{ $account->email }}' permanentemente."
                                                     btnText="Eliminar correo"

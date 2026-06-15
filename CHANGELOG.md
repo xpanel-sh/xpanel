@@ -12,6 +12,31 @@ Future releases will include:
 
 ---
 
+## [2.7.0] - Client Website Console, Real Databases and Default Site Page
+**Release date:** 2026-06-15
+
+### Added
+- Added Hostinger-inspired client website routes under `/client/websites`, including per-domain module navigation for panel, hosting plan, performance, analytics, security, domains, website, files, databases and advanced tools.
+- Added website file manager entry routes with a selector screen and the dedicated iKode manager route at `/client/website/{domain}/file-manager/ikode`.
+- Added the XMail prototype as a standalone mail workspace rendered through the blank `layouts.app` layout.
+- Added tenant customer codes (`tenants.code`) for stable database/user prefixes such as `X235324_blog` and `X235324_user`.
+- Added real database provisioning flow from the client panel, creating MariaDB/MySQL databases and users through the daemon.
+- Added phpMyAdmin routing and Docker service configuration, with database buttons opening phpMyAdmin for the selected database.
+- Added a new generated site default page stored as `default.php` for PHP sites.
+
+### Changed
+- Changed client web module views into dedicated folders under `resources/views/client/web`, replacing the temporary modules folder.
+- Changed client databases, mail and DNS views into clearer folder locations (`client/db`, `client/mail`, `client/domains/dns.blade.php`).
+- Changed the website list and per-domain panel to use compact Hostinger-style cards, actions and resource sections.
+- Changed database creation so names and users are prefixed by the client code instead of a per-database random prefix.
+- Changed PHP site startup behavior to prefer `default.php`, then `index.php`, then `index.html`.
+
+### Fixed
+- Fixed newly created PHP site containers by ensuring default content is served from `default.php` while still allowing normal `index.php`/`index.html` fallbacks.
+- Fixed database creation UX so the password is not shown or recovered after provisioning, matching the real credential flow.
+
+---
+
 ## [2.6.0] - File Manager Search, Runtime Metrics and Form Refresh
 **Release date:** 2026-06-12
 

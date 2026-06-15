@@ -20,9 +20,14 @@ class SiteController extends Controller
     public function index()
     {
         $tenant = request()->attributes->get('tenant');
-        $sites = Site::where('tenant_id', $tenant->id)->latest()->get();
+        $search = trim((string) request('search'));
+        $tenant?->loadMissing('plan');
+        $sites = Site::where('tenant_id', $tenant->id)
+            ->when($search !== '', fn ($query) => $query->where('domain', 'like', "%{$search}%"))
+            ->latest()
+            ->get();
 
-        return view('client.web.index', compact('sites'));
+        return view('client.web.index', compact('sites', 'tenant', 'search'));
     }
 
     /**
@@ -54,24 +59,59 @@ class SiteController extends Controller
     public function module(Request $request, string $domain, string $section, ?string $page = null)
     {
         $site = $this->siteForDomain($request, $domain);
+        $activePath = trim($section . '/' . trim((string) $page, '/'), '/');
 
-        return $this->renderSitePanel($site, trim($section . '/' . trim((string) $page, '/'), '/'));
+        if ($activePath === 'files/file-manager') {
+            return redirect()->route('client.website.file-manager.entry', ['domain' => $site->domain]);
+        }
+
+        return $this->renderSitePanel($site, $activePath);
+    }
+
+    public function fileManager(Request $request, string $domain)
+    {
+        $site = $this->siteForDomain($request, $domain);
+
+        return view('client.web.files.index', compact('site'));
     }
 
     private function renderSitePanel(Site $site, ?string $activePath = null)
     {
+        $site->loadMissing('tenant.plan');
+        $tenant = $site->tenant;
+
         $stats = [
             'domains' => Domain::where('tenant_id', $site->tenant_id)->where('site_id', $site->id)->count(),
             'databases' => ManagedDatabase::where('tenant_id', $site->tenant_id)->where('site_id', $site->id)->count(),
             'emails' => EmailAccount::where('tenant_id', $site->tenant_id)
                 ->whereHas('domain', fn ($query) => $query->where('site_id', $site->id))
                 ->count(),
+            'tenant_sites' => $tenant?->sites()->count() ?? 0,
+            'tenant_databases' => ManagedDatabase::where('tenant_id', $site->tenant_id)->count(),
+            'tenant_emails' => EmailAccount::where('tenant_id', $site->tenant_id)->count(),
+            'ssl_active' => Domain::where('tenant_id', $site->tenant_id)
+                ->where('site_id', $site->id)
+                ->whereIn('ssl_status', ['active', 'managed', 'issued'])
+                ->exists(),
         ];
 
         $siteMenu = $this->websiteMenu($site);
         $activeModule = $this->moduleForPath($siteMenu, $activePath);
+        $databases = collect();
 
-        return view('client.web.panel', compact('site', 'stats', 'siteMenu', 'activePath', 'activeModule'));
+        if ($activePath === 'databases/my-sql-databases') {
+            $databases = ManagedDatabase::query()
+                ->where('tenant_id', $site->tenant_id)
+                ->where('site_id', $site->id)
+                ->latest()
+                ->get();
+        }
+
+        if ($activePath) {
+            return view($this->moduleViewForPath($activePath), compact('site', 'stats', 'siteMenu', 'activePath', 'activeModule', 'databases'));
+        }
+
+        return view('client.web.panel.index', compact('site', 'stats', 'siteMenu', 'activePath', 'activeModule'));
     }
 
     /**
@@ -220,7 +260,7 @@ class SiteController extends Controller
                 'label' => 'Archivos',
                 'icon' => 'ki-folder',
                 'children' => [
-                    ['label' => 'Administrador de archivos', 'path' => 'files/file-manager', 'url' => $moduleUrl('files/file-manager'), 'primary_url' => route('client.files.index', ['domain' => $site->domain])],
+                    ['label' => 'Administrador de archivos', 'path' => 'files/file-manager', 'url' => route('client.website.file-manager.entry', ['domain' => $site->domain]), 'primary_url' => route('client.website.file-manager.ikode', ['domain' => $site->domain])],
                     ['label' => 'Backups', 'path' => 'files/backups', 'url' => $moduleUrl('files/backups')],
                     ['label' => 'Cuentas FTP', 'path' => 'files/ftp-accounts', 'url' => $moduleUrl('files/ftp-accounts')],
                 ],
@@ -281,5 +321,45 @@ class SiteController extends Controller
             'path' => $activePath,
             'description' => 'Modulo preparado para esta ruta del sitio.',
         ];
+    }
+
+    private function moduleViewForPath(string $activePath): string
+    {
+        return [
+            'order/details' => 'client.web.hosting-plan.details',
+            'order/order-usage' => 'client.web.hosting-plan.order-usage',
+            'order/upgrade' => 'client.web.hosting-plan.upgrade',
+            'performance/ai-troubleshooter' => 'client.web.performance.ai-troubleshooter',
+            'performance/page-speed' => 'client.web.performance.page-speed',
+            'performance/cdn' => 'client.web.performance.cdn',
+            'analytics' => 'client.web.analytics.index',
+            'hosting-security/malware-scanner' => 'client.web.security.malware-scanner',
+            'hosting-security/ssl' => 'client.web.security.ssl',
+            'domains/subdomains' => 'client.web.domains.subdomains',
+            'domains/parked-domains' => 'client.web.domains.parked-domains',
+            'domains/redirects' => 'client.web.domains.redirects',
+            'website/wordpress' => 'client.web.website.wordpress',
+            'website/auto-installer' => 'client.web.website.auto-installer',
+            'website/migration' => 'client.web.website.migration',
+            'website/error-pages' => 'client.web.website.error-pages',
+            'website/builder' => 'client.web.website.builder',
+            'files/backups' => 'client.web.files.backups',
+            'files/ftp-accounts' => 'client.web.files.ftp',
+            'databases/my-sql-databases' => 'client.web.db.my-sql-databases',
+            'databases/php-my-admin' => 'client.web.db.php-my-admin',
+            'databases/remote-my-sql' => 'client.web.db.remote-my-sql',
+            'advanced/ssh-access' => 'client.web.advanced.ssh-access',
+            'advanced/php-configuration' => 'client.web.advanced.php-configuration',
+            'advanced/cron-jobs' => 'client.web.advanced.cron-jobs',
+            'advanced/php-info' => 'client.web.advanced.php-info',
+            'advanced/cache-manager' => 'client.web.advanced.cache-manager',
+            'advanced/git' => 'client.web.advanced.git',
+            'advanced/password-protect-directories' => 'client.web.advanced.password-protect-directories',
+            'advanced/ip-manager' => 'client.web.advanced.ip-manager',
+            'advanced/hotlink-protection' => 'client.web.advanced.hotlink-protection',
+            'advanced/folder-index-manager' => 'client.web.advanced.folder-index-manager',
+            'advanced/fix-file-ownership' => 'client.web.advanced.fix-file-ownership',
+            'advanced/activity-log' => 'client.web.advanced.activity-log',
+        ][$activePath] ?? 'client.web.panel.index';
     }
 }
