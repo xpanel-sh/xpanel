@@ -463,7 +463,7 @@ class DaemonClient
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
-            throw new \RuntimeException($errorPrefix . '.');
+            throw new \RuntimeException($errorPrefix . ': ' . trim($response->body()));
         }
 
         return $response->json() ?? [];
