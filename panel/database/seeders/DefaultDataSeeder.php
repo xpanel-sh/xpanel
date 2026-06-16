@@ -3,13 +3,10 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\ServerNode;
-use App\Models\Tenant;
 use App\Models\HostingPlan;
 use App\Models\NameserverSetting;
 use App\Models\SystemSetting;
-use RuntimeException;
 
 class DefaultDataSeeder extends Seeder
 {
@@ -73,48 +70,5 @@ class DefaultDataSeeder extends Seeder
             );
         }
 
-        if (!filter_var(env('XPANEL_SEED_DEMO_USERS', false), FILTER_VALIDATE_BOOLEAN)) {
-            return;
-        }
-
-        $adminPassword = trim((string) env('XPANEL_DEMO_ADMIN_PASSWORD', ''));
-        $clientPassword = trim((string) env('XPANEL_DEMO_CLIENT_PASSWORD', ''));
-
-        if ($adminPassword === '' || $clientPassword === '') {
-            throw new RuntimeException('Demo users require XPANEL_DEMO_ADMIN_PASSWORD and XPANEL_DEMO_CLIENT_PASSWORD.');
-        }
-
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@xpanel.com'],
-            [
-                'name' => 'Admin',
-                'password' => bcrypt($adminPassword),
-                'role' => 'admin'
-            ]
-        );
-        $admin->name = 'Admin';
-        $admin->role = 'admin';
-        $admin->save();
-
-        $client = User::firstOrCreate(
-            ['email' => 'client@xpanel.com'],
-            [
-                'name' => 'Client User',
-                'password' => bcrypt($clientPassword),
-                'role' => 'client'
-            ]
-        );
-        $client->name = 'Client User';
-        $client->role = 'client';
-        $client->save();
-
-        Tenant::updateOrCreate(
-            ['domain' => 'client.com'],
-            [
-                'name' => 'Default Client',
-                'user_id' => $client->id,
-                'status' => 'active'
-            ]
-        );
     }
 }

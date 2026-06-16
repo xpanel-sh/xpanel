@@ -12,6 +12,39 @@ Future releases will include:
 
 ---
 
+## [2.9.0] - MySQL Permissions Manager and PHP localhost Fix
+**Release date:** 2026-06-16
+
+### Added
+- Added MySQL privilege management for client databases: new "Permisos" button in the databases table opens a `kt-modal` with checkboxes for `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `DROP`, `INDEX`, `ALTER` and `REFERENCES`. Includes a "Seleccionar todos" master checkbox showing the current count.
+- Added daemon `UpdatePermissions()` method in `daemon/internal/database/manager.go`: runs `REVOKE ALL PRIVILEGES ON db.* FROM user; GRANT {selected}... ON db.* TO user; FLUSH PRIVILEGES;` using a server-side allowlist so no privilege name reaches the query unvalidated.
+- Added daemon API endpoint `POST /api/database/permissions` (`daemon/internal/api/database.go`, registered in `router.go`).
+- Added `DatabasePermissionsRequest` struct to `daemon/internal/types/requests.go`.
+- Added `DaemonClient::updateDatabasePermissions()` PHP method.
+- Added `DatabaseController::updatePermissions()` with server-side privilege validation against an explicit allowlist.
+- Added route `POST /client/databases/{database}/permissions` (name: `client.databases.permissions`).
+- Added socat Unix socket proxy to PHP site containers (`docker/php/entrypoint.sh`): creates `/var/run/mysqld/mysqld.sock` with `mode=777` forwarding to `xpanel-db:3306`, solving `Permission denied` and `No such file or directory` errors when PHP uses `host=localhost` (which resolves to a Unix socket on Linux, not TCP).
+- Added `pdo_mysql.default_socket` and `mysqli.default_socket` ini settings to the custom PHP Docker image pointing to the socat-created socket.
+- Added demo `ManagedDatabase` seed record (`{code}_demo` / `{code}_demo_user`) in `DefaultDataSeeder` so the demo client account shows data in the databases panel section.
+
+### Changed
+- Changed daemon `http.go` to bind on `0.0.0.0:{XPANEL_DAEMON_PORT}` (default 7070) instead of `127.0.0.1:9090`, making the daemon reachable from Docker containers via `host.docker.internal`.
+- Changed daemon `http.go` to use `NewRouter()` instead of a minimal inline mux so all API endpoints are registered.
+- Changed PHP site image selector (`daemon/internal/docker/image_selector.go`) to use `xpanel-php:{version}-apache` (the custom image with pdo_mysql and socat) instead of the upstream `php:{version}-apache`.
+- Changed the permissions modal from a custom Alpine.js `x-show` overlay to the native Metronic `data-kt-modal` system; the trigger button combines `@click="setPermData({...})"` (Alpine data) with `data-kt-modal-toggle="#perm_modal"` (Metronic open), eliminating the scope bug that caused a `405 Method Not Allowed` when the form submitted to the wrong URL.
+- Changed `x-data` placement in `my-sql-databases.blade.php` from the inner grid div to the outermost wrapper so Alpine scope covers both the table action buttons and the modal.
+
+### Fixed
+- Fixed `405 Method Not Allowed` on "Guardar permisos": the modal was outside the `x-data` scope, so Alpine did not bind `:action` and the form POSTed to the current page URL (the website module route, which has no POST handler).
+- Fixed MySQL `Permission denied` on socket connection from PHP sites using `host=localhost`: socat socket was created without world-write permissions. Fixed by adding `mode=777` to the `UNIX-LISTEN` options.
+- Fixed `could not find driver` PDO error in PHP site containers by ensuring containers use `xpanel-php:*-apache` (which has pdo_mysql installed) instead of `php:*-apache`.
+- Fixed daemon not accessible from inside Docker containers: was bound to `127.0.0.1` (loopback only); changed to `0.0.0.0` so `host.docker.internal` (which resolves to `172.17.0.1`) can reach it.
+
+### Daemon build
+- Run `go mod tidy && go build -o xpanel-daemon ./cmd/daemon/` after updating source files on the server.
+
+---
+
 ## [2.8.0] - DNS Architecture, SSL Automation and Components CLI
 **Release date:** 2026-06-15
 

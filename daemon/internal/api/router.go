@@ -52,6 +52,9 @@ func NewRouter() http.Handler {
 	mux.HandleFunc("/api/database/create", requireAuth(handleDatabaseCreate))
 	mux.HandleFunc("/api/database/delete", requireAuth(handleDatabaseDelete))
 	mux.HandleFunc("/api/database/permissions", requireAuth(handleDatabasePermissions))
+	mux.HandleFunc("/api/database/user/add", requireAuth(handleDatabaseUserAdd))
+	mux.HandleFunc("/api/database/user/remove", requireAuth(handleDatabaseUserRemove))
+	mux.HandleFunc("/api/database/user/password", requireAuth(handleDatabaseUserPassword))
 	mux.HandleFunc("/api/operations", requireAuth(handleOperationsList))
 	mux.HandleFunc("/api/runtime/status", requireAuth(handleRuntimeStatus))
 

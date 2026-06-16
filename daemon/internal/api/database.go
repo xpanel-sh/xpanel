@@ -53,6 +53,42 @@ func handleDatabasePermissions(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]string{"status": "updated"})
 }
 
+func handleDatabaseUserAdd(w http.ResponseWriter, r *http.Request) {
+	var req model.DatabaseUserRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if err := databaseManager.AddUser(r.Context(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "created"})
+}
+
+func handleDatabaseUserRemove(w http.ResponseWriter, r *http.Request) {
+	var req model.DatabaseUserRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if err := databaseManager.RemoveUser(r.Context(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "removed"})
+}
+
+func handleDatabaseUserPassword(w http.ResponseWriter, r *http.Request) {
+	var req model.DatabaseUserRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if err := databaseManager.ChangeUserPassword(r.Context(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "updated"})
+}
+
 func handleDatabaseDelete(w http.ResponseWriter, r *http.Request) {
 	var req model.DatabaseRequest
 	if !decodeJSON(w, r, &req) {

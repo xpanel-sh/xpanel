@@ -175,6 +175,13 @@ type DatabasePermissionsRequest struct {
 	Privileges []string `json:"privileges"`
 }
 
+type DatabaseUserRequest struct {
+	Database string `json:"database"`
+	Username string `json:"username"`
+	Password string `json:"password,omitempty"`
+	Engine   string `json:"engine"`
+}
+
 // --- SSL types ---
 
 type SSLIssueRequest struct {

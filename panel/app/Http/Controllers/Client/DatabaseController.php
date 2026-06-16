@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\ManagedDatabase;
+use App\Models\ManagedDatabaseUser;
 use App\Models\Site;
 use App\Services\DaemonClient;
 use Illuminate\Http\Request;
@@ -146,6 +147,108 @@ class DatabaseController extends Controller
         return str_starts_with($url, 'http://') || str_starts_with($url, 'https://')
             ? redirect()->away($url)
             : redirect($url);
+    }
+
+    public function addUser(Request $request, ManagedDatabase $database, DaemonClient $daemon)
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($database->tenant_id !== $tenant->id) {
+            abort(403);
+        }
+
+        $prefix = $tenant->databasePrefix();
+        if ($request->filled('username_suffix')) {
+            $request->merge(['username' => $prefix . trim((string) $request->input('username_suffix'))]);
+        }
+
+        $validated = $request->validate([
+            'username' => ['required', 'regex:/^[A-Za-z0-9_]+$/', 'min:3', 'max:32', 'unique:managed_database_users,username'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+        ]);
+
+        try {
+            $daemon->addDatabaseUser($database->name, $validated['username'], $validated['password'], $database->engine);
+        } catch (\Throwable $e) {
+            Log::warning('Database user add failed', ['database_id' => $database->id, 'exception' => $e]);
+            return back()->withErrors(['db_user' => 'No se pudo crear el usuario: ' . $e->getMessage()]);
+        }
+
+        ManagedDatabaseUser::create([
+            'managed_database_id' => $database->id,
+            'username'            => $validated['username'],
+            'password'            => bcrypt($validated['password']),
+            'privileges'          => ['SELECT','INSERT','UPDATE','DELETE','CREATE','DROP','INDEX','ALTER','REFERENCES'],
+            'status'              => 'active',
+        ]);
+
+        return back()->with('success', 'Usuario creado correctamente.');
+    }
+
+    public function removeUser(Request $request, ManagedDatabase $database, ManagedDatabaseUser $dbUser, DaemonClient $daemon)
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($database->tenant_id !== $tenant->id || $dbUser->managed_database_id !== $database->id) {
+            abort(403);
+        }
+
+        try {
+            $daemon->removeDatabaseUser($database->name, $dbUser->username, $database->engine);
+        } catch (\Throwable $e) {
+            Log::warning('Database user remove failed', ['dbuser_id' => $dbUser->id, 'exception' => $e]);
+            return back()->withErrors(['db_user' => 'No se pudo eliminar el usuario: ' . $e->getMessage()]);
+        }
+
+        $dbUser->delete();
+
+        return back()->with('success', 'Usuario eliminado.');
+    }
+
+    public function changeUserPassword(Request $request, ManagedDatabase $database, ManagedDatabaseUser $dbUser, DaemonClient $daemon)
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($database->tenant_id !== $tenant->id || $dbUser->managed_database_id !== $database->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+        ]);
+
+        try {
+            $daemon->changeDatabaseUserPassword($dbUser->username, $validated['password'], $database->engine);
+        } catch (\Throwable $e) {
+            Log::warning('Database user password change failed', ['dbuser_id' => $dbUser->id, 'exception' => $e]);
+            return back()->withErrors(['db_user' => 'No se pudo cambiar la contraseña: ' . $e->getMessage()]);
+        }
+
+        $dbUser->update(['password' => bcrypt($validated['password'])]);
+
+        return back()->with('success', 'Contraseña actualizada.');
+    }
+
+    public function updateUserPermissions(Request $request, ManagedDatabase $database, ManagedDatabaseUser $dbUser, DaemonClient $daemon)
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($database->tenant_id !== $tenant->id || $dbUser->managed_database_id !== $database->id) {
+            abort(403);
+        }
+
+        $allowed = ['SELECT','INSERT','UPDATE','DELETE','CREATE','DROP','INDEX','ALTER','REFERENCES','ALL PRIVILEGES'];
+        $validated = $request->validate([
+            'privileges'   => ['required', 'array', 'min:1'],
+            'privileges.*' => ['required', 'string', 'in:' . implode(',', $allowed)],
+        ]);
+
+        try {
+            $daemon->updateDatabasePermissions($database->name, $dbUser->username, $database->engine, $validated['privileges']);
+        } catch (\Throwable $e) {
+            Log::warning('Database user permissions update failed', ['dbuser_id' => $dbUser->id, 'exception' => $e]);
+            return back()->withErrors(['db_user' => 'No se pudieron actualizar los permisos: ' . $e->getMessage()]);
+        }
+
+        $dbUser->update(['privileges' => $validated['privileges']]);
+
+        return back()->with('success', 'Permisos actualizados.');
     }
 
     public function updatePermissions(Request $request, ManagedDatabase $database, DaemonClient $daemon)

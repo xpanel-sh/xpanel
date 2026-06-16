@@ -111,6 +111,34 @@ class DaemonClient
         ], 'Daemon deleteDatabase failed');
     }
 
+    public function addDatabaseUser(string $database, string $username, string $password, string $engine): array
+    {
+        return $this->post('/api/database/user/add', [
+            'database' => $database,
+            'username' => $username,
+            'password' => $password,
+            'engine'   => $engine,
+        ], 'Daemon addDatabaseUser failed');
+    }
+
+    public function removeDatabaseUser(string $database, string $username, string $engine): array
+    {
+        return $this->post('/api/database/user/remove', [
+            'database' => $database,
+            'username' => $username,
+            'engine'   => $engine,
+        ], 'Daemon removeDatabaseUser failed');
+    }
+
+    public function changeDatabaseUserPassword(string $username, string $password, string $engine): array
+    {
+        return $this->post('/api/database/user/password', [
+            'username' => $username,
+            'password' => $password,
+            'engine'   => $engine,
+        ], 'Daemon changeDatabaseUserPassword failed');
+    }
+
     public function updateDatabasePermissions(string $name, string $username, string $engine, array $privileges): array
     {
         return $this->post('/api/database/permissions', [

@@ -101,6 +101,7 @@ class SiteController extends Controller
 
         if ($activePath === 'databases/my-sql-databases') {
             $databases = ManagedDatabase::query()
+                ->with('dbUsers')
                 ->where('tenant_id', $site->tenant_id)
                 ->where('site_id', $site->id)
                 ->latest()

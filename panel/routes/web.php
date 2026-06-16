@@ -163,6 +163,10 @@ Route::group(['middleware' => ['web']], function () {
             Route::post('/',            [\App\Http\Controllers\Client\DatabaseController::class, 'store'])->name('store');
             Route::get('/{database}/phpmyadmin', [\App\Http\Controllers\Client\DatabaseController::class, 'phpMyAdmin'])->name('phpmyadmin');
             Route::post('/{database}/permissions', [\App\Http\Controllers\Client\DatabaseController::class, 'updatePermissions'])->name('permissions');
+            Route::post('/{database}/users', [\App\Http\Controllers\Client\DatabaseController::class, 'addUser'])->name('users.store');
+            Route::post('/{database}/users/{dbUser}/password', [\App\Http\Controllers\Client\DatabaseController::class, 'changeUserPassword'])->name('users.password');
+            Route::post('/{database}/users/{dbUser}/permissions', [\App\Http\Controllers\Client\DatabaseController::class, 'updateUserPermissions'])->name('users.permissions');
+            Route::delete('/{database}/users/{dbUser}', [\App\Http\Controllers\Client\DatabaseController::class, 'removeUser'])->name('users.destroy');
             Route::delete('/{database}',[\App\Http\Controllers\Client\DatabaseController::class, 'destroy'])->name('destroy');
         });
 

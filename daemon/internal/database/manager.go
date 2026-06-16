@@ -94,6 +94,72 @@ func (m *Manager) UpdatePermissions(ctx context.Context, req model.DatabasePermi
 	return m.execMariaDB(ctx, sql)
 }
 
+func (m *Manager) AddUser(ctx context.Context, req model.DatabaseUserRequest) error {
+	engine := strings.ToLower(strings.TrimSpace(req.Engine))
+	if engine != "mariadb" && engine != "mysql" {
+		return fmt.Errorf("engine %q not supported", req.Engine)
+	}
+	if err := validateIdentifier(req.Database, "database name"); err != nil {
+		return err
+	}
+	if err := validateIdentifier(req.Username, "username"); err != nil {
+		return err
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		return fmt.Errorf("password is required")
+	}
+
+	sql := fmt.Sprintf(
+		"CREATE USER IF NOT EXISTS '%s'@'%%' IDENTIFIED BY %s; ALTER USER '%s'@'%%' IDENTIFIED BY %s; GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeIdentifier(req.Database),
+		escapeSQLString(req.Username),
+	)
+	return m.execMariaDB(ctx, sql)
+}
+
+func (m *Manager) RemoveUser(ctx context.Context, req model.DatabaseUserRequest) error {
+	engine := strings.ToLower(strings.TrimSpace(req.Engine))
+	if engine != "mariadb" && engine != "mysql" {
+		return fmt.Errorf("engine %q not supported", req.Engine)
+	}
+	if err := validateIdentifier(req.Database, "database name"); err != nil {
+		return err
+	}
+	if err := validateIdentifier(req.Username, "username"); err != nil {
+		return err
+	}
+
+	sql := fmt.Sprintf(
+		"REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; DROP USER IF EXISTS '%s'@'%%'; FLUSH PRIVILEGES;",
+		escapeIdentifier(req.Database),
+		escapeSQLString(req.Username),
+		escapeSQLString(req.Username),
+	)
+	return m.execMariaDB(ctx, sql)
+}
+
+func (m *Manager) ChangeUserPassword(ctx context.Context, req model.DatabaseUserRequest) error {
+	engine := strings.ToLower(strings.TrimSpace(req.Engine))
+	if engine != "mariadb" && engine != "mysql" {
+		return fmt.Errorf("engine %q not supported", req.Engine)
+	}
+	if err := validateIdentifier(req.Username, "username"); err != nil {
+		return err
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		return fmt.Errorf("password is required")
+	}
+
+	sql := fmt.Sprintf(
+		"ALTER USER '%s'@'%%' IDENTIFIED BY %s; FLUSH PRIVILEGES;",
+		escapeSQLString(req.Username),
+		quoteSQLString(req.Password),
+	)
+	return m.execMariaDB(ctx, sql)
+}
+
 func (m *Manager) Delete(ctx context.Context, req model.DatabaseRequest) error {
 	engine := strings.ToLower(strings.TrimSpace(req.Engine))
 	if engine != "mariadb" && engine != "mysql" {

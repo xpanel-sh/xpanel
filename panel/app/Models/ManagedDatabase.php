@@ -32,4 +32,9 @@ class ManagedDatabase extends Model
     {
         return $this->belongsTo(Site::class);
     }
+
+    public function dbUsers()
+    {
+        return $this->hasMany(ManagedDatabaseUser::class, 'managed_database_id');
+    }
 }
