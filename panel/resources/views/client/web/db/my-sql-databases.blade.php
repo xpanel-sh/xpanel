@@ -7,15 +7,15 @@
     $suffixMaxLength = max(1, 32 - strlen($dbPrefix));
     $allPrivileges   = ['SELECT','INSERT','UPDATE','DELETE','CREATE','DROP','INDEX','ALTER','REFERENCES'];
 
-    if ($databases->isEmpty()) {
-        $fakeUser1 = (object)['id'=>null,'username'=>$dbPrefix.'usuario1','status'=>'active','privileges'=>$allPrivileges];
-        $fakeUser2 = (object)['id'=>null,'username'=>$dbPrefix.'shop_user','status'=>'active','privileges'=>['SELECT','INSERT']];
-        $db1 = \App\Models\ManagedDatabase::make(['name'=>$dbPrefix.'mi_proyecto','engine'=>'mysql','status'=>'active','created_at'=>now()]);
-        $db1->setRelation('dbUsers', collect([$fakeUser1]));
-        $db2 = \App\Models\ManagedDatabase::make(['name'=>$dbPrefix.'tienda','engine'=>'mysql','status'=>'active','created_at'=>now()->subDays(3)]);
-        $db2->setRelation('dbUsers', collect([$fakeUser2]));
-        $databases = collect([$db1, $db2]);
-    }
+    // if ($databases->isEmpty()) {
+    //     $fakeUser1 = (object)['id'=>null,'username'=>$dbPrefix.'usuario1','status'=>'active','privileges'=>$allPrivileges];
+    //     $fakeUser2 = (object)['id'=>null,'username'=>$dbPrefix.'shop_user','status'=>'active','privileges'=>['SELECT','INSERT']];
+    //     $db1 = \App\Models\ManagedDatabase::make(['name'=>$dbPrefix.'mi_proyecto','engine'=>'mysql','status'=>'active','created_at'=>now()]);
+    //     $db1->setRelation('dbUsers', collect([$fakeUser1]));
+    //     $db2 = \App\Models\ManagedDatabase::make(['name'=>$dbPrefix.'tienda','engine'=>'mysql','status'=>'active','created_at'=>now()->subDays(3)]);
+    //     $db2->setRelation('dbUsers', collect([$fakeUser2]));
+    //     $databases = collect([$db1, $db2]);
+    // }
 @endphp
 
 @section('content')
@@ -335,12 +335,11 @@
 
         @include('layouts.partials.client.footer')
     </div>
-</div>
 
-{{-- ════════════════════════════════════
-    Modal: Permisos
-════════════════════════════════════ --}}
-<div class="kt-modal" data-kt-modal="true" id="perm_modal">
+    {{-- ════════════════════════════════════
+        Modal: Permisos
+    ════════════════════════════════════ --}}
+    <div class="kt-modal" data-kt-modal="true" id="perm_modal">
     <div class="kt-modal-content max-w-[500px] top-[5%] max-h-[90vh] flex flex-col">
         <div class="kt-modal-header py-4 px-5 shrink-0">
             <i class="ki-filled ki-shield-tick text-muted-foreground text-xl"></i>
@@ -360,7 +359,7 @@
                 @csrf
                 <label class="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-muted/50 px-3 py-2.5 mb-3 hover:bg-muted transition-colors"
                     :class="allChecked ? 'border-primary/40 bg-primary/10' : ''">
-                    <input type="checkbox" class="kt-checkbox" :checked="allChecked" @change="toggleAll()">
+                    <input type="checkbox" class="kt-checkbox" :checked="allChecked" @click.prevent="toggleAll()">
                     <span class="text-sm font-semibold text-mono">Seleccionar todos</span>
                     <span class="ms-auto text-xs text-secondary-foreground" x-text="permSelected.length + ' / ' + allPrivs.length"></span>
                 </label>
@@ -383,12 +382,12 @@
             </form>
         </div>
     </div>
-</div>
+    </div>
 
-{{-- ════════════════════════════════════
-    Modal: Cambiar contraseña de usuario
-════════════════════════════════════ --}}
-<div class="kt-modal" data-kt-modal="true" id="pass_modal">
+    {{-- ════════════════════════════════════
+        Modal: Cambiar contraseña de usuario
+    ════════════════════════════════════ --}}
+    <div class="kt-modal" data-kt-modal="true" id="pass_modal">
     <div class="kt-modal-content max-w-[400px] top-[10%] max-h-[90vh] flex flex-col">
         <div class="kt-modal-header py-4 px-5 shrink-0">
             <i class="ki-filled ki-key text-muted-foreground text-xl"></i>
@@ -430,12 +429,12 @@
             </form>
         </div>
     </div>
-</div>
+    </div>
 
-{{-- ════════════════════════════════════
-    Modal: Agregar usuario a la DB
-════════════════════════════════════ --}}
-<div class="kt-modal" data-kt-modal="true" id="add_user_modal">
+    {{-- ════════════════════════════════════
+        Modal: Agregar usuario a la DB
+    ════════════════════════════════════ --}}
+    <div class="kt-modal" data-kt-modal="true" id="add_user_modal">
     <div class="kt-modal-content max-w-[420px] top-[10%] max-h-[90vh] flex flex-col">
         <div class="kt-modal-header py-4 px-5 shrink-0">
             <i class="ki-filled ki-user-plus text-muted-foreground text-xl"></i>
@@ -487,5 +486,6 @@
             </form>
         </div>
     </div>
-</div>
+    </div>
+</div>{{-- /x-data --}}
 @endsection
