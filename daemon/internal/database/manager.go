@@ -78,29 +78,27 @@ func (m *Manager) UpdatePermissions(ctx context.Context, req model.DatabasePermi
 		}
 		grants = append(grants, p)
 	}
+	grantList := strings.Join(grants, ", ")
+
+	var sql string
 	if len(grants) == 0 {
-		// Sin privilegios → solo revocar todo (acceso denegado a nivel de queries)
-		sql := fmt.Sprintf(
-			"GRANT USAGE ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; FLUSH PRIVILEGES;",
+		// GRANT ALL primero garantiza que exista fila en mysql.db;
+		// luego REVOKE ALL la vacía sin error 1141.
+		sql = fmt.Sprintf(
+			"GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; FLUSH PRIVILEGES;",
 			escapeIdentifier(req.Name), escapeSQLString(req.Username),
 			escapeIdentifier(req.Name), escapeSQLString(req.Username),
 		)
-		return m.execMariaDB(ctx, sql)
+	} else {
+		// Igual: GRANT ALL crea/actualiza la fila, REVOKE limpia, GRANT aplica solo los elegidos.
+		sql = fmt.Sprintf(
+			"GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; GRANT %s ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
+			escapeIdentifier(req.Name), escapeSQLString(req.Username),
+			escapeIdentifier(req.Name), escapeSQLString(req.Username),
+			grantList,
+			escapeIdentifier(req.Name), escapeSQLString(req.Username),
+		)
 	}
-
-	grantList := strings.Join(grants, ", ")
-	// GRANT USAGE first ensures a row exists in mysql.db so the subsequent
-	// REVOKE never fails with "no such grant defined" (MariaDB error 1141).
-	sql := fmt.Sprintf(
-		"GRANT USAGE ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; GRANT %s ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
-		escapeIdentifier(req.Name),
-		escapeSQLString(req.Username),
-		escapeIdentifier(req.Name),
-		escapeSQLString(req.Username),
-		grantList,
-		escapeIdentifier(req.Name),
-		escapeSQLString(req.Username),
-	)
 	return m.execMariaDB(ctx, sql)
 }
 
