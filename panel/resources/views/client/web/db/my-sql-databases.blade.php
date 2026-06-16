@@ -9,17 +9,20 @@
 @endphp
 
 @section('content')
-    <div class="flex grow rounded-xl bg-background border border-input lg:ms-(--sidebar-width) mt-0 lg:mt-(--header-height) m-5">
+    <div class="flex grow rounded-xl bg-background border border-input lg:ms-(--sidebar-width) mt-0 lg:mt-(--header-height) m-5"
+        x-data="{
+            permModal: false,
+            permDb: { id: null, name: '', username: '', engine: '' },
+            permSelected: [],
+            allPrivs: @js($allPrivileges),
+            get allChecked() { return this.permSelected.length === this.allPrivs.length; },
+            openPerms(db) { this.permDb = db; this.permSelected = [...this.allPrivs]; this.permModal = true; },
+            toggleAll() { this.permSelected = this.allChecked ? [] : [...this.allPrivs]; }
+        }">
         <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
             <main class="grow" role="content">
                 <div class="kt-container-fluid">
-                    <div class="grid gap-5 lg:gap-7.5" x-data="{
-                        permModal: false,
-                        permDb: { id: null, name: '', username: '', engine: '' },
-                        permSelected: [],
-                        openPerms(db) { this.permDb = db; this.permSelected = @js($allPrivileges); this.permModal = true; },
-                        toggleAll() { const all = @js($allPrivileges); this.permSelected = this.permSelected.length === all.length ? [] : [...all]; }
-                    }">
+                    <div class="grid gap-5 lg:gap-7.5">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div>
                                 <h1 class="text-2xl font-semibold text-mono">Administracion</h1>
@@ -92,6 +95,15 @@
                                 <h2 class="text-xl font-semibold text-mono">Lista de bases de datos y usuarios actuales de MySQL</h2>
                                 <p class="mt-1 text-sm text-secondary-foreground">Bases creadas desde este panel.</p>
                             </div>
+
+                            @if(session('success'))
+                                <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
+                            @error('permissions')
+                                <div class="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ $message }}</div>
+                            @enderror
 
                             <div class="kt-card overflow-visible">
                                 <div class="overflow-x-auto">
@@ -176,61 +188,62 @@
 
             {{-- Modal Permisos --}}
             <div x-show="permModal" x-cloak
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-                @keydown.escape.window="permModal = false">
-                <div class="w-full max-w-md rounded-2xl border border-border bg-background p-6 shadow-xl" @click.stop>
-                    <div class="mb-5 flex items-center justify-between">
-                        <div>
-                            <h2 class="text-lg font-semibold text-mono">Permisos MySQL</h2>
-                            <p class="mt-0.5 text-sm text-secondary-foreground" x-text="permDb.name + ' → ' + permDb.username"></p>
+                class="kt-modal"
+                @keydown.escape.window="permModal = false"
+                @click.self="permModal = false">
+                <div class="kt-modal-content max-w-[500px] top-[8%]">
+
+                    <div class="kt-modal-header py-4 px-5">
+                        <i class="ki-filled ki-shield-tick text-muted-foreground text-xl"></i>
+                        <div class="flex flex-col grow ms-2">
+                            <span class="text-base font-semibold text-mono">Permisos MySQL</span>
+                            <span class="text-xs text-secondary-foreground" x-text="permDb.name + ' → ' + permDb.username"></span>
                         </div>
-                        <button type="button" class="kt-btn kt-btn-icon kt-btn-ghost kt-btn-sm" @click="permModal = false">
+                        <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" @click="permModal = false">
                             <i class="ki-filled ki-cross"></i>
                         </button>
                     </div>
 
-                    @if(session('success'))
-                        <div class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @error('permissions')
-                        <div class="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{{ $message }}</div>
-                    @enderror
+                    <div class="kt-modal-body p-5">
+                        <form method="POST" :action="'/client/databases/' + permDb.id + '/permissions'">
+                            @csrf
 
-                    <form method="POST" :action="'/client/databases/' + permDb.id + '/permissions'">
-                        @csrf
-
-                        <div class="mb-4 flex items-center justify-between">
-                            <span class="text-sm font-semibold text-mono">Privilegios</span>
-                            <button type="button" class="text-xs text-blue-400 hover:underline" @click="toggleAll()">
-                                <span x-text="permSelected.length === @js(count($allPrivileges)) ? 'Desmarcar todos' : 'Seleccionar todos'"></span>
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 mb-6">
-                            @foreach($allPrivileges as $priv)
-                            <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 hover:bg-muted/60"
-                                   :class="permSelected.includes('{{ $priv }}') ? 'border-blue-500/50 bg-blue-500/10' : ''">
+                            {{-- Select all --}}
+                            <label class="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-muted/50 px-3 py-2.5 mb-3 hover:bg-muted transition-colors"
+                                   :class="allChecked ? 'border-primary/50 bg-primary/10' : ''">
                                 <input type="checkbox"
-                                    name="privileges[]"
-                                    value="{{ $priv }}"
-                                    class="rounded border-border text-blue-500"
-                                    x-model="permSelected"
-                                    :value="'{{ $priv }}'">
-                                <span class="text-sm font-mono text-mono">{{ $priv }}</span>
+                                    class="kt-checkbox"
+                                    :checked="allChecked"
+                                    @change="toggleAll()">
+                                <span class="text-sm font-semibold text-mono">Seleccionar todos</span>
+                                <span class="ms-auto text-xs text-secondary-foreground" x-text="permSelected.length + ' / ' + allPrivs.length"></span>
                             </label>
-                            @endforeach
-                        </div>
 
-                        <div class="flex gap-3 justify-end">
-                            <button type="button" class="kt-btn kt-btn-outline" @click="permModal = false">Cancelar</button>
-                            <button type="submit" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-check"></i>
-                                Guardar permisos
-                            </button>
-                        </div>
-                    </form>
+                            <div class="grid grid-cols-2 gap-2 mb-5">
+                                @foreach($allPrivileges as $priv)
+                                <label class="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-accent/40 px-3 py-2.5 hover:bg-accent transition-colors"
+                                       :class="permSelected.includes('{{ $priv }}') ? 'border-primary/50 bg-primary/10' : ''">
+                                    <input type="checkbox"
+                                        name="privileges[]"
+                                        value="{{ $priv }}"
+                                        class="kt-checkbox"
+                                        x-model="permSelected"
+                                        :value="'{{ $priv }}'">
+                                    <span class="text-sm font-mono text-mono">{{ $priv }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+
+                            <div class="flex gap-3 justify-end border-t border-border pt-4">
+                                <button type="button" class="kt-btn kt-btn-outline" @click="permModal = false">Cancelar</button>
+                                <button type="submit" class="kt-btn kt-btn-primary">
+                                    <i class="ki-filled ki-check"></i>
+                                    Guardar permisos
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                 </div>
             </div>
 
