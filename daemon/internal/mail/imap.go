@@ -350,7 +350,7 @@ func (c *IMAPClient) SetFlag(account, folder string, uid uint32, flag string, se
 	if !set {
 		op = imap.RemoveFlags
 	}
-	return cl.UidStore(seqset, op, []interface{}{flag}, nil)
+	return cl.UidStore(seqset, imap.FormatFlagsOp(op, false), []interface{}{flag}, nil)
 }
 
 // Move copies a message to targetFolder then deletes it from folder.
@@ -463,7 +463,9 @@ func parseMessageParts(mr *gomessage.Reader) (textBody, htmlBody string, attachm
 			if filename == "" {
 				filename = "attachment"
 			}
-			filename = mime.QEncoding.Decode("utf-8", filename)
+			if decoded, err := (&mime.WordDecoder{}).DecodeHeader(filename); err == nil {
+					filename = decoded
+				}
 			ct, _, _ := h.ContentType()
 			body, _ := io.ReadAll(p.Body)
 			attachments = append(attachments, Attachment{
