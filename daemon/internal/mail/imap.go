@@ -350,7 +350,7 @@ func (c *IMAPClient) SetFlag(account, folder string, uid uint32, flag string, se
 	if !set {
 		op = imap.RemoveFlags
 	}
-	return cl.UidStore(seqset, imap.FormatFlagsOp(op, false), []interface{}{flag}, nil)
+	return cl.UidStore(seqset, imap.StoreItem(op), []interface{}{flag}, nil)
 }
 
 // Move copies a message to targetFolder then deletes it from folder.
