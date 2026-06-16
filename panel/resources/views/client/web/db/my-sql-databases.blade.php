@@ -35,7 +35,8 @@
         openPerms(dbId, dbName, userId, username, privs) {
             this.permDbId = dbId; this.permDbName = dbName;
             this.permUserId = userId; this.permUsername = username;
-            this.permSelected = privs && privs.length ? privs : [...this.allPrivs];
+            this.permSelected = (Array.isArray(privs) && privs.length) ? [...privs] : [...this.allPrivs];
+            this.$nextTick(() => document.getElementById('_perm_trigger').click());
         },
         toggleAll() { this.permSelected = this.allChecked ? [] : [...this.allPrivs]; },
 
@@ -270,7 +271,6 @@
                                                             class="kt-btn kt-btn-outline kt-btn-sm {{ $disabledCls }}"
                                                             @if($realUser)
                                                                 @click="openPerms({{ $database->id }}, '{{ $database->name }}', {{ $dbUser->id }}, '{{ $dbUser->username }}', @js($privs))"
-                                                                data-kt-modal-toggle="#perm_modal"
                                                             @else
                                                                 disabled
                                                             @endif>
@@ -336,6 +336,9 @@
         @include('layouts.partials.client.footer')
     </div>
 
+    {{-- Trigger oculto: Alpine lo clickea desde $nextTick en openPerms --}}
+    <button id="_perm_trigger" data-kt-modal-toggle="#perm_modal" hidden tabindex="-1" aria-hidden="true"></button>
+
     {{-- ════════════════════════════════════
         Modal: Permisos
     ════════════════════════════════════ --}}
@@ -367,7 +370,11 @@
                     @foreach($allPrivileges as $priv)
                     <label class="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-accent/40 px-3 py-2.5 hover:bg-accent transition-colors"
                         :class="permSelected.includes('{{ $priv }}') ? 'border-primary/40 bg-primary/10' : ''">
-                        <input type="checkbox" name="privileges[]" class="kt-checkbox" x-model="permSelected" :value="'{{ $priv }}'">
+                        <input type="checkbox" name="privileges[]" value="{{ $priv }}" class="kt-checkbox"
+                            :checked="permSelected.includes('{{ $priv }}')"
+                            @change="permSelected = $event.target.checked
+                                ? [...permSelected, '{{ $priv }}']
+                                : permSelected.filter(p => p !== '{{ $priv }}')">
                         <span class="text-sm font-mono text-mono">{{ $priv }}</span>
                     </label>
                     @endforeach
