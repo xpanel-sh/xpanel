@@ -218,7 +218,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="kt-btn kt-btn-icon kt-btn-sm text-destructive border border-destructive/30 hover:bg-destructive/10"
+                                                class="kt-btn kt-btn-icon kt-btn-sm "
                                                 title="Eliminar base de datos">
                                                 <i class="ki-filled ki-trash text-xs"></i>
                                             </button>
@@ -299,14 +299,14 @@
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit"
-                                                                    class="kt-btn kt-btn-icon kt-btn-sm text-destructive hover:bg-destructive/10"
+                                                                    class="kt-btn kt-btn-icon kt-btn-sm "
                                                                     title="Eliminar usuario">
                                                                     <i class="ki-filled ki-trash text-xs"></i>
                                                                 </button>
                                                             </form>
                                                         @else
                                                             <button type="button"
-                                                                class="kt-btn kt-btn-icon kt-btn-sm text-destructive opacity-50 cursor-not-allowed" disabled
+                                                                class="kt-btn kt-btn-icon kt-btn-sm  opacity-50 cursor-not-allowed" disabled
                                                                 title="Eliminar usuario">
                                                                 <i class="ki-filled ki-trash text-xs"></i>
                                                             </button>
