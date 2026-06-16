@@ -22,6 +22,31 @@ CMD="${1:-}"
 shift || true
 
 case "$CMD" in
+  git|sync|forzar)
+    echo "⬇️  Sincronizando desde git (sin validar versión)..."
+    git -C "$BASE" pull --ff-only origin "$(git -C "$BASE" rev-parse --abbrev-ref HEAD)"
+    DAEMON_SRC=""
+    [ -f "$BASE/daemon/go.mod" ]     && DAEMON_SRC="$BASE/daemon"
+    [ -f "$BASE/daemon-src/go.mod" ] && DAEMON_SRC="$BASE/daemon-src"
+    if command -v go >/dev/null 2>&1 && [ -n "$DAEMON_SRC" ]; then
+      echo "🔨 Compilando daemon..."
+      (
+        cd "$DAEMON_SRC"
+        if go build -o xpanel-daemon-new ./cmd/daemon 2>/dev/null || go build -o xpanel-daemon-new .; then
+          mv -f xpanel-daemon-new "$BASE/daemon/xpanel-daemon"
+          chmod +x "$BASE/daemon/xpanel-daemon"
+          echo "✅ Daemon compilado."
+        else
+          rm -f xpanel-daemon-new
+          echo "⚠️  Error compilando daemon."
+        fi
+      )
+    fi
+    bash "$DIR/migrate.sh" "$XPANEL_LANG" || true
+    systemctl restart xpanel-daemon 2>/dev/null || true
+    echo "✅ Sincronización completa."
+    ;;
+
   update|actualizar)
     if [ "${1:-}" = "check" ] || [ "${1:-}" = "verificar" ]; then
       XPANEL_UPDATE_CHECK_ONLY=1 bash "$DIR/update.sh" "$XPANEL_LANG"
