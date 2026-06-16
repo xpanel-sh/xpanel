@@ -1,19 +1,26 @@
 package api
 
 import (
+	"log"
 	"net/http"
+	"os"
 )
 
 func Start() {
-	mux := http.NewServeMux()
+	port := os.Getenv("XPANEL_DAEMON_PORT")
+	if port == "" {
+		port = "7070"
+	}
+	addr := "127.0.0.1:" + port
 
-	mux.HandleFunc("/health", health)
-	mux.HandleFunc("/docker/ps", dockerPS)
+	log.Printf("XPanel Daemon listening on %s", addr)
 
 	server := &http.Server{
-		Addr:    "127.0.0.1:9090",
-		Handler: mux,
+		Addr:    addr,
+		Handler: NewRouter(),
 	}
 
-	server.ListenAndServe()
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalf("daemon: %v", err)
+	}
 }
