@@ -111,6 +111,16 @@ class DaemonClient
         ], 'Daemon deleteDatabase failed');
     }
 
+    public function updateDatabasePermissions(string $name, string $username, string $engine, array $privileges): array
+    {
+        return $this->post('/api/database/permissions', [
+            'name'       => $name,
+            'username'   => $username,
+            'engine'     => $engine,
+            'privileges' => $privileges,
+        ], 'Daemon updateDatabasePermissions failed');
+    }
+
     // ===========================
     // Mail Proxy Methods (IMAP/SMTP via daemon)
     // ===========================

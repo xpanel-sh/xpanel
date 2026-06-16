@@ -5,6 +5,7 @@
     $nameSuffix = old('name_suffix', str_starts_with((string) old('name'), $dbPrefix) ? substr((string) old('name'), strlen($dbPrefix)) : '');
     $usernameSuffix = old('username_suffix', str_starts_with((string) old('username'), $dbPrefix) ? substr((string) old('username'), strlen($dbPrefix)) : '');
     $suffixMaxLength = max(1, 32 - strlen($dbPrefix));
+    $allPrivileges = ['SELECT','INSERT','UPDATE','DELETE','CREATE','DROP','INDEX','ALTER','REFERENCES'];
 @endphp
 
 @section('content')
@@ -12,7 +13,13 @@
         <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
             <main class="grow" role="content">
                 <div class="kt-container-fluid">
-                    <div class="grid gap-5 lg:gap-7.5">
+                    <div class="grid gap-5 lg:gap-7.5" x-data="{
+                        permModal: false,
+                        permDb: { id: null, name: '', username: '', engine: '' },
+                        permSelected: [],
+                        openPerms(db) { this.permDb = db; this.permSelected = @js($allPrivileges); this.permModal = true; },
+                        toggleAll() { const all = @js($allPrivileges); this.permSelected = this.permSelected.length === all.length ? [] : [...all]; }
+                    }">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div>
                                 <h1 class="text-2xl font-semibold text-mono">Administracion</h1>
@@ -118,6 +125,12 @@
                                                             <a class="kt-btn kt-btn-outline kt-btn-sm" href="{{ route('client.databases.phpmyadmin', $database) }}" target="_blank" rel="noopener">
                                                                 Acceder a phpMyAdmin
                                                             </a>
+                                                            <button type="button"
+                                                                class="kt-btn kt-btn-outline kt-btn-sm"
+                                                                @click="openPerms({ id: {{ $database->id }}, name: '{{ $database->name }}', username: '{{ $database->username }}', engine: '{{ $database->engine }}' })">
+                                                                <i class="ki-filled ki-shield-tick text-xs"></i>
+                                                                Permisos
+                                                            </button>
 
                                                             <details class="relative">
                                                                 <summary class="kt-btn kt-btn-icon kt-btn-ghost kt-btn-sm list-none cursor-pointer" title="Opciones">
@@ -160,6 +173,66 @@
                     </div>
                 </div>
             </main>
+
+            {{-- Modal Permisos --}}
+            <div x-show="permModal" x-cloak
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                @keydown.escape.window="permModal = false">
+                <div class="w-full max-w-md rounded-2xl border border-border bg-background p-6 shadow-xl" @click.stop>
+                    <div class="mb-5 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-semibold text-mono">Permisos MySQL</h2>
+                            <p class="mt-0.5 text-sm text-secondary-foreground" x-text="permDb.name + ' → ' + permDb.username"></p>
+                        </div>
+                        <button type="button" class="kt-btn kt-btn-icon kt-btn-ghost kt-btn-sm" @click="permModal = false">
+                            <i class="ki-filled ki-cross"></i>
+                        </button>
+                    </div>
+
+                    @if(session('success'))
+                        <div class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+                    @error('permissions')
+                        <div class="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{{ $message }}</div>
+                    @enderror
+
+                    <form method="POST" :action="'/client/databases/' + permDb.id + '/permissions'">
+                        @csrf
+
+                        <div class="mb-4 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-mono">Privilegios</span>
+                            <button type="button" class="text-xs text-blue-400 hover:underline" @click="toggleAll()">
+                                <span x-text="permSelected.length === @js(count($allPrivileges)) ? 'Desmarcar todos' : 'Seleccionar todos'"></span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-6">
+                            @foreach($allPrivileges as $priv)
+                            <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 hover:bg-muted/60"
+                                   :class="permSelected.includes('{{ $priv }}') ? 'border-blue-500/50 bg-blue-500/10' : ''">
+                                <input type="checkbox"
+                                    name="privileges[]"
+                                    value="{{ $priv }}"
+                                    class="rounded border-border text-blue-500"
+                                    x-model="permSelected"
+                                    :value="'{{ $priv }}'">
+                                <span class="text-sm font-mono text-mono">{{ $priv }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+
+                        <div class="flex gap-3 justify-end">
+                            <button type="button" class="kt-btn kt-btn-outline" @click="permModal = false">Cancelar</button>
+                            <button type="submit" class="kt-btn kt-btn-primary">
+                                <i class="ki-filled ki-check"></i>
+                                Guardar permisos
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             @include('layouts.partials.client.footer')
         </div>

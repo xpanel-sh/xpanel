@@ -9,7 +9,7 @@ set -e
 mkdir -p /var/run/mysqld
 
 # Unix socket proxy  → host=localhost (PHP default on Linux)
-socat UNIX-LISTEN:/var/run/mysqld/mysqld.sock,fork,reuseaddr,unlink-early \
+socat UNIX-LISTEN:/var/run/mysqld/mysqld.sock,fork,reuseaddr,unlink-early,mode=777 \
       TCP:xpanel-db:3306 2>/dev/null &
 
 # TCP proxy          → host=127.0.0.1

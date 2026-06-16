@@ -11,7 +11,7 @@ func Start() {
 	if port == "" {
 		port = "7070"
 	}
-	addr := "127.0.0.1:" + port
+	addr := "0.0.0.0:" + port
 
 	log.Printf("XPanel Daemon listening on %s", addr)
 

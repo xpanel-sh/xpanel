@@ -52,6 +52,48 @@ func (m *Manager) Create(ctx context.Context, req model.DatabaseRequest) error {
 	return m.execMariaDB(ctx, sql)
 }
 
+var allowedPrivileges = map[string]bool{
+	"SELECT": true, "INSERT": true, "UPDATE": true, "DELETE": true,
+	"CREATE": true, "DROP": true, "INDEX": true, "ALTER": true,
+	"REFERENCES": true, "ALL PRIVILEGES": true,
+}
+
+func (m *Manager) UpdatePermissions(ctx context.Context, req model.DatabasePermissionsRequest) error {
+	engine := strings.ToLower(strings.TrimSpace(req.Engine))
+	if engine != "mariadb" && engine != "mysql" {
+		return fmt.Errorf("engine %q not supported", req.Engine)
+	}
+	if err := validateIdentifier(req.Name, "database name"); err != nil {
+		return err
+	}
+	if err := validateIdentifier(req.Username, "username"); err != nil {
+		return err
+	}
+
+	var grants []string
+	for _, p := range req.Privileges {
+		p = strings.ToUpper(strings.TrimSpace(p))
+		if !allowedPrivileges[p] {
+			return fmt.Errorf("privilege %q not allowed", p)
+		}
+		grants = append(grants, p)
+	}
+	if len(grants) == 0 {
+		return fmt.Errorf("at least one privilege is required")
+	}
+
+	grantList := strings.Join(grants, ", ")
+	sql := fmt.Sprintf(
+		"REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; GRANT %s ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
+		escapeIdentifier(req.Name),
+		escapeSQLString(req.Username),
+		grantList,
+		escapeIdentifier(req.Name),
+		escapeSQLString(req.Username),
+	)
+	return m.execMariaDB(ctx, sql)
+}
+
 func (m *Manager) Delete(ctx context.Context, req model.DatabaseRequest) error {
 	engine := strings.ToLower(strings.TrimSpace(req.Engine))
 	if engine != "mariadb" && engine != "mysql" {

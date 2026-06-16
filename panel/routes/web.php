@@ -162,6 +162,7 @@ Route::group(['middleware' => ['web']], function () {
             Route::get('/create',       [\App\Http\Controllers\Client\DatabaseController::class, 'create'])->name('create');
             Route::post('/',            [\App\Http\Controllers\Client\DatabaseController::class, 'store'])->name('store');
             Route::get('/{database}/phpmyadmin', [\App\Http\Controllers\Client\DatabaseController::class, 'phpMyAdmin'])->name('phpmyadmin');
+            Route::post('/{database}/permissions', [\App\Http\Controllers\Client\DatabaseController::class, 'updatePermissions'])->name('permissions');
             Route::delete('/{database}',[\App\Http\Controllers\Client\DatabaseController::class, 'destroy'])->name('destroy');
         });
 

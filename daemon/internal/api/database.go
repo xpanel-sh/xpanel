@@ -41,6 +41,18 @@ func handleDatabaseCreate(w http.ResponseWriter, r *http.Request) {
 	accepted(w, "database", "create", key, "database created and registered in daemon state", payload)
 }
 
+func handleDatabasePermissions(w http.ResponseWriter, r *http.Request) {
+	var req model.DatabasePermissionsRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if err := databaseManager.UpdatePermissions(r.Context(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "updated"})
+}
+
 func handleDatabaseDelete(w http.ResponseWriter, r *http.Request) {
 	var req model.DatabaseRequest
 	if !decodeJSON(w, r, &req) {

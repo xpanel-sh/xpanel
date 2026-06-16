@@ -148,6 +148,36 @@ class DatabaseController extends Controller
             : redirect($url);
     }
 
+    public function updatePermissions(Request $request, ManagedDatabase $database, DaemonClient $daemon)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        if ($database->tenant_id !== $tenant->id) {
+            abort(403);
+        }
+
+        $allowed = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'INDEX', 'ALTER', 'REFERENCES', 'ALL PRIVILEGES'];
+
+        $validated = $request->validate([
+            'privileges'   => ['required', 'array', 'min:1'],
+            'privileges.*' => ['required', 'string', 'in:' . implode(',', $allowed)],
+        ]);
+
+        try {
+            $daemon->updateDatabasePermissions(
+                $database->name,
+                $database->username,
+                $database->engine,
+                $validated['privileges']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Database permissions update failed', ['database_id' => $database->id, 'exception' => $e]);
+            return back()->withErrors(['permissions' => 'No se pudieron actualizar los permisos: ' . $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Permisos actualizados correctamente.');
+    }
+
     public function destroy(Request $request, ManagedDatabase $database, DaemonClient $daemon)
     {
         $tenant = $request->attributes->get('tenant');

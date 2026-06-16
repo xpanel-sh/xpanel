@@ -168,6 +168,13 @@ type PhpIniRequest struct {
 	Options map[string]string `json:"options"`
 }
 
+type DatabasePermissionsRequest struct {
+	Name       string   `json:"name"`
+	Username   string   `json:"username"`
+	Engine     string   `json:"engine"`
+	Privileges []string `json:"privileges"`
+}
+
 // --- SSL types ---
 
 type SSLIssueRequest struct {
