@@ -167,6 +167,7 @@
                                             @if($isDemo)
                                                 <span class="kt-badge kt-badge-outline kt-badge-warning text-xs">Ejemplo</span>
                                             @endif
+                                            <span class="text-xs text-secondary-foreground font-mono">Host: <strong class="text-mono">xpanel-db</strong>:3306</span>
                                         </div>
                                     </div>
                                 </div>
@@ -366,7 +367,7 @@
                     <span class="text-sm font-semibold text-mono">Seleccionar todos</span>
                     <span class="ms-auto text-xs text-secondary-foreground" x-text="permSelected.length + ' / ' + allPrivs.length"></span>
                 </label>
-                <div class="grid grid-cols-2 gap-2 mb-5">
+                <div class="grid grid-cols-2 gap-2 mb-3">
                     @foreach($allPrivileges as $priv)
                     <label class="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-accent/40 px-3 py-2.5 hover:bg-accent transition-colors"
                         :class="permSelected.includes('{{ $priv }}') ? 'border-primary/40 bg-primary/10' : ''">
@@ -378,6 +379,12 @@
                         <span class="text-sm font-mono text-mono">{{ $priv }}</span>
                     </label>
                     @endforeach
+                </div>
+                {{-- Aviso cuando no hay permisos: el usuario no podrá ejecutar queries --}}
+                <div x-show="permSelected.length === 0"
+                    class="rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 mb-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                    <i class="ki-filled ki-information-2 shrink-0"></i>
+                    Sin permisos: el usuario podrá conectarse pero no ejecutar ninguna consulta.
                 </div>
                 <div class="flex gap-3 justify-end border-t border-border pt-4">
                     <button type="button" class="kt-btn kt-btn-outline" data-kt-modal-dismiss="#perm_modal">Cancelar</button>

@@ -79,7 +79,13 @@ func (m *Manager) UpdatePermissions(ctx context.Context, req model.DatabasePermi
 		grants = append(grants, p)
 	}
 	if len(grants) == 0 {
-		return fmt.Errorf("at least one privilege is required")
+		// Sin privilegios → solo revocar todo (acceso denegado a nivel de queries)
+		sql := fmt.Sprintf(
+			"GRANT USAGE ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; FLUSH PRIVILEGES;",
+			escapeIdentifier(req.Name), escapeSQLString(req.Username),
+			escapeIdentifier(req.Name), escapeSQLString(req.Username),
+		)
+		return m.execMariaDB(ctx, sql)
 	}
 
 	grantList := strings.Join(grants, ", ")

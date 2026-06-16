@@ -108,6 +108,10 @@ func (m *Manager) CreateSiteContainer(ctx context.Context, req model.CreateSiteR
 		Image:      imageName,
 		Cmd:        cmd,
 		WorkingDir: preparedSite.WorkingDir,
+		Env: []string{
+			"XPANEL_MYSQL_HOST=xpanel-db",
+			"XPANEL_MYSQL_PORT=3306",
+		},
 		Labels: map[string]string{
 			"traefik.enable": "true",
 			fmt.Sprintf("traefik.http.routers.%s.rule", routerName):             fmt.Sprintf("Host(`%s`)", domain),

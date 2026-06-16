@@ -235,18 +235,19 @@ class DatabaseController extends Controller
 
         $allowed = ['SELECT','INSERT','UPDATE','DELETE','CREATE','DROP','INDEX','ALTER','REFERENCES','ALL PRIVILEGES'];
         $validated = $request->validate([
-            'privileges'   => ['required', 'array', 'min:1'],
-            'privileges.*' => ['required', 'string', 'in:' . implode(',', $allowed)],
+            'privileges'   => ['nullable', 'array'],
+            'privileges.*' => ['string', 'in:' . implode(',', $allowed)],
         ]);
+        $privileges = $validated['privileges'] ?? [];
 
         try {
-            $daemon->updateDatabasePermissions($database->name, $dbUser->username, $database->engine, $validated['privileges']);
+            $daemon->updateDatabasePermissions($database->name, $dbUser->username, $database->engine, $privileges);
         } catch (\Throwable $e) {
             Log::warning('Database user permissions update failed', ['dbuser_id' => $dbUser->id, 'exception' => $e]);
             return back()->withErrors(['db_user' => 'No se pudieron actualizar los permisos: ' . $e->getMessage()]);
         }
 
-        $dbUser->update(['privileges' => $validated['privileges']]);
+        $dbUser->update(['privileges' => $privileges]);
 
         return back()->with('success', 'Permisos actualizados.');
     }
