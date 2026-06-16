@@ -83,8 +83,12 @@ func (m *Manager) UpdatePermissions(ctx context.Context, req model.DatabasePermi
 	}
 
 	grantList := strings.Join(grants, ", ")
+	// GRANT USAGE first ensures a row exists in mysql.db so the subsequent
+	// REVOKE never fails with "no such grant defined" (MariaDB error 1141).
 	sql := fmt.Sprintf(
-		"REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; GRANT %s ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
+		"GRANT USAGE ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; GRANT %s ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
+		escapeIdentifier(req.Name),
+		escapeSQLString(req.Username),
 		escapeIdentifier(req.Name),
 		escapeSQLString(req.Username),
 		grantList,
