@@ -1,6 +1,12 @@
 @extends('layouts.client')
 
 @php
+    // xpanel-php:*-apache tiene socat que proxea localhost → xpanel-db:3306.
+    // serversideup/php Nginx y otros stacks no tienen ese proxy → deben usar xpanel-db.
+    $dbHost = ($site->project_type === 'php' && $site->web_server !== 'nginx')
+        ? 'localhost'
+        : 'xpanel-db';
+
     $dbPrefix        = ($site->tenant?->code ?: 'X000000') . '_';
     $nameSuffix      = old('name_suffix', str_starts_with((string) old('name'), $dbPrefix) ? substr((string) old('name'), strlen($dbPrefix)) : '');
     $usernameSuffix  = old('username_suffix', str_starts_with((string) old('username'), $dbPrefix) ? substr((string) old('username'), strlen($dbPrefix)) : '');
@@ -167,7 +173,7 @@
                                             @if($isDemo)
                                                 <span class="kt-badge kt-badge-outline kt-badge-warning text-xs">Ejemplo</span>
                                             @endif
-                                            <span class="text-xs text-secondary-foreground font-mono">Host: <strong class="text-mono">xpanel-db</strong>:3306</span>
+                                            <span class="text-xs text-secondary-foreground font-mono">Host: <strong class="text-mono">{{ $dbHost }}</strong>:3306</span>
                                         </div>
                                     </div>
                                 </div>

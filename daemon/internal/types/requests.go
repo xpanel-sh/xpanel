@@ -190,3 +190,37 @@ type SSLIssueRequest struct {
 	CFToken string `json:"cf_token,omitempty"`
 	Webroot string `json:"webroot,omitempty"`
 }
+
+// --- Docker App types ---
+
+type DockerAppCreateRequest struct {
+	TenantCode  string `json:"tenant_code"`
+	Slug        string `json:"slug"`
+	ComposeYAML string `json:"compose_yaml"`
+}
+
+type DockerAppActionRequest struct {
+	TenantCode string `json:"tenant_code"`
+	Slug       string `json:"slug"`
+}
+
+type DockerAppUpdateRequest struct {
+	TenantCode  string `json:"tenant_code"`
+	Slug        string `json:"slug"`
+	ComposeYAML string `json:"compose_yaml"`
+}
+
+type DockerServiceStatus struct {
+	Name   string `json:"name"`
+	State  string `json:"state"`  // running | exited | created
+	Health string `json:"health,omitempty"`
+}
+
+type DockerAppStatusResponse struct {
+	Status   string                `json:"status"` // running | stopped | partial | not_found
+	Services []DockerServiceStatus `json:"services"`
+}
+
+type DockerAppLogsResponse struct {
+	Logs string `json:"logs"`
+}

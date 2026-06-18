@@ -181,6 +181,16 @@ func NewRouter() http.Handler {
 		writeJSON(w, model.ActionResponse{Status: "deleted", OperationID: op.ID})
 	}))
 
+	// Docker App endpoints
+	mux.HandleFunc("/api/docker-app/create",  requireAuth(handleDockerAppCreate))
+	mux.HandleFunc("/api/docker-app/update",  requireAuth(handleDockerAppUpdate))
+	mux.HandleFunc("/api/docker-app/start",   requireAuth(handleDockerAppStart))
+	mux.HandleFunc("/api/docker-app/stop",    requireAuth(handleDockerAppStop))
+	mux.HandleFunc("/api/docker-app/restart", requireAuth(handleDockerAppRestart))
+	mux.HandleFunc("/api/docker-app/delete",  requireAuth(handleDockerAppDelete))
+	mux.HandleFunc("/api/docker-app/status",  requireAuth(handleDockerAppStatus))
+	mux.HandleFunc("/api/docker-app/logs",    requireAuth(handleDockerAppLogs))
+
 	return mux
 }
 

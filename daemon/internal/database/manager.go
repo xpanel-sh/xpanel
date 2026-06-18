@@ -39,14 +39,21 @@ func (m *Manager) Create(ctx context.Context, req model.DatabaseRequest) error {
 	}
 
 	sql := fmt.Sprintf(
-		"CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS '%s'@'%%' IDENTIFIED BY %s; ALTER USER '%s'@'%%' IDENTIFIED BY %s; GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
+		"CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"+
+			" CREATE USER IF NOT EXISTS '%s'@'%%' IDENTIFIED BY %s;"+
+			" ALTER USER '%s'@'%%' IDENTIFIED BY %s;"+
+			" CREATE USER IF NOT EXISTS '%s'@'localhost' IDENTIFIED BY %s;"+
+			" ALTER USER '%s'@'localhost' IDENTIFIED BY %s;"+
+			" GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%';"+
+			" GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'localhost';"+
+			" FLUSH PRIVILEGES;",
 		escapeIdentifier(req.Name),
-		escapeSQLString(req.Username),
-		quoteSQLString(req.Password),
-		escapeSQLString(req.Username),
-		quoteSQLString(req.Password),
-		escapeIdentifier(req.Name),
-		escapeSQLString(req.Username),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeIdentifier(req.Name), escapeSQLString(req.Username),
+		escapeIdentifier(req.Name), escapeSQLString(req.Username),
 	)
 
 	return m.execMariaDB(ctx, sql)
@@ -80,23 +87,23 @@ func (m *Manager) UpdatePermissions(ctx context.Context, req model.DatabasePermi
 	}
 	grantList := strings.Join(grants, ", ")
 
+	// localhost siempre conserva ALL PRIVILEGES (la entrada se crea en Create/AddUser).
+	// Solo actualizamos @'%' para controlar acceso remoto/TCP.
 	var sql string
+	db := escapeIdentifier(req.Name)
+	u := escapeSQLString(req.Username)
 	if len(grants) == 0 {
 		// GRANT ALL primero garantiza que exista fila en mysql.db;
 		// luego REVOKE ALL la vacía sin error 1141.
 		sql = fmt.Sprintf(
 			"GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; FLUSH PRIVILEGES;",
-			escapeIdentifier(req.Name), escapeSQLString(req.Username),
-			escapeIdentifier(req.Name), escapeSQLString(req.Username),
+			db, u, db, u,
 		)
 	} else {
 		// Igual: GRANT ALL crea/actualiza la fila, REVOKE limpia, GRANT aplica solo los elegidos.
 		sql = fmt.Sprintf(
 			"GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%'; REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; GRANT %s ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
-			escapeIdentifier(req.Name), escapeSQLString(req.Username),
-			escapeIdentifier(req.Name), escapeSQLString(req.Username),
-			grantList,
-			escapeIdentifier(req.Name), escapeSQLString(req.Username),
+			db, u, db, u, grantList, db, u,
 		)
 	}
 	return m.execMariaDB(ctx, sql)
@@ -118,11 +125,19 @@ func (m *Manager) AddUser(ctx context.Context, req model.DatabaseUserRequest) er
 	}
 
 	sql := fmt.Sprintf(
-		"CREATE USER IF NOT EXISTS '%s'@'%%' IDENTIFIED BY %s; ALTER USER '%s'@'%%' IDENTIFIED BY %s; GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%'; FLUSH PRIVILEGES;",
+		"CREATE USER IF NOT EXISTS '%s'@'%%' IDENTIFIED BY %s;"+
+			" ALTER USER '%s'@'%%' IDENTIFIED BY %s;"+
+			" CREATE USER IF NOT EXISTS '%s'@'localhost' IDENTIFIED BY %s;"+
+			" ALTER USER '%s'@'localhost' IDENTIFIED BY %s;"+
+			" GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%%';"+
+			" GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'localhost';"+
+			" FLUSH PRIVILEGES;",
 		escapeSQLString(req.Username), quoteSQLString(req.Password),
 		escapeSQLString(req.Username), quoteSQLString(req.Password),
-		escapeIdentifier(req.Database),
-		escapeSQLString(req.Username),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeIdentifier(req.Database), escapeSQLString(req.Username),
+		escapeIdentifier(req.Database), escapeSQLString(req.Username),
 	)
 	return m.execMariaDB(ctx, sql)
 }
@@ -140,9 +155,10 @@ func (m *Manager) RemoveUser(ctx context.Context, req model.DatabaseUserRequest)
 	}
 
 	sql := fmt.Sprintf(
-		"REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; DROP USER IF EXISTS '%s'@'%%'; FLUSH PRIVILEGES;",
-		escapeIdentifier(req.Database),
-		escapeSQLString(req.Username),
+		"REVOKE ALL PRIVILEGES ON `%s`.* FROM '%s'@'%%'; DROP USER IF EXISTS '%s'@'%%';"+
+			" DROP USER IF EXISTS '%s'@'localhost';"+
+			" FLUSH PRIVILEGES;",
+		escapeIdentifier(req.Database), escapeSQLString(req.Username), escapeSQLString(req.Username),
 		escapeSQLString(req.Username),
 	)
 	return m.execMariaDB(ctx, sql)
@@ -161,9 +177,11 @@ func (m *Manager) ChangeUserPassword(ctx context.Context, req model.DatabaseUser
 	}
 
 	sql := fmt.Sprintf(
-		"ALTER USER '%s'@'%%' IDENTIFIED BY %s; FLUSH PRIVILEGES;",
-		escapeSQLString(req.Username),
-		quoteSQLString(req.Password),
+		"ALTER USER '%s'@'%%' IDENTIFIED BY %s;"+
+			" ALTER USER IF EXISTS '%s'@'localhost' IDENTIFIED BY %s;"+
+			" FLUSH PRIVILEGES;",
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
+		escapeSQLString(req.Username), quoteSQLString(req.Password),
 	)
 	return m.execMariaDB(ctx, sql)
 }
@@ -182,8 +200,12 @@ func (m *Manager) Delete(ctx context.Context, req model.DatabaseRequest) error {
 	}
 
 	sql := fmt.Sprintf(
-		"DROP DATABASE IF EXISTS `%s`; DROP USER IF EXISTS '%s'@'%%'; FLUSH PRIVILEGES;",
+		"DROP DATABASE IF EXISTS `%s`;"+
+			" DROP USER IF EXISTS '%s'@'%%';"+
+			" DROP USER IF EXISTS '%s'@'localhost';"+
+			" FLUSH PRIVILEGES;",
 		escapeIdentifier(req.Name),
+		escapeSQLString(req.Username),
 		escapeSQLString(req.Username),
 	)
 

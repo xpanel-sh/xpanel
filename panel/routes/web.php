@@ -216,6 +216,20 @@ Route::group(['middleware' => ['web']], function () {
 
         Route::get('/account', [\App\Http\Controllers\Client\AccountController::class, 'show'])->name('client.account.show');
 
+        // Docker Apps
+        Route::prefix('docker')->name('client.docker.')->group(function () {
+            Route::get('/',                          [\App\Http\Controllers\Client\DockerController::class, 'index'])->name('index');
+            Route::get('/create',                    [\App\Http\Controllers\Client\DockerController::class, 'create'])->name('create');
+            Route::post('/',                         [\App\Http\Controllers\Client\DockerController::class, 'store'])->name('store');
+            Route::get('/{dockerInstance}',          [\App\Http\Controllers\Client\DockerController::class, 'show'])->name('show');
+            Route::post('/{dockerInstance}/update',  [\App\Http\Controllers\Client\DockerController::class, 'update'])->name('update');
+            Route::post('/{dockerInstance}/start',   [\App\Http\Controllers\Client\DockerController::class, 'start'])->name('start');
+            Route::post('/{dockerInstance}/stop',    [\App\Http\Controllers\Client\DockerController::class, 'stop'])->name('stop');
+            Route::post('/{dockerInstance}/restart', [\App\Http\Controllers\Client\DockerController::class, 'restart'])->name('restart');
+            Route::get('/{dockerInstance}/logs',     [\App\Http\Controllers\Client\DockerController::class, 'logs'])->name('logs');
+            Route::delete('/{dockerInstance}',       [\App\Http\Controllers\Client\DockerController::class, 'destroy'])->name('destroy');
+        });
+
         // Gestor de Archivos por sitio
         Route::get('/website/file-manager', [\App\Http\Controllers\Client\FileManagerController::class, 'index'])
             ->name('client.website.file-manager.root');

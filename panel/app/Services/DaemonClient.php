@@ -469,6 +469,94 @@ class DaemonClient
         return $response->json() ?? [];
     }
 
+    // ── Docker App ────────────────────────────────────────────────────────────
+
+    public function dockerAppCreate(string $tenantCode, string $slug, string $composeYaml): array
+    {
+        return $this->post('/api/docker-app/create', [
+            'tenant_code'  => $tenantCode,
+            'slug'         => $slug,
+            'compose_yaml' => $composeYaml,
+        ], 'Daemon dockerAppCreate failed');
+    }
+
+    public function dockerAppUpdate(string $tenantCode, string $slug, string $composeYaml): array
+    {
+        return $this->post('/api/docker-app/update', [
+            'tenant_code'  => $tenantCode,
+            'slug'         => $slug,
+            'compose_yaml' => $composeYaml,
+        ], 'Daemon dockerAppUpdate failed');
+    }
+
+    public function dockerAppStart(string $tenantCode, string $slug): array
+    {
+        return $this->post('/api/docker-app/start', [
+            'tenant_code' => $tenantCode,
+            'slug'        => $slug,
+        ], 'Daemon dockerAppStart failed');
+    }
+
+    public function dockerAppStop(string $tenantCode, string $slug): array
+    {
+        return $this->post('/api/docker-app/stop', [
+            'tenant_code' => $tenantCode,
+            'slug'        => $slug,
+        ], 'Daemon dockerAppStop failed');
+    }
+
+    public function dockerAppRestart(string $tenantCode, string $slug): array
+    {
+        return $this->post('/api/docker-app/restart', [
+            'tenant_code' => $tenantCode,
+            'slug'        => $slug,
+        ], 'Daemon dockerAppRestart failed');
+    }
+
+    public function dockerAppDelete(string $tenantCode, string $slug): array
+    {
+        return $this->post('/api/docker-app/delete', [
+            'tenant_code' => $tenantCode,
+            'slug'        => $slug,
+        ], 'Daemon dockerAppDelete failed');
+    }
+
+    public function dockerAppStatus(string $tenantCode, string $slug): array
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/docker-app/status", [
+            'tenant_code' => $tenantCode,
+            'slug'        => $slug,
+        ]);
+
+        if (!$response->successful()) {
+            Log::warning('Daemon dockerAppStatus failed', [
+                'tenant_code' => $tenantCode,
+                'slug'        => $slug,
+                'status'      => $response->status(),
+            ]);
+            return ['status' => 'error', 'services' => []];
+        }
+
+        return $response->json() ?? ['status' => 'unknown', 'services' => []];
+    }
+
+    public function dockerAppLogs(string $tenantCode, string $slug, int $tail = 150): string
+    {
+        $response = $this->http()->get("{$this->baseUrl}/api/docker-app/logs", [
+            'tenant_code' => $tenantCode,
+            'slug'        => $slug,
+            'tail'        => $tail,
+        ]);
+
+        if (!$response->successful()) {
+            return '';
+        }
+
+        return $response->json('logs') ?? '';
+    }
+
+    // ── Internals ─────────────────────────────────────────────────────────────
+
     private function http()
     {
         $client = Http::timeout(15);
